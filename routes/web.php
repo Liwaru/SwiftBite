@@ -1,0 +1,33 @@
+<?php
+
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CashierController;
+use App\Http\Controllers\CustomerMenuController;
+use App\Http\Controllers\CustomerPageController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::middleware(['simple.auth', 'user.level:3'])->group(function () {
+    Route::get('/admin', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::post('/admin/tables', [AdminController::class, 'storeTable'])->name('admin.tables.store');
+    Route::post('/admin/menu-items', [AdminController::class, 'storeMenuItem'])->name('admin.menu-items.store');
+    Route::patch('/admin/orders/{order}/status', [AdminController::class, 'updateOrderStatus'])->name('admin.orders.status');
+});
+
+Route::middleware(['simple.auth', 'user.level:2'])->group(function () {
+    Route::get('/kasir', [CashierController::class, 'dashboard'])->name('cashier.dashboard');
+    Route::get('/kasir/riwayat', [CashierController::class, 'history'])->name('cashier.history');
+    Route::patch('/kasir/orders/{order}/status', [CashierController::class, 'updateOrderStatus'])->name('cashier.orders.status');
+});
+
+Route::middleware(['simple.auth', 'user.level:1'])->group(function () {
+    Route::get('/pelanggan', [CustomerPageController::class, 'home'])->name('customer.home');
+});
+
+Route::get('/menu/{token}', [CustomerMenuController::class, 'show'])->name('customer.menu');
+Route::post('/menu/{token}/orders', [CustomerMenuController::class, 'store'])->name('customer.orders.store');
+Route::get('/menu/{token}/orders/{order}', [CustomerMenuController::class, 'receipt'])->name('customer.orders.show');
