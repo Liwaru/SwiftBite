@@ -72,7 +72,7 @@
                                     @csrf
                                     @method('patch')
                                     <select name="status">
-                                        @foreach (['new' => 'Baru', 'preparing' => 'Diproses', 'ready' => 'Siap', 'paid' => 'Sudah Dibayar', 'cancelled' => 'Batal'] as $value => $label)
+                                        @foreach (['menunggu' => 'Menunggu', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan'] as $value => $label)
                                             <option value="{{ $value }}" @selected($order->status === $value)>{{ $label }}</option>
                                         @endforeach
                                     </select>

@@ -8,22 +8,53 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
+    protected $primaryKey = 'id_order';
+
     protected $fillable = [
-        'dining_table_id',
-        'customer_name',
-        'payment_method',
+        'id_meja',
+        'kode_pesanan',
+        'total_harga',
         'status',
-        'total_price',
-        'notes',
+        'metode_pembayaran',
     ];
 
     public function diningTable(): BelongsTo
     {
-        return $this->belongsTo(DiningTable::class);
+        return $this->belongsTo(DiningTable::class, 'id_meja', 'id_meja');
     }
 
     public function items(): HasMany
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(OrderItem::class, 'id_order', 'id_order');
+    }
+
+    public function getIdAttribute(): int|string
+    {
+        return $this->id_order;
+    }
+
+    public function getDiningTableIdAttribute(): int|string
+    {
+        return $this->id_meja;
+    }
+
+    public function getCustomerNameAttribute(): ?string
+    {
+        return null;
+    }
+
+    public function getPaymentMethodAttribute(): string
+    {
+        return $this->metode_pembayaran;
+    }
+
+    public function getTotalPriceAttribute(): float
+    {
+        return (float) $this->total_harga;
+    }
+
+    public function getNotesAttribute(): ?string
+    {
+        return null;
     }
 }

@@ -8,19 +8,19 @@ use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CustomerMenuController extends Controller
 {
     public function show(string $token): View
     {
-        $table = DiningTable::where('qr_token', $token)
-            ->where('is_active', true)
+        $table = DiningTable::where('token', $token)
             ->firstOrFail();
 
-        $menuItems = MenuItem::where('is_available', true)
-            ->orderBy('category')
-            ->orderBy('name')
+        $menuItems = MenuItem::with('categoryModel')
+            ->where('status', 'tersedia')
+            ->orderBy('nama_menu')
             ->get()
             ->groupBy('category');
 
@@ -29,8 +29,7 @@ class CustomerMenuController extends Controller
 
     public function store(Request $request, string $token): RedirectResponse
     {
-        $table = DiningTable::where('qr_token', $token)
-            ->where('is_active', true)
+        $table = DiningTable::where('token', $token)
             ->firstOrFail();
 
         $validated = $request->validate([
@@ -51,52 +50,50 @@ class CustomerMenuController extends Controller
                 ->withInput();
         }
 
-        $items = MenuItem::whereIn('id', $quantities->keys())
-            ->where('is_available', true)
+        $items = MenuItem::whereIn('id_menu', $quantities->keys())
+            ->where('status', 'tersedia')
             ->get();
 
         $order = DB::transaction(function () use ($table, $validated, $quantities, $items) {
             $total = 0;
 
             $order = Order::create([
-                'dining_table_id' => $table->id,
-                'customer_name' => $validated['customer_name'] ?? null,
-                'payment_method' => $validated['payment_method'],
-                'notes' => $validated['notes'] ?? null,
-                'status' => 'new',
+                'id_meja' => $table->id_meja,
+                'kode_pesanan' => 'ORD-' . now()->format('YmdHis') . '-' . Str::upper(Str::random(4)),
+                'metode_pembayaran' => $validated['payment_method'],
+                'status' => 'menunggu',
             ]);
 
             foreach ($items as $item) {
-                $quantity = $quantities->get($item->id, 0);
-                $subtotal = $item->price * $quantity;
+                $quantity = $quantities->get($item->id_menu, 0);
+                $subtotal = $item->harga * $quantity;
                 $total += $subtotal;
 
                 $order->items()->create([
-                    'menu_item_id' => $item->id,
-                    'menu_name' => $item->name,
-                    'price' => $item->price,
-                    'quantity' => $quantity,
+                    'id_menu' => $item->id_menu,
+                    'harga' => $item->harga,
+                    'qty' => $quantity,
                     'subtotal' => $subtotal,
                 ]);
             }
 
-            $order->update(['total_price' => $total]);
+            $order->update(['total_harga' => $total]);
 
             return $order;
         });
 
         return redirect()
-            ->route('customer.orders.show', [$table->qr_token, $order])
+            ->route('customer.orders.show', [$table->token, $order])
             ->with('success', 'Pesanan berhasil dikirim ke kasir/dapur.');
     }
 
     public function receipt(string $token, Order $order): View
     {
-        $table = DiningTable::where('qr_token', $token)->firstOrFail();
+        $table = DiningTable::where('token', $token)->firstOrFail();
 
-        abort_unless($order->dining_table_id === $table->id, 404);
+        abort_unless((int) $order->id_meja === (int) $table->id_meja, 404);
 
-        $order->load('items');
+        $order->load('items.menuItem');
 
         return view('customer.receipt', compact('table', 'order'));
     }

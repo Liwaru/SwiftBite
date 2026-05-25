@@ -11,8 +11,8 @@ class CashierController extends Controller
 {
     public function dashboard(): View
     {
-        $orders = Order::with(['diningTable', 'items'])
-            ->whereNotIn('status', ['paid', 'cancelled'])
+        $orders = Order::with(['diningTable', 'items.menuItem'])
+            ->whereNotIn('status', ['selesai', 'dibatalkan'])
             ->latest()
             ->limit(30)
             ->get();
@@ -22,8 +22,8 @@ class CashierController extends Controller
 
     public function history(): View
     {
-        $orders = Order::with(['diningTable', 'items'])
-            ->whereIn('status', ['paid', 'cancelled'])
+        $orders = Order::with(['diningTable', 'items.menuItem'])
+            ->whereIn('status', ['selesai', 'dibatalkan'])
             ->latest()
             ->limit(50)
             ->get();
@@ -34,7 +34,7 @@ class CashierController extends Controller
     public function updateOrderStatus(Request $request, Order $order): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => ['required', 'in:new,preparing,ready,paid,cancelled'],
+            'status' => ['required', 'in:menunggu,diproses,selesai,dibatalkan'],
         ]);
 
         $order->update($validated);
