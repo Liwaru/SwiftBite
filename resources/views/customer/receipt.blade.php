@@ -6,16 +6,23 @@
     <title>Pesanan #{{ $order->id }}</title>
     <style>
         :root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-        body { margin: 0; background: #f8f6f0; color: #211f1b; }
+        body {
+            margin: 0;
+            background:
+                linear-gradient(135deg, rgba(53, 32, 22, .82), rgba(111, 69, 43, .9)),
+                repeating-linear-gradient(45deg, rgba(255, 246, 232, .08) 0 1px, transparent 1px 14px),
+                #6f452b;
+            color: #2b1c15;
+        }
         main { max-width: 620px; margin: 0 auto; padding: 28px 16px; }
-        .panel { background: #fffdfa; border: 1px solid #e5dccc; border-radius: 8px; padding: 18px; display: grid; gap: 14px; }
+        .panel { background: #fff6e8; border: 1px solid #e1ad73; border-radius: 8px; padding: 18px; display: grid; gap: 14px; box-shadow: 0 12px 30px rgba(39, 20, 13, .12); }
         h1, h2, p { margin: 0; }
         h1 { font-size: 30px; }
-        .muted { color: #766f64; }
-        .row { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid #eee4d7; padding-top: 10px; }
+        .muted { color: #7a5a46; }
+        .row { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid #ead4ba; padding-top: 10px; }
         .total { font-size: 22px; font-weight: 900; }
-        .badge { width: fit-content; padding: 5px 9px; border-radius: 999px; background: #e6f4eb; color: #195c33; font-weight: 900; font-size: 13px; }
-        a { color: #2f6f61; font-weight: 900; }
+        .badge { width: fit-content; padding: 5px 9px; border-radius: 999px; background: #edf5e8; color: #355b28; font-weight: 900; font-size: 13px; }
+        a { color: #6f452b; font-weight: 900; }
     </style>
 </head>
 <body>

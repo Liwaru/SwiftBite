@@ -5,13 +5,20 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CashierController;
 use App\Http\Controllers\CustomerMenuController;
 use App\Http\Controllers\CustomerPageController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.store');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::middleware(['simple.auth', 'user.level:3'])->group(function () {
+Route::middleware('simple.auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::patch('/profile/name', [ProfileController::class, 'updateName'])->name('profile.name.update');
+    Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+});
+
+Route::middleware(['simple.auth', 'user.level:3,4'])->group(function () {
     Route::get('/admin', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::post('/admin/tables', [AdminController::class, 'storeTable'])->name('admin.tables.store');
     Route::post('/admin/menu-items', [AdminController::class, 'storeMenuItem'])->name('admin.menu-items.store');
@@ -20,6 +27,7 @@ Route::middleware(['simple.auth', 'user.level:3'])->group(function () {
 
 Route::middleware(['simple.auth', 'user.level:2'])->group(function () {
     Route::get('/kasir', [CashierController::class, 'dashboard'])->name('cashier.dashboard');
+    Route::get('/kasir/live-orders', [CashierController::class, 'liveOrders'])->name('cashier.orders.live');
     Route::get('/kasir/riwayat', [CashierController::class, 'history'])->name('cashier.history');
     Route::patch('/kasir/orders/{order}/status', [CashierController::class, 'updateOrderStatus'])->name('cashier.orders.status');
 });

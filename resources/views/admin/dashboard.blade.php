@@ -6,34 +6,35 @@
     <title>Dashboard QR Resto</title>
     <style>
         :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-        body { margin: 0; background: #ffffff; color: #211f1b; }
+        body { margin: 0; background: #ffffff; color: #2b1c15; }
         main { max-width: 1180px; padding: 34px 30px 56px; }
         header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-end; margin-bottom: 24px; }
         h1, h2, h3, p { margin: 0; }
         h1 { font-size: clamp(28px, 4vw, 44px); }
         h2 { font-size: 22px; margin-bottom: 14px; }
         h3 { font-size: 17px; margin-bottom: 6px; }
-        .muted { color: #746d61; }
+        .muted { color: #7a5a46; }
         .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; align-items: start; }
-        .panel { background: #ffffff; border: 1px solid #f0d4d7; border-radius: 8px; padding: 18px; box-shadow: 0 14px 34px rgba(169, 0, 16, .08); }
+        .panel { background: #fff6e8; border: 1px solid #e1ad73; border-radius: 8px; padding: 18px; box-shadow: 0 12px 30px rgba(39, 20, 13, .12); color: #2b1c15; }
+        .panel .muted { color: #7a5a46; }
         .span-4 { grid-column: span 4; }
         .span-8 { grid-column: span 8; }
         .span-12 { grid-column: span 12; }
         form { display: grid; gap: 10px; }
         label { display: grid; gap: 6px; font-weight: 700; font-size: 13px; }
-        input, textarea, select { width: 100%; box-sizing: border-box; border: 1px solid #f0a7ad; border-radius: 7px; padding: 10px 11px; font: inherit; background: #fff; }
+        input, textarea, select { width: 100%; box-sizing: border-box; border: 1px solid #d8b893; border-radius: 7px; padding: 10px 11px; font: inherit; background: #fffaf2; color: #352016; }
         textarea { resize: vertical; min-height: 74px; }
-        button, .button { border: 0; border-radius: 7px; background: linear-gradient(135deg, #d90416, #a90010); color: white; padding: 10px 13px; font-weight: 800; cursor: pointer; text-decoration: none; text-align: center; }
-        .notice { padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; background: #fff0f1; color: #a90010; border: 1px solid #ffc5ca; font-weight: 800; }
-        .error { background: #fff0ed; color: #9c2b1e; border-color: #f2beb5; }
+        button, .button { border: 0; border-radius: 7px; background: linear-gradient(135deg, #6f452b, #352016); color: #fff8ed; padding: 10px 13px; font-weight: 800; cursor: pointer; text-decoration: none; text-align: center; }
+        .notice { padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; background: #edf5e8; color: #355b28; border: 1px solid #c5ddb7; font-weight: 800; }
+        .error { background: #fff0e8; color: #8a341b; border-color: #e6b292; }
         .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
         .table-card { display: grid; gap: 10px; }
-        .qr { display: grid; place-items: center; background: white; padding: 14px; border: 1px dashed #f0a7ad; border-radius: 8px; }
+        .qr { display: grid; place-items: center; background: #fffaf2; padding: 14px; border: 1px dashed #d8b893; border-radius: 8px; }
         .menu-list, .order-list { display: grid; gap: 10px; }
-        .row { display: flex; justify-content: space-between; gap: 12px; align-items: center; border-top: 1px solid #f3dde0; padding-top: 10px; }
-        .badge { display: inline-flex; width: fit-content; padding: 4px 8px; border-radius: 999px; background: #fff0f1; color: #a90010; font-size: 12px; font-weight: 900; }
+        .row { display: flex; justify-content: space-between; gap: 12px; align-items: center; border-top: 1px solid #ead4ba; padding-top: 10px; }
+        .badge { display: inline-flex; width: fit-content; padding: 4px 8px; border-radius: 999px; background: #f4e3cd; color: #5d3820; font-size: 12px; font-weight: 900; }
         .price { font-weight: 900; white-space: nowrap; }
-        .order { display: grid; gap: 12px; border-top: 1px solid #f3dde0; padding-top: 14px; }
+        .order { display: grid; gap: 12px; border-top: 1px solid #ead4ba; padding-top: 14px; }
         @media (max-width: 860px) { header { align-items: flex-start; flex-direction: column; } .span-4, .span-8 { grid-column: span 12; } main { padding: 24px 16px 44px; } }
     </style>
 </head>

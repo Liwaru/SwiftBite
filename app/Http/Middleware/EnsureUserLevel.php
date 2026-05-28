@@ -10,7 +10,9 @@ class EnsureUserLevel
 {
     public function handle(Request $request, Closure $next, string $level): Response
     {
-        if ((int) $request->session()->get('auth_level') !== (int) $level) {
+        $allowedLevels = array_map('intval', explode(',', $level));
+
+        if (! in_array((int) $request->session()->get('auth_level'), $allowedLevels, true)) {
             abort(403);
         }
 

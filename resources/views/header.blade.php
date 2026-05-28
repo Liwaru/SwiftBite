@@ -1,13 +1,17 @@
 <style>
     :root {
-        --sidebar-red: #d90416;
-        --sidebar-red-dark: #a90010;
-        --sidebar-red-light: #ff2a2a;
+        --sidebar-red: #5a321f;
+        --sidebar-red-dark: #27140d;
+        --sidebar-red-light: #9a6239;
+        --page-cream: #fff6e8;
     }
 
     .app-shell {
         min-height: 100vh;
-        background: #ffffff;
+        background:
+            linear-gradient(135deg, rgba(53, 32, 22, .82), rgba(111, 69, 43, .9)),
+            repeating-linear-gradient(45deg, rgba(255, 246, 232, .08) 0 1px, transparent 1px 14px),
+            #6f452b;
     }
 
     .sidebar {
@@ -18,13 +22,13 @@
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
-        padding: 24px 18px;
+        padding: 26px 18px 28px;
         overflow: hidden;
         background:
-            radial-gradient(circle at 18% 12%, rgba(255, 255, 255, .2), transparent 28%),
-            linear-gradient(160deg, var(--sidebar-red-light) 0%, var(--sidebar-red) 48%, var(--sidebar-red-dark) 100%);
-        color: #ffffff;
-        box-shadow: 14px 0 36px rgba(169, 0, 16, .16);
+            radial-gradient(circle at 18% 12%, rgba(255, 246, 232, .14), transparent 28%),
+            linear-gradient(180deg, var(--sidebar-red-light) 0%, var(--sidebar-red) 38%, var(--sidebar-red-dark) 100%);
+        color: #fff8ed;
+        box-shadow: 14px 0 36px rgba(24, 13, 7, .34);
         transition: width .28s ease, padding .28s ease, box-shadow .28s ease;
     }
 
@@ -33,9 +37,19 @@
         align-items: center;
         gap: 12px;
         padding-bottom: 20px;
-        margin-bottom: 18px;
-        border-bottom: 1px solid rgba(255, 255, 255, .18);
+        margin-bottom: 22px;
+        border-bottom: 1px solid rgba(255, 246, 232, .18);
         min-width: 0;
+    }
+
+    .sidebar-brand-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        flex: 1 1 auto;
+        color: inherit;
+        text-decoration: none;
     }
 
     .sidebar-logo {
@@ -44,9 +58,9 @@
         height: 42px;
         display: grid;
         place-items: center;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, .18);
-        color: #ffffff;
+        border-radius: 9px;
+        background: rgba(255, 246, 232, .2);
+        color: #fff8ed;
         font-size: 15px;
         font-weight: 900;
     }
@@ -54,6 +68,7 @@
     .sidebar-brand-text {
         min-width: 0;
         flex: 1 1 auto;
+        text-align: left;
     }
 
     .sidebar-brand-text strong,
@@ -71,7 +86,7 @@
 
     .sidebar-brand-text span {
         margin-top: 6px;
-        color: rgba(255, 255, 255, .82);
+        color: rgba(255, 248, 237, .82);
         font-size: 13px;
         font-weight: 700;
     }
@@ -86,61 +101,46 @@
         margin-left: auto;
         border: 0;
         border-radius: 12px;
-        background: rgba(255, 255, 255, .16);
-        color: #ffffff;
+        background: rgba(255, 246, 232, .18);
+        color: #fff8ed;
         cursor: pointer;
         transition: background .2s ease, transform .2s ease;
     }
 
     .sidebar-toggle:hover {
-        background: rgba(255, 255, 255, .26);
-        transform: translateY(-1px);
+        background: rgba(255, 246, 232, .26);
     }
 
-    .sidebar-toggle span {
-        position: relative;
+    .hamburger-icon {
+        width: 21px;
+        display: grid;
+        gap: 4px;
+    }
+
+    .hamburger-icon span {
         display: block;
-        width: 18px;
+        width: 21px;
         height: 2px;
         background: currentColor;
-        border-radius: 999px;
-    }
-
-    .sidebar-toggle span::before,
-    .sidebar-toggle span::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        width: 18px;
-        height: 2px;
-        background: currentColor;
-        border-radius: 999px;
-    }
-
-    .sidebar-toggle span::before {
-        top: -6px;
-    }
-
-    .sidebar-toggle span::after {
-        top: 6px;
+        border-radius: 2px;
     }
 
     .sidebar-nav {
         display: grid;
-        gap: 8px;
+        gap: 10px;
     }
 
     .sidebar-link {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 13px;
         min-width: 0;
-        padding: 12px 13px;
-        border-radius: 8px;
-        color: #ffffff;
+        padding: 13px 14px;
+        border-radius: 9px;
+        color: #fff8ed;
         text-decoration: none;
         font-weight: 900;
-        background: rgba(255, 255, 255, .1);
+        background: rgba(255, 246, 232, .09);
         white-space: nowrap;
         overflow: hidden;
         transition: background .2s ease, color .2s ease;
@@ -148,19 +148,31 @@
 
     .sidebar-link:hover,
     .sidebar-link.active {
-        background: #ffffff;
+        background: #fff6e8;
+        color: var(--sidebar-red-dark);
+    }
+
+    .sidebar-link:hover .sidebar-icon,
+    .sidebar-link.active .sidebar-icon {
+        border-color: rgba(39, 20, 13, .2);
         color: var(--sidebar-red-dark);
     }
 
     .sidebar-icon {
-        flex: 0 0 24px;
-        width: 24px;
-        height: 24px;
+        flex: 0 0 26px;
+        width: 26px;
+        height: 26px;
         display: grid;
         place-items: center;
-        font-size: 13px;
-        font-weight: 900;
-        line-height: 1;
+        border: 1px solid rgba(255, 248, 237, .38);
+        border-radius: 7px;
+        color: rgba(255, 248, 237, .92);
+    }
+
+    .sidebar-icon svg {
+        width: 15px;
+        height: 15px;
+        stroke: currentColor;
     }
 
     .sidebar-label {
@@ -173,45 +185,189 @@
         margin-top: auto;
         display: grid;
         gap: 10px;
+        padding-top: 22px;
     }
 
-    .sidebar-user {
-        padding: 12px 13px;
+    .sidebar-account {
+        position: relative;
+    }
+
+    .sidebar-user-info {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 38px 1fr;
+        gap: 11px;
+        align-items: center;
+        padding: 12px;
         border-radius: 8px;
-        background: rgba(255, 255, 255, .14);
+        background: rgba(255, 246, 232, .1);
+        border: 1px solid rgba(255, 246, 232, .12);
+        color: #fff8ed;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: background .2s ease, border-color .2s ease;
+    }
+
+    .sidebar-user-info:hover,
+    .sidebar-account.open .sidebar-user-info {
+        background: rgba(255, 246, 232, .15);
+        border-color: rgba(255, 246, 232, .22);
+    }
+
+    .sidebar-avatar,
+    .account-menu-avatar {
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+        background: rgba(255, 246, 232, .18);
+        color: #fff8ed;
+        font-weight: 900;
+    }
+
+    .sidebar-avatar {
+        width: 38px;
+        height: 38px;
+    }
+
+    .sidebar-user-details {
+        min-width: 0;
+        display: grid;
+        gap: 3px;
+    }
+
+    .sidebar-user-name {
+        overflow: hidden;
+        color: #fff8ed;
+        font-weight: 900;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sidebar-user-role {
+        display: block;
+        color: rgba(255, 248, 237, .78);
+        font-size: 12px;
         font-weight: 800;
     }
 
-    .sidebar-user span {
+    .account-menu {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: calc(100% + 10px);
+        z-index: 3;
+        display: none;
+        overflow: hidden;
+        border: 1px solid #e1ad73;
+        border-radius: 8px;
+        background: #fff6e8;
+        box-shadow: 0 18px 38px rgba(39, 20, 13, .24);
+        color: #2b1c15;
+    }
+
+    .sidebar-account.open .account-menu {
         display: block;
-        color: rgba(255, 255, 255, .78);
+    }
+
+    .account-menu-head {
+        display: grid;
+        grid-template-columns: 40px 1fr;
+        gap: 11px;
+        align-items: center;
+        padding: 13px;
+        border-bottom: 1px solid #ead4ba;
+    }
+
+    .account-menu-avatar {
+        width: 40px;
+        height: 40px;
+        background: #6f452b;
+    }
+
+    .account-menu-name {
+        overflow: hidden;
+        font-weight: 900;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .account-menu-role {
+        color: #7a5a46;
         font-size: 12px;
-        margin-bottom: 3px;
+        font-weight: 800;
+    }
+
+    .account-menu-main {
+        display: grid;
+        gap: 4px;
+        padding: 8px;
+    }
+
+    .account-menu-link,
+    .account-menu-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: #352016;
+        padding: 10px;
+        font: inherit;
+        font-weight: 900;
+        text-align: left;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .account-menu-link:hover,
+    .account-menu-btn:hover {
+        background: #f4e3cd;
+    }
+
+    .account-menu-icon {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+    }
+
+    .account-menu-logout {
+        margin: 0;
     }
 
     .sidebar-logout {
         width: 100%;
-        border: 0;
+        border: 1px solid rgba(255, 246, 232, .74);
         border-radius: 8px;
-        background: #ffffff;
+        background: rgba(255, 246, 232, .9);
         color: var(--sidebar-red-dark);
         padding: 11px 13px;
         font: inherit;
         font-weight: 900;
         cursor: pointer;
+        transition: background .2s ease, color .2s ease, border-color .2s ease;
+    }
+
+    .sidebar-logout:hover {
+        background: transparent;
+        border-color: rgba(255, 246, 232, .86);
+        color: #fff8ed;
     }
 
     .content-with-sidebar {
         margin-left: 260px;
         min-height: 100vh;
         box-sizing: border-box;
+        background: #ffffff;
         transition: margin-left .28s ease;
     }
 
     .app-shell.sidebar-collapsed .sidebar {
         width: 88px;
         padding-inline: 14px;
-        box-shadow: 10px 0 24px rgba(169, 0, 16, .14);
+        box-shadow: 10px 0 24px rgba(24, 13, 7, .2);
     }
 
     .app-shell.sidebar-collapsed .content-with-sidebar {
@@ -219,10 +375,16 @@
     }
 
     .app-shell.sidebar-collapsed .sidebar-brand {
-        justify-content: center;
+        display: grid;
+        place-items: center;
         padding-bottom: 18px;
     }
 
+    .app-shell.sidebar-collapsed .sidebar-brand-link {
+        flex: 0 0 auto;
+    }
+
+    .app-shell.sidebar-collapsed .sidebar-brand-link,
     .app-shell.sidebar-collapsed .sidebar-logo,
     .app-shell.sidebar-collapsed .sidebar-brand-text,
     .app-shell.sidebar-collapsed .sidebar-footer,
@@ -241,12 +403,16 @@
     .app-shell.sidebar-collapsed .sidebar-link {
         justify-content: center;
         padding: 12px 0;
-        border-radius: 12px;
+        border-radius: 9px;
     }
 
     .app-shell.sidebar-collapsed .sidebar-icon {
         flex-basis: auto;
-        width: 24px;
+    }
+
+    .app-shell.sidebar-state-loading .sidebar,
+    .app-shell.sidebar-state-loading .content-with-sidebar {
+        transition: none;
     }
 
     @media (max-width: 760px) {
@@ -271,75 +437,200 @@
     }
 </style>
 
+<script>
+    (function () {
+        const appShell = document.currentScript.parentElement;
+
+        if (
+            appShell
+            && window.innerWidth > 760
+            && localStorage.getItem('swiftbite.sidebarCollapsed') === 'true'
+        ) {
+            appShell.classList.add('sidebar-collapsed', 'sidebar-state-loading');
+        }
+    })();
+</script>
+
+@php
+    $authLevel = (int) session('auth_level');
+    $authName = session('auth_name', 'User');
+    $roleName = match ($authLevel) {
+        4 => 'Owner',
+        3 => 'Manager',
+        2 => 'Cashier',
+        default => 'Customer',
+    };
+    $dashboardRoute = match ($authLevel) {
+        4, 3 => route('admin.dashboard'),
+        2 => route('cashier.dashboard'),
+        default => route('customer.home'),
+    };
+@endphp
+
 <aside class="sidebar">
     <div class="sidebar-brand">
-        <span class="sidebar-logo">QB</span>
-        <div class="sidebar-brand-text">
-            <strong>QuickBite</strong>
-            <span>Sistem Pesanan QR</span>
-        </div>
+        <a class="sidebar-brand-link" href="{{ $dashboardRoute }}" aria-label="Buka dashboard">
+            <span class="sidebar-logo">SB</span>
+            <div class="sidebar-brand-text">
+                <strong>SwiftBite</strong>
+            </div>
+        </a>
         <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">
-            <span></span>
+            <span class="hamburger-icon" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+            </span>
         </button>
     </div>
 
     <nav class="sidebar-nav">
-        @if ((int) session('auth_level') === 1)
+        @if ($authLevel === 1)
             <a class="sidebar-link {{ request()->routeIs('customer.home') ? 'active' : '' }}" href="{{ route('customer.home') }}" title="Dashboard Pelanggan">
-                <span class="sidebar-icon">DP</span>
+                <span class="sidebar-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v13A2.5 2.5 0 0 1 17.5 21h-11A2.5 2.5 0 0 1 4 18.5v-13Z" />
+                        <path d="M8 8h8M8 12h8M8 16h5" />
+                    </svg>
+                </span>
                 <span class="sidebar-label">Dashboard Pelanggan</span>
             </a>
-        @elseif ((int) session('auth_level') === 2)
+        @endif
+
+        @if ($authLevel === 2)
             <a class="sidebar-link {{ request()->routeIs('cashier.dashboard') ? 'active' : '' }}" href="{{ route('cashier.dashboard') }}" title="Pesanan">
-                <span class="sidebar-icon">PS</span>
+                <span class="sidebar-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                        <path d="M6 3h12l-1 18H7L6 3Z" />
+                        <path d="M9 7h6M9 11h6M9 15h4" />
+                    </svg>
+                </span>
                 <span class="sidebar-label">Pesanan</span>
             </a>
             <a class="sidebar-link {{ request()->routeIs('cashier.history') ? 'active' : '' }}" href="{{ route('cashier.history') }}" title="Riwayat Pesanan">
-                <span class="sidebar-icon">RP</span>
+                <span class="sidebar-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                        <path d="M12 8v5l3 2" />
+                        <path d="M4 12a8 8 0 1 0 2.34-5.66" />
+                        <path d="M4 4v5h5" />
+                    </svg>
+                </span>
                 <span class="sidebar-label">Riwayat Pesanan</span>
             </a>
-        @elseif ((int) session('auth_level') === 3)
-            <a class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" title="Dashboard Admin">
-                <span class="sidebar-icon">DA</span>
-                <span class="sidebar-label">Dashboard Admin</span>
+        @endif
+
+        @if (in_array($authLevel, [3, 4], true))
+            <a class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" title="Dashboard Management">
+                <span class="sidebar-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                        <path d="M4 4h7v7H4V4ZM13 4h7v7h-7V4ZM4 13h7v7H4v-7ZM13 13h7v7h-7v-7Z" />
+                    </svg>
+                </span>
+                <span class="sidebar-label">Dashboard Management</span>
             </a>
         @endif
     </nav>
 
     <div class="sidebar-footer">
-        <div class="sidebar-user">
-            <span>
-                @if ((int) session('auth_level') === 3)
-                    Admin
-                @elseif ((int) session('auth_level') === 2)
-                    Kasir
-                @else
-                    Pelanggan
-                @endif
-            </span>
-            {{ session('auth_name') }}
+        <div class="sidebar-account" id="sidebarAccount">
+            <button type="button" class="sidebar-user-info" id="accountMenuToggle" aria-label="Buka menu akun" aria-expanded="false" aria-controls="accountMenu">
+                <span class="sidebar-avatar">{{ strtoupper(substr($authName, 0, 1)) }}</span>
+                <span class="sidebar-user-details">
+                    <span class="sidebar-user-name">{{ $authName }}</span>
+                    <span class="sidebar-user-role">{{ $roleName }}</span>
+                </span>
+            </button>
+
+            <div class="account-menu" id="accountMenu">
+                <div class="account-menu-head">
+                    <div class="account-menu-avatar">{{ strtoupper(substr($authName, 0, 1)) }}</div>
+                    <div class="sidebar-user-details">
+                        <div class="account-menu-name">{{ $authName }}</div>
+                        <div class="account-menu-role">{{ $roleName }}</div>
+                    </div>
+                </div>
+                <div class="account-menu-main">
+                    <a class="account-menu-link" href="{{ route('profile.show') }}">
+                        <svg class="account-menu-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
+                            <path d="M20 21a8 8 0 0 0-16 0" />
+                            <path d="M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" />
+                        </svg>
+                        <span>Profil</span>
+                    </a>
+                    <form method="post" action="{{ route('logout') }}" class="account-menu-logout">
+                        @csrf
+                        <button type="submit" class="account-menu-btn">
+                            <svg class="account-menu-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
+                                <path d="M10 17l5-5-5-5" />
+                                <path d="M15 12H3" />
+                                <path d="M21 4v16" />
+                            </svg>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
-        <form method="post" action="{{ route('logout') }}">
-            @csrf
-            <button class="sidebar-logout" type="submit">Logout</button>
-        </form>
     </div>
 </aside>
 
 <script>
     (function () {
+        const sidebarStorageKey = 'swiftbite.sidebarCollapsed';
+
         function initSidebarToggle() {
             const toggleButton = document.getElementById('sidebarToggle');
             const appShell = toggleButton ? toggleButton.closest('.app-shell') : null;
+            const account = document.getElementById('sidebarAccount');
+            const accountToggle = document.getElementById('accountMenuToggle');
+
+            function closeAccountMenu() {
+                if (!account || !accountToggle) {
+                    return;
+                }
+
+                account.classList.remove('open');
+                accountToggle.setAttribute('aria-expanded', 'false');
+            }
+
+            if (account && accountToggle) {
+                accountToggle.addEventListener('click', function () {
+                    const isOpen = account.classList.toggle('open');
+                    accountToggle.setAttribute('aria-expanded', String(isOpen));
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!account.contains(event.target)) {
+                        closeAccountMenu();
+                    }
+                });
+
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape') {
+                        closeAccountMenu();
+                    }
+                });
+            }
 
             if (!appShell || !toggleButton || window.innerWidth <= 760) {
                 return;
             }
 
+            if (localStorage.getItem(sidebarStorageKey) === 'true') {
+                appShell.classList.add('sidebar-collapsed');
+                toggleButton.setAttribute('aria-expanded', 'false');
+            }
+
+            requestAnimationFrame(function () {
+                appShell.classList.remove('sidebar-state-loading');
+            });
+
             toggleButton.addEventListener('click', function () {
                 appShell.classList.toggle('sidebar-collapsed');
                 const expanded = !appShell.classList.contains('sidebar-collapsed');
                 toggleButton.setAttribute('aria-expanded', String(expanded));
+                localStorage.setItem(sidebarStorageKey, String(!expanded));
+                closeAccountMenu();
             });
         }
 

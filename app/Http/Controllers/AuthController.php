@@ -14,7 +14,7 @@ class AuthController extends Controller
     {
         if ($request->session()->has('auth_user_id')) {
             return match ((int) $request->session()->get('auth_level')) {
-                3 => redirect()->route('admin.dashboard'),
+                3, 4 => redirect()->route('admin.dashboard'),
                 2 => redirect()->route('cashier.dashboard'),
                 default => redirect()->route('customer.home'),
             };
@@ -47,7 +47,7 @@ class AuthController extends Controller
         ]);
 
         return match ($user->level) {
-            3 => redirect()->route('admin.dashboard'),
+            3, 4 => redirect()->route('admin.dashboard'),
             2 => redirect()->route('cashier.dashboard'),
             default => redirect()->route('customer.home'),
         };

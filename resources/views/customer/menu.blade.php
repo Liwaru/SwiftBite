@@ -6,23 +6,34 @@
     <title>Menu {{ $table->name }}</title>
     <style>
         :root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-        body { margin: 0; background: #f8f6f0; color: #211f1b; }
+        body {
+            margin: 0;
+            background:
+                linear-gradient(135deg, rgba(53, 32, 22, .82), rgba(111, 69, 43, .9)),
+                repeating-linear-gradient(45deg, rgba(255, 246, 232, .08) 0 1px, transparent 1px 14px),
+                #6f452b;
+            color: #2b1c15;
+        }
         main { max-width: 760px; margin: 0 auto; padding: 24px 16px 108px; }
         h1, h2, h3, p { margin: 0; }
         h1 { font-size: 34px; }
         h2 { margin: 28px 0 12px; font-size: 20px; }
         h3 { font-size: 17px; }
-        .muted { color: #766f64; }
+        .muted { color: #7a5a46; }
         .top { display: grid; gap: 8px; margin-bottom: 18px; }
-        .item { display: grid; grid-template-columns: 1fr 86px; gap: 14px; align-items: center; background: #fffdfa; border: 1px solid #e5dccc; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+        .top, h2 { color: #fff8ed; }
+        .top .muted { color: #ead4ba; }
+        .item { display: grid; grid-template-columns: 1fr 86px; gap: 14px; align-items: center; background: #fff6e8; border: 1px solid #e1ad73; border-radius: 8px; padding: 14px; margin-bottom: 10px; box-shadow: 0 12px 30px rgba(39, 20, 13, .12); }
+        .item h3, .item .price { color: #2b1c15; }
+        .item .muted { color: #7a5a46; }
         .price { font-weight: 900; margin-top: 8px; }
-        input, textarea, select { box-sizing: border-box; width: 100%; border: 1px solid #d7cab8; border-radius: 7px; padding: 11px; font: inherit; background: white; }
+        input, textarea, select { box-sizing: border-box; width: 100%; border: 1px solid #d8b893; border-radius: 7px; padding: 11px; font: inherit; background: #fffaf2; color: #352016; }
         input[type="number"] { text-align: center; font-weight: 900; }
         label { display: grid; gap: 6px; font-weight: 800; font-size: 13px; }
-        .checkout { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255, 253, 250, .96); border-top: 1px solid #dfd2c1; backdrop-filter: blur(10px); }
+        .checkout { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255, 246, 232, .96); border-top: 1px solid #d8b893; backdrop-filter: blur(10px); }
         .checkout-inner { max-width: 760px; margin: 0 auto; padding: 12px 16px; display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
-        button { border: 0; border-radius: 7px; background: #2f6f61; color: white; padding: 12px 14px; font-weight: 900; cursor: pointer; }
-        .notice { padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; background: #fff0ed; color: #9c2b1e; border: 1px solid #f2beb5; }
+        button { border: 0; border-radius: 7px; background: linear-gradient(135deg, #6f452b, #352016); color: #fff8ed; padding: 12px 14px; font-weight: 900; cursor: pointer; }
+        .notice { padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; background: #fff0e8; color: #8a341b; border: 1px solid #e6b292; }
         @media (max-width: 680px) { .checkout-inner { grid-template-columns: 1fr; } .item { grid-template-columns: 1fr 74px; } }
     </style>
 </head>

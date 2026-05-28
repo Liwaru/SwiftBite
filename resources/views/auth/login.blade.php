@@ -239,6 +239,13 @@
             border-radius: 7px;
             margin-bottom: 16px;
             font-weight: 800;
+            cursor: pointer;
+            transition: opacity .18s ease, transform .18s ease;
+        }
+
+        .notice.is-hiding {
+            opacity: 0;
+            transform: translateY(-4px);
         }
 
         .error {
@@ -282,22 +289,26 @@
 <body>
     <main class="shell">
         <section class="brand-panel" aria-label="SwiftBite">
+            <div class="mark">SB</div>
             <div class="brand-copy">
                 <h1>SwiftBite</h1>
+                <p>Platform kasir dan pemesanan digital restoran.</p>
             </div>
+            <p class="footnote">QR table ordering system</p>
         </section>
 
         <section class="form-panel">
             <div class="form-heading">
                 <h2>Masuk akun</h2>
+                <p>Masuk untuk mulai mengelola pesanan.</p>
             </div>
 
             @if (session('success'))
-                <div class="notice success">{{ session('success') }}</div>
+                <div class="notice success" role="button" tabindex="0" aria-label="Tutup notifikasi">{{ session('success') }}</div>
             @endif
 
             @if ($errors->any())
-                <div class="notice error">{{ $errors->first() }}</div>
+                <div class="notice error" role="button" tabindex="0" aria-label="Tutup notifikasi">{{ $errors->first() }}</div>
             @endif
 
             <form method="post" action="{{ route('login.store') }}">
@@ -332,6 +343,7 @@
     <script>
         const togglePassword = document.querySelector('.toggle-password');
         const passwordInput = document.querySelector('#password');
+        const notices = document.querySelectorAll('.notice');
 
         togglePassword.addEventListener('click', () => {
             const isHidden = passwordInput.type === 'password';
@@ -339,6 +351,21 @@
             passwordInput.type = isHidden ? 'text' : 'password';
             togglePassword.classList.toggle('is-visible', isHidden);
             togglePassword.setAttribute('aria-label', isHidden ? 'Sembunyikan password' : 'Lihat password');
+        });
+
+        notices.forEach((notice) => {
+            const dismiss = () => {
+                notice.classList.add('is-hiding');
+                setTimeout(() => notice.remove(), 180);
+            };
+
+            notice.addEventListener('click', dismiss);
+            notice.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    dismiss();
+                }
+            });
         });
     </script>
 </body>
