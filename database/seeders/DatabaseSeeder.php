@@ -32,16 +32,34 @@ class DatabaseSeeder extends Seeder
             [
                 'email' => 'kasir@example.com',
                 'password' => 'kasir',
+                'level' => 3,
+            ],
+        );
+
+        User::updateOrCreate(
+            ['name' => 'waiter'],
+            [
+                'email' => 'waiter@example.com',
+                'password' => 'waiter',
                 'level' => 2,
             ],
         );
 
         User::updateOrCreate(
-            ['name' => 'admin'],
+            ['name' => 'manager'],
             [
-                'email' => 'admin@example.com',
-                'password' => 'admin',
-                'level' => 3,
+                'email' => 'manager@example.com',
+                'password' => 'manager',
+                'level' => 4,
+            ],
+        );
+
+        User::updateOrCreate(
+            ['name' => 'owner'],
+            [
+                'email' => 'owner@example.com',
+                'password' => 'owner',
+                'level' => 5,
             ],
         );
 

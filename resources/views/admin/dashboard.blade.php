@@ -141,7 +141,7 @@
                                 <div>
                                     <span class="badge">{{ $order->status }}</span>
                                     <h3>#{{ $order->id }} - {{ $order->diningTable->name }}</h3>
-                                    <p class="muted">{{ $order->customer_name ?: 'Tanpa nama' }} - {{ strtoupper($order->payment_method) }}</p>
+                                    <p class="muted">{{ $order->customer_name ?: 'Tanpa nama' }} - {{ $order->payment_method === 'cash' ? 'Tunai' : strtoupper($order->payment_method) }}</p>
                                 </div>
                                 <span class="price">Rp{{ number_format($order->total_price, 0, ',', '.') }}</span>
                             </div>

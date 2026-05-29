@@ -5,7 +5,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CashierController;
 use App\Http\Controllers\CustomerMenuController;
 use App\Http\Controllers\CustomerPageController;
+use App\Http\Controllers\ManagerController;
+use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\WaiterController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
@@ -18,14 +21,28 @@ Route::middleware('simple.auth')->group(function () {
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 });
 
-Route::middleware(['simple.auth', 'user.level:3,4'])->group(function () {
+Route::middleware(['simple.auth', 'user.level:2'])->group(function () {
+    Route::get('/waiter', [WaiterController::class, 'dashboard'])->name('waiter.dashboard');
+    Route::patch('/waiter/orders/{order}/complete', [WaiterController::class, 'complete'])->name('waiter.orders.complete');
+});
+
+Route::middleware(['simple.auth', 'user.level:4'])->group(function () {
+    Route::get('/manager', [ManagerController::class, 'dashboard'])->name('manager.dashboard');
+    Route::get('/manager/{section}', [ManagerController::class, 'page'])->name('manager.page');
+});
+
+Route::middleware(['simple.auth', 'user.level:5'])->group(function () {
+    Route::get('/owner', [OwnerController::class, 'dashboard'])->name('owner.dashboard');
+});
+
+Route::middleware(['simple.auth', 'user.level:4,5'])->group(function () {
     Route::get('/admin', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::post('/admin/tables', [AdminController::class, 'storeTable'])->name('admin.tables.store');
     Route::post('/admin/menu-items', [AdminController::class, 'storeMenuItem'])->name('admin.menu-items.store');
     Route::patch('/admin/orders/{order}/status', [AdminController::class, 'updateOrderStatus'])->name('admin.orders.status');
 });
 
-Route::middleware(['simple.auth', 'user.level:2'])->group(function () {
+Route::middleware(['simple.auth', 'user.level:3'])->group(function () {
     Route::get('/kasir', [CashierController::class, 'dashboard'])->name('cashier.dashboard');
     Route::get('/kasir/live-orders', [CashierController::class, 'liveOrders'])->name('cashier.orders.live');
     Route::get('/kasir/riwayat', [CashierController::class, 'history'])->name('cashier.history');

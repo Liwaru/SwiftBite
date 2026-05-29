@@ -43,19 +43,39 @@
         .tab.active { background: var(--cream); border-color: var(--cream); color: var(--sidebar-brown-dark); }
         .badge { display: inline-flex; width: fit-content; padding: 4px 8px; border-radius: 999px; background: rgba(255, 246, 232, .16); color: var(--cream); font-size: 12px; font-weight: 900; }
         .badge.payment { background: #edf5e8; color: #355b28; }
-        .badge-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 7px; }
+        .badge.pending { background: #fff1cf; color: #7a4b12; }
+        .badge.cancelled { background: #ffe2dc; color: #7b2418; }
+        .badge-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+        .order-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; color: rgba(255, 246, 232, .76); line-height: 1.5; }
+        .wait-time { display: inline-flex; width: fit-content; color: #fff4df; font-size: 13px; font-weight: 900; }
         .live-status { display: inline-flex; align-items: center; gap: 8px; color: rgba(255, 246, 232, .78); font-size: 13px; font-weight: 800; }
         .live-dot { width: 9px; height: 9px; border-radius: 999px; background: #5f8f3d; box-shadow: 0 0 0 4px rgba(95, 143, 61, .14); }
         .live-dot.syncing { background: #b8844d; box-shadow: 0 0 0 4px rgba(184, 132, 77, .16); }
         .order-list { display: grid; gap: 12px; }
-        .order-card { display: grid; gap: 12px; border: 1px solid rgba(255, 246, 232, .22); border-radius: 8px; background: rgba(255, 246, 232, .08); padding: 14px; }
+        .order-card { display: grid; gap: 18px; border: 1px solid rgba(255, 246, 232, .22); border-radius: 8px; background: rgba(255, 246, 232, .08); padding: 18px 14px 20px; }
         .row { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
-        .price { font-weight: 900; white-space: nowrap; }
-        .items { display: grid; gap: 4px; }
-        form.status { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+        .price { font-size: 18px; font-weight: 900; white-space: nowrap; }
+        .items { display: grid; gap: 7px; margin-top: 2px; padding-bottom: 4px; }
+        .detail-toggle { width: fit-content; color: var(--cream); font-weight: 900; cursor: pointer; list-style: none; }
+        .detail-toggle::-webkit-details-marker { display: none; }
+        .detail-toggle::before { content: "▼ "; font-size: 12px; }
+        .order-detail { display: grid; gap: 12px; border-top: 1px solid rgba(255, 246, 232, .16); padding-top: 16px; }
+        .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; }
+        .detail-grid span { display: block; color: rgba(255, 246, 232, .68); font-size: 12px; font-weight: 800; }
+        .detail-grid strong { display: block; margin-top: 2px; }
+        form.status { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .status-done { display: inline-flex; width: fit-content; border-radius: 7px; background: #edf5e8; color: #355b28; padding: 10px 13px; font-weight: 900; }
         select, input { width: 100%; box-sizing: border-box; border: 1px solid rgba(255, 246, 232, .34); border-radius: 7px; padding: 10px 11px; font: inherit; background: var(--cream-soft); color: #352016; }
         button, .button { border: 0; border-radius: 7px; background: var(--cream); color: var(--sidebar-brown-dark); padding: 10px 13px; font-weight: 900; cursor: pointer; text-decoration: none; text-align: center; }
+        button:disabled { cursor: default; opacity: .86; }
         .button.secondary, button.secondary { background: rgba(255, 246, 232, .16); color: var(--cream); border: 1px solid rgba(255, 246, 232, .26); }
+        .pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
+        .pagination-info { color: rgba(255, 246, 232, .76); font-size: 13px; font-weight: 800; }
+        .pagination-links { display: flex; flex-wrap: wrap; gap: 7px; }
+        .page-link, .page-current, .page-disabled { min-width: 34px; box-sizing: border-box; border-radius: 7px; padding: 8px 10px; text-align: center; font-size: 13px; font-weight: 900; }
+        .page-link { border: 1px solid rgba(255, 246, 232, .26); color: var(--cream); text-decoration: none; background: rgba(255, 246, 232, .1); }
+        .page-current { background: var(--cream); color: var(--sidebar-brown-dark); }
+        .page-disabled { border: 1px solid rgba(255, 246, 232, .12); color: rgba(255, 246, 232, .45); }
         .pos-panel { display: grid; gap: 14px; }
         .menu-preview { display: grid; gap: 8px; }
         .menu-row { display: flex; justify-content: space-between; gap: 10px; align-items: center; border-top: 1px solid rgba(255, 246, 232, .18); padding-top: 8px; }
@@ -64,7 +84,7 @@
         .toast { position: fixed; right: 24px; bottom: 24px; z-index: 40; transform: translateY(18px); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; background: #352016; color: #fff8ed; border: 1px solid #8b6040; border-radius: 8px; padding: 12px 14px; font-weight: 900; box-shadow: 0 16px 38px rgba(39, 20, 13, .24); }
         .toast.show { transform: translateY(0); opacity: 1; }
         @media (max-width: 1050px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dashboard-grid { grid-template-columns: 1fr; } }
-        @media (max-width: 760px) { main { padding: 24px 16px 44px; } .topbar { align-items: flex-start; flex-direction: column; } .stats { grid-template-columns: 1fr; } form.status, .quick-actions { grid-template-columns: 1fr; } .row { flex-direction: column; } }
+        @media (max-width: 760px) { main { padding: 24px 16px 44px; } .topbar { align-items: flex-start; flex-direction: column; } .stats { grid-template-columns: 1fr; } form.status, .quick-actions, .detail-grid { grid-template-columns: 1fr; } .row { flex-direction: column; } .pagination { align-items: flex-start; flex-direction: column; } }
     </style>
 </head>
 <body>
@@ -75,8 +95,7 @@
             <main>
                 <div class="topbar">
                     <div>
-                        <p class="muted">Morning bakery cashier</p>
-                        <h1>Dashboard Kasir</h1>
+                        <h1>Dashboard</h1>
                     </div>
                 </div>
 
@@ -114,7 +133,7 @@
                         </div>
 
                         <div class="tabs">
-                            @foreach (['semua' => 'Semua', 'menunggu' => 'Menunggu', 'diproses' => 'Diproses', 'selesai' => 'Selesai'] as $value => $label)
+                            @foreach (['aktif' => 'Aktif', 'menunggu' => 'Menunggu', 'diproses' => 'Diproses', 'selesai' => 'Selesai'] as $value => $label)
                                 <a class="tab {{ $status === $value ? 'active' : '' }}" href="{{ route('cashier.dashboard', ['status' => $value]) }}">{{ $label }}</a>
                             @endforeach
                         </div>
@@ -159,6 +178,10 @@
 
     <div class="toast" id="liveToast">Pesanan baru masuk.</div>
 
+    @php
+        $liveOrdersUrl = route('cashier.orders.live', ['status' => $status, 'page' => request('page', 1)]);
+    @endphp
+
     <script>
         (function () {
             const orderList = document.getElementById('cashierOrderList');
@@ -166,7 +189,7 @@
             const liveText = document.getElementById('liveText');
             const toast = document.getElementById('liveToast');
             const formatter = new Intl.NumberFormat('id-ID');
-            const liveUrl = @json(route('cashier.orders.live', ['status' => $status]));
+            const liveUrl = @json($liveOrdersUrl);
             let latestOrderId = getLatestOrderId();
             let firstSync = true;
             let toastTimer = null;

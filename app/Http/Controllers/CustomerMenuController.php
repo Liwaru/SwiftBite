@@ -8,6 +8,7 @@ use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -34,7 +35,7 @@ class CustomerMenuController extends Controller
 
         $validated = $request->validate([
             'customer_name' => ['nullable', 'string', 'max:100'],
-            'payment_method' => ['required', 'in:cash,qris'],
+            'payment_method' => ['required', 'in:cash,qris,gopay,ovo,dana,shopeepay'],
             'notes' => ['nullable', 'string', 'max:500'],
             'quantities' => ['required', 'array'],
             'quantities.*' => ['nullable', 'integer', 'min:0', 'max:20'],
@@ -57,12 +58,22 @@ class CustomerMenuController extends Controller
         $order = DB::transaction(function () use ($table, $validated, $quantities, $items) {
             $total = 0;
 
-            $order = Order::create([
+            $orderData = [
                 'id_meja' => $table->id_meja,
                 'kode_pesanan' => 'ORD-' . now()->format('YmdHis') . '-' . Str::upper(Str::random(4)),
                 'metode_pembayaran' => $validated['payment_method'],
                 'status' => 'menunggu',
-            ]);
+            ];
+
+            if (Schema::hasColumn('orders', 'customer_name')) {
+                $orderData['customer_name'] = $validated['customer_name'] ?? null;
+            }
+
+            if (Schema::hasColumn('orders', 'notes')) {
+                $orderData['notes'] = $validated['notes'] ?? null;
+            }
+
+            $order = Order::create($orderData);
 
             foreach ($items as $item) {
                 $quantity = $quantities->get($item->id_menu, 0);

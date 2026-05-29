@@ -159,26 +159,92 @@
     }
 
     .sidebar-icon {
-        flex: 0 0 26px;
-        width: 26px;
-        height: 26px;
+        flex: 0 0 30px;
+        width: 30px;
+        height: 30px;
         display: grid;
         place-items: center;
-        border: 1px solid rgba(255, 248, 237, .38);
+        border: 1.5px solid rgba(255, 248, 237, .48);
         border-radius: 7px;
-        color: rgba(255, 248, 237, .92);
+        color: #fff8ed;
     }
 
     .sidebar-icon svg {
-        width: 15px;
-        height: 15px;
+        width: 18px;
+        height: 18px;
         stroke: currentColor;
+        stroke-width: 2.35;
+        stroke-linecap: round;
+        stroke-linejoin: round;
     }
 
     .sidebar-label {
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+
+    .sidebar-group {
+        display: grid;
+        gap: 8px;
+    }
+
+    .sidebar-group summary {
+        list-style: none;
+    }
+
+    .sidebar-group summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .sidebar-group-toggle {
+        cursor: pointer;
+    }
+
+    .sidebar-caret {
+        margin-left: auto;
+        color: currentColor;
+        font-size: 12px;
+        transition: transform .2s ease;
+    }
+
+    .sidebar-group[open] .sidebar-caret {
+        transform: rotate(180deg);
+    }
+
+    .sidebar-subnav {
+        display: grid;
+        gap: 8px;
+        max-height: 0;
+        overflow: hidden;
+        padding-left: 12px;
+        opacity: 0;
+        transform: translateY(-12px) scaleY(.94);
+        transform-origin: top;
+        transition: max-height .36s cubic-bezier(.2, .8, .2, 1), opacity .28s ease, transform .32s cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .sidebar-group[open] .sidebar-subnav {
+        max-height: 360px;
+        opacity: 1;
+        transform: translateY(0) scaleY(1);
+    }
+
+    .sidebar-subnav .sidebar-link {
+        padding: 10px 12px;
+        background: rgba(255, 246, 232, .07);
+    }
+
+    .sidebar-subnav .sidebar-link:hover,
+    .sidebar-subnav .sidebar-link.active {
+        background: #fff6e8;
+        color: var(--sidebar-red-dark);
+    }
+
+    .sidebar-subnav .sidebar-link:hover .sidebar-icon,
+    .sidebar-subnav .sidebar-link.active .sidebar-icon {
+        border-color: rgba(39, 20, 13, .2);
+        color: var(--sidebar-red-dark);
     }
 
     .sidebar-footer {
@@ -455,14 +521,17 @@
     $authLevel = (int) session('auth_level');
     $authName = session('auth_name', 'User');
     $roleName = match ($authLevel) {
-        4 => 'Owner',
-        3 => 'Manager',
-        2 => 'Cashier',
+        5 => 'Owner',
+        4 => 'Manager',
+        3 => 'Cashier',
+        2 => 'Waiter',
         default => 'Customer',
     };
     $dashboardRoute = match ($authLevel) {
-        4, 3 => route('admin.dashboard'),
-        2 => route('cashier.dashboard'),
+        5 => route('owner.dashboard'),
+        4 => route('manager.dashboard'),
+        3 => route('cashier.dashboard'),
+        2 => route('waiter.dashboard'),
         default => route('customer.home'),
     };
 @endphp
@@ -488,9 +557,10 @@
         @if ($authLevel === 1)
             <a class="sidebar-link {{ request()->routeIs('customer.home') ? 'active' : '' }}" href="{{ route('customer.home') }}" title="Dashboard Pelanggan">
                 <span class="sidebar-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v13A2.5 2.5 0 0 1 17.5 21h-11A2.5 2.5 0 0 1 4 18.5v-13Z" />
-                        <path d="M8 8h8M8 12h8M8 16h5" />
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M3 11.5 12 4l9 7.5" />
+                        <path d="M5 10.5V20h14v-9.5" />
+                        <path d="M9 20v-6h6v6" />
                     </svg>
                 </span>
                 <span class="sidebar-label">Dashboard Pelanggan</span>
@@ -498,35 +568,132 @@
         @endif
 
         @if ($authLevel === 2)
+            <a class="sidebar-link {{ request()->routeIs('waiter.dashboard') ? 'active' : '' }}" href="{{ route('waiter.dashboard') }}" title="Pesanan Antar">
+                <span class="sidebar-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M6 4h12v6H6V4Z" />
+                        <path d="M4 14h16" />
+                        <path d="M7 14v6M17 14v6" />
+                        <path d="M9 7h6" />
+                    </svg>
+                </span>
+                <span class="sidebar-label">Pesanan Antar</span>
+            </a>
+        @endif
+
+        @if ($authLevel === 3)
             <a class="sidebar-link {{ request()->routeIs('cashier.dashboard') ? 'active' : '' }}" href="{{ route('cashier.dashboard') }}" title="Pesanan">
                 <span class="sidebar-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                        <path d="M6 3h12l-1 18H7L6 3Z" />
-                        <path d="M9 7h6M9 11h6M9 15h4" />
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5 4h14v16H5V4Z" />
+                        <path d="M9 8h6M9 12h6M9 16h3" />
+                        <path d="M16 16h2" />
                     </svg>
                 </span>
                 <span class="sidebar-label">Pesanan</span>
             </a>
-            <a class="sidebar-link {{ request()->routeIs('cashier.history') ? 'active' : '' }}" href="{{ route('cashier.history') }}" title="Riwayat Pesanan">
+            <a class="sidebar-link {{ request()->routeIs('cashier.history') ? 'active' : '' }}" href="{{ route('cashier.history') }}" title="Riwayat Transaksi">
                 <span class="sidebar-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                    <svg viewBox="0 0 24 24" fill="none">
                         <path d="M12 8v5l3 2" />
                         <path d="M4 12a8 8 0 1 0 2.34-5.66" />
                         <path d="M4 4v5h5" />
                     </svg>
                 </span>
-                <span class="sidebar-label">Riwayat Pesanan</span>
+                <span class="sidebar-label">Riwayat Transaksi</span>
             </a>
         @endif
 
-        @if (in_array($authLevel, [3, 4], true))
-            <a class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" title="Dashboard Management">
+        @if ($authLevel === 4)
+            @php
+                $dataMasterMenus = [
+                    'users' => [
+                        'label' => 'Data User',
+                        'icon' => '<path d="M16 20v-2a4 4 0 0 0-8 0v2" /><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /><path d="M19 8v5M21.5 10.5h-5" />',
+                    ],
+                    'menus' => [
+                        'label' => 'Data Menu',
+                        'icon' => '<path d="M5 4h14v16H5V4Z" /><path d="M9 8h6M9 12h6M9 16h3" /><path d="M7 8h.01M7 12h.01M7 16h.01" />',
+                    ],
+                    'tables' => [
+                        'label' => 'Data Meja',
+                        'icon' => '<path d="M4 10h16" /><path d="M6 10l-2 9M18 10l2 9" /><path d="M8 5h8a2 2 0 0 1 2 2v3H6V7a2 2 0 0 1 2-2Z" />',
+                    ],
+                    'stock' => [
+                        'label' => 'Stok Produk',
+                        'icon' => '<path d="M5 8h8l-1 12H6L5 8Z" /><path d="M7 5h4" /><path d="M16 10h3a2 2 0 0 1 0 4h-3" /><path d="M15 8v12h2a4 4 0 0 0 4-4v-2" />',
+                    ],
+                ];
+
+                $managerMenus = [
+                    'access' => [
+                        'label' => 'Hak Akses',
+                        'icon' => '<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4Z" /><path d="M9 12l2 2 4-4" />',
+                    ],
+                    'database' => [
+                        'label' => 'Database',
+                        'icon' => '<path d="M4 7c0 2 3.58 4 8 4s8-2 8-4-3.58-4-8-4-8 2-8 4Z" /><path d="M4 7v10c0 2 3.58 4 8 4s8-2 8-4V7" /><path d="M4 12c0 2 3.58 4 8 4s8-2 8-4" />',
+                    ],
+                    'activity' => [
+                        'label' => 'Catatan Aktivitas',
+                        'icon' => '<path d="M5 4h14v16H5V4Z" /><path d="M8 8h8M8 12h8M8 16h5" /><path d="M17 20l3 2" />',
+                    ],
+                ];
+
+                $dataMasterSections = array_keys($dataMasterMenus);
+                $dataMasterOpen = request()->routeIs('manager.page') && in_array(request()->route('section'), $dataMasterSections, true);
+            @endphp
+
+            <details class="sidebar-group" @open($dataMasterOpen)>
+                <summary class="sidebar-link sidebar-group-toggle">
+                    <span class="sidebar-icon">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M4 5h7v7H4V5Z" />
+                            <path d="M13 5h7v7h-7V5Z" />
+                            <path d="M4 14h7v5H4v-5Z" />
+                            <path d="M13 14h7v5h-7v-5Z" />
+                        </svg>
+                    </span>
+                    <span class="sidebar-label">Data Master</span>
+                    <span class="sidebar-caret">▼</span>
+                </summary>
+
+                <div class="sidebar-subnav">
+                    @foreach ($dataMasterMenus as $section => $menu)
+                        <a class="sidebar-link {{ request()->routeIs('manager.page') && request()->route('section') === $section ? 'active' : '' }}" href="{{ route('manager.page', $section) }}" title="{{ $menu['label'] }}">
+                            <span class="sidebar-icon">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    {!! $menu['icon'] !!}
+                                </svg>
+                            </span>
+                            <span class="sidebar-label">{{ $menu['label'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </details>
+
+            @foreach ($managerMenus as $section => $menu)
+                <a class="sidebar-link {{ request()->routeIs('manager.page') && request()->route('section') === $section ? 'active' : '' }}" href="{{ route('manager.page', $section) }}" title="{{ $menu['label'] }}">
+                    <span class="sidebar-icon">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            {!! $menu['icon'] !!}
+                        </svg>
+                    </span>
+                    <span class="sidebar-label">{{ $menu['label'] }}</span>
+                </a>
+            @endforeach
+        @endif
+
+        @if ($authLevel === 5)
+            <a class="sidebar-link {{ request()->routeIs('owner.dashboard') ? 'active' : '' }}" href="{{ route('owner.dashboard') }}" title="Dashboard Owner">
                 <span class="sidebar-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                        <path d="M4 4h7v7H4V4ZM13 4h7v7h-7V4ZM4 13h7v7H4v-7ZM13 13h7v7h-7v-7Z" />
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3l8 5v8l-8 5-8-5V8l8-5Z" />
+                        <path d="M12 7v10" />
+                        <path d="M8 10l4 2 4-2" />
                     </svg>
                 </span>
-                <span class="sidebar-label">Dashboard Management</span>
+                <span class="sidebar-label">Dashboard Owner</span>
             </a>
         @endif
     </nav>

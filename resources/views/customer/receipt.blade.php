@@ -35,7 +35,7 @@
             <div>
                 <p class="muted">{{ $table->name }}</p>
                 <h1>Pesanan #{{ $order->id }}</h1>
-                <p class="muted">Status: {{ $order->status }} - Bayar: {{ strtoupper($order->payment_method) }}</p>
+                <p class="muted">Status: {{ $order->status }} - Bayar: {{ $order->payment_method === 'cash' ? 'Tunai' : strtoupper($order->payment_method) }}</p>
             </div>
 
             @foreach ($order->items as $item)

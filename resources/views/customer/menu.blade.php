@@ -42,7 +42,7 @@
         <div class="top">
             <p class="muted">Pesanan meja digital</p>
             <h1>{{ $table->name }}</h1>
-            <p class="muted">Pilih jumlah menu, lalu kirim pesanan. Pembayaran bisa cash atau QRIS dummy.</p>
+            <p class="muted">Pilih jumlah menu, lalu kirim pesanan. Pembayaran bisa tunai atau QRIS dummy.</p>
         </div>
 
         @if ($errors->any())
@@ -82,8 +82,12 @@
                     <label>
                         Bayar
                         <select name="payment_method" required>
-                            <option value="cash" @selected(old('payment_method') === 'cash')>Cash</option>
+                            <option value="cash" @selected(old('payment_method') === 'cash')>Tunai</option>
                             <option value="qris" @selected(old('payment_method') === 'qris')>QRIS Dummy</option>
+                            <option value="gopay" @selected(old('payment_method') === 'gopay')>GoPay</option>
+                            <option value="ovo" @selected(old('payment_method') === 'ovo')>OVO</option>
+                            <option value="dana" @selected(old('payment_method') === 'dana')>DANA</option>
+                            <option value="shopeepay" @selected(old('payment_method') === 'shopeepay')>ShopeePay</option>
                         </select>
                     </label>
                     <button type="submit">Kirim Pesanan</button>

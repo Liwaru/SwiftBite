@@ -16,6 +16,8 @@ class Order extends Model
         'total_harga',
         'status',
         'metode_pembayaran',
+        'customer_name',
+        'notes',
     ];
 
     public function diningTable(): BelongsTo
@@ -40,12 +42,12 @@ class Order extends Model
 
     public function getCustomerNameAttribute(): ?string
     {
-        return null;
+        return $this->attributes['customer_name'] ?? null;
     }
 
     public function getPaymentMethodAttribute(): string
     {
-        return $this->metode_pembayaran;
+        return $this->attributes['metode_pembayaran'] ?? $this->attributes['payment_method'] ?? 'cash';
     }
 
     public function getTotalPriceAttribute(): float
@@ -55,6 +57,6 @@ class Order extends Model
 
     public function getNotesAttribute(): ?string
     {
-        return null;
+        return $this->attributes['notes'] ?? null;
     }
 }
