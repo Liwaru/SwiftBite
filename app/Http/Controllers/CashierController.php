@@ -13,11 +13,20 @@ class CashierController extends Controller
 {
     public function dashboard(Request $request): View
     {
+        $stats = $this->todayStats();
+        $mode = 'dashboard';
+
+        return view('cashier.dashboard', compact('stats', 'mode'));
+    }
+
+    public function orders(Request $request): View
+    {
         $status = $this->normalizeStatus($request->query('status', 'aktif'));
         $orders = $this->ordersForStatus($status)
             ->paginate(5)
             ->withQueryString();
         $stats = $this->todayStats();
+        $mode = 'orders';
 
         $menuItems = MenuItem::with('categoryModel')
             ->where('status', 'tersedia')
@@ -25,7 +34,7 @@ class CashierController extends Controller
             ->limit(8)
             ->get();
 
-        return view('cashier.dashboard', compact('orders', 'stats', 'status', 'menuItems'));
+        return view('cashier.dashboard', compact('orders', 'stats', 'status', 'menuItems', 'mode'));
     }
 
     public function liveOrders(Request $request)
@@ -37,7 +46,7 @@ class CashierController extends Controller
         $stats = $this->todayStats();
 
         return response()->json([
-            'orders_html' => view('cashier.partials.order-list', compact('orders'))->render(),
+            'orders_html' => view('cashier.partials.order-list', compact('orders', 'status'))->render(),
             'stats' => $stats,
             'latest_order_id' => (int) ($orders->getCollection()->max('id_order') ?? 0),
             'updated_at' => now()->format('H:i:s'),

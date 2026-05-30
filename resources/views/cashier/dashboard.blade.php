@@ -21,7 +21,21 @@
         h2 { font-size: 22px; margin-bottom: 14px; }
         h3 { font-size: 17px; margin-bottom: 6px; }
         .muted { color: #7a5a46; line-height: 1.5; }
-        .topbar { display: flex; justify-content: space-between; gap: 16px; align-items: end; margin-bottom: 22px; }
+        .hero-card {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 16px;
+            padding: 22px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--sidebar-brown-light), var(--sidebar-brown-dark));
+            color: #fff8ed;
+            box-shadow: 0 16px 38px rgba(39, 20, 13, .13);
+        }
+        .eyebrow { margin-bottom: 8px; color: rgba(255, 248, 237, .76); font-size: 12px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
+        .hero-title { margin: 0; font-size: clamp(32px, 4vw, 46px); line-height: 1.05; }
+        .hero-subtitle { max-width: 720px; margin-top: 10px; color: rgba(255, 248, 237, .82); line-height: 1.55; }
         .stats { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 14px; margin-bottom: 18px; }
         .stat-card, .panel {
             background:
@@ -36,6 +50,11 @@
         .stat-card strong { font-size: 24px; line-height: 1.1; }
         .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(320px, .8fr); gap: 16px; align-items: start; }
         .panel { padding: 18px; }
+        .summary-table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 8px; }
+        .summary-table th, .summary-table td { padding: 13px 14px; border-top: 1px solid rgba(255, 246, 232, .16); text-align: left; }
+        .summary-table th { background: rgba(255, 246, 232, .1); color: rgba(255, 246, 232, .78); font-size: 12px; font-weight: 900; text-transform: uppercase; }
+        .summary-table td:last-child { text-align: right; font-weight: 900; }
+        .summary-panel { margin-bottom: 16px; }
         .notice { padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; background: #edf5e8; color: #355b28; border: 1px solid #c5ddb7; font-weight: 800; }
         .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
         .panel .muted { color: rgba(255, 246, 232, .76); }
@@ -84,7 +103,7 @@
         .toast { position: fixed; right: 24px; bottom: 24px; z-index: 40; transform: translateY(18px); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; background: #352016; color: #fff8ed; border: 1px solid #8b6040; border-radius: 8px; padding: 12px 14px; font-weight: 900; box-shadow: 0 16px 38px rgba(39, 20, 13, .24); }
         .toast.show { transform: translateY(0); opacity: 1; }
         @media (max-width: 1050px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dashboard-grid { grid-template-columns: 1fr; } }
-        @media (max-width: 760px) { main { padding: 24px 16px 44px; } .topbar { align-items: flex-start; flex-direction: column; } .stats { grid-template-columns: 1fr; } form.status, .quick-actions, .detail-grid { grid-template-columns: 1fr; } .row { flex-direction: column; } .pagination { align-items: flex-start; flex-direction: column; } }
+        @media (max-width: 760px) { main { padding: 24px 16px 44px; } .hero-card { align-items: flex-start; flex-direction: column; } .stats { grid-template-columns: 1fr; } form.status, .quick-actions, .detail-grid { grid-template-columns: 1fr; } .row { flex-direction: column; } .pagination { align-items: flex-start; flex-direction: column; } }
     </style>
 </head>
 <body>
@@ -93,35 +112,58 @@
 
         <div class="content-with-sidebar">
             <main>
-                <div class="topbar">
-                    <div>
-                        <h1>Dashboard</h1>
-                    </div>
-                </div>
-
                 @if (session('success'))
                     <div class="notice">{{ session('success') }}</div>
                 @endif
 
-                <section class="stats" aria-label="Statistik kasir">
-                    <article class="stat-card">
-                        <span>Pesanan Hari Ini</span>
-                        <strong id="statTodayOrders">{{ $stats['today_orders'] }}</strong>
-                    </article>
-                    <article class="stat-card">
-                        <span>Pending Payment</span>
-                        <strong id="statPendingPayment">{{ $stats['pending_payment'] }}</strong>
-                    </article>
-                    <article class="stat-card">
-                        <span>Diproses</span>
-                        <strong id="statProcessingOrders">{{ $stats['processing_orders'] }}</strong>
-                    </article>
-                    <article class="stat-card">
-                        <span>Pendapatan Hari Ini</span>
-                        <strong id="statTodayRevenue">Rp{{ number_format($stats['today_revenue'], 0, ',', '.') }}</strong>
-                    </article>
-                </section>
+                @if (($mode ?? 'dashboard') === 'dashboard')
+                    <section class="hero-card">
+                        <div>
+                            <div class="eyebrow">Cashier Operasional</div>
+                            <h1 class="hero-title">Dashboard Kasir</h1>
+                            <p class="hero-subtitle">Pantau ringkasan pesanan, pembayaran, dan pendapatan kasir hari ini.</p>
+                        </div>
+                    </section>
 
+                    <section class="stats" aria-label="Statistik kasir">
+                        <article class="stat-card">
+                            <span>Pesanan Hari Ini</span>
+                            <strong id="statTodayOrders">{{ $stats['today_orders'] }}</strong>
+                        </article>
+                        <article class="stat-card">
+                            <span>Pending Payment</span>
+                            <strong id="statPendingPayment">{{ $stats['pending_payment'] }}</strong>
+                        </article>
+                        <article class="stat-card">
+                            <span>Diproses</span>
+                            <strong id="statProcessingOrders">{{ $stats['processing_orders'] }}</strong>
+                        </article>
+                        <article class="stat-card">
+                            <span>Pendapatan Hari Ini</span>
+                            <strong id="statTodayRevenue">Rp{{ number_format($stats['today_revenue'], 0, ',', '.') }}</strong>
+                        </article>
+                    </section>
+
+                    <section class="panel summary-panel">
+                        <h2>Ringkasan Kasir Hari Ini</h2>
+                        <table class="summary-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Pesanan Hari Ini</td><td>{{ $stats['today_orders'] }}</td></tr>
+                                <tr><td>Pending Payment</td><td>{{ $stats['pending_payment'] }}</td></tr>
+                                <tr><td>Diproses</td><td>{{ $stats['processing_orders'] }}</td></tr>
+                                <tr><td>Pendapatan Hari Ini</td><td>Rp{{ number_format($stats['today_revenue'], 0, ',', '.') }}</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+                @endif
+
+                @if (($mode ?? 'dashboard') === 'orders')
                 <section class="dashboard-grid">
                     <div class="panel">
                         <div class="row" style="margin-bottom: 14px">
@@ -134,7 +176,7 @@
 
                         <div class="tabs">
                             @foreach (['aktif' => 'Aktif', 'menunggu' => 'Menunggu', 'diproses' => 'Diproses', 'selesai' => 'Selesai'] as $value => $label)
-                                <a class="tab {{ $status === $value ? 'active' : '' }}" href="{{ route('cashier.dashboard', ['status' => $value]) }}">{{ $label }}</a>
+                                <a class="tab {{ $status === $value ? 'active' : '' }}" href="{{ route('cashier.orders', ['status' => $value]) }}">{{ $label }}</a>
                             @endforeach
                         </div>
 
@@ -172,27 +214,29 @@
                         <button type="button">Buat Pesanan Manual</button>
                     </aside>
                 </section>
+                @endif
             </main>
         </div>
     </div>
 
-    <div class="toast" id="liveToast">Pesanan baru masuk.</div>
+    @if (($mode ?? 'dashboard') === 'orders')
+        <div class="toast" id="liveToast">Pesanan baru masuk.</div>
 
-    @php
-        $liveOrdersUrl = route('cashier.orders.live', ['status' => $status, 'page' => request('page', 1)]);
-    @endphp
+        @php
+            $liveOrdersUrl = route('cashier.orders.live', ['status' => $status, 'page' => request('page', 1)]);
+        @endphp
 
-    <script>
-        (function () {
-            const orderList = document.getElementById('cashierOrderList');
-            const liveDot = document.getElementById('liveDot');
-            const liveText = document.getElementById('liveText');
-            const toast = document.getElementById('liveToast');
-            const formatter = new Intl.NumberFormat('id-ID');
-            const liveUrl = @json($liveOrdersUrl);
-            let latestOrderId = getLatestOrderId();
-            let firstSync = true;
-            let toastTimer = null;
+        <script>
+            (function () {
+                const orderList = document.getElementById('cashierOrderList');
+                const liveDot = document.getElementById('liveDot');
+                const liveText = document.getElementById('liveText');
+                const toast = document.getElementById('liveToast');
+                const formatter = new Intl.NumberFormat('id-ID');
+                const liveUrl = @json($liveOrdersUrl);
+                let latestOrderId = getLatestOrderId();
+                let firstSync = true;
+                let toastTimer = null;
 
             function getLatestOrderId() {
                 const ids = Array.from(document.querySelectorAll('[data-order-id]')).map(function (element) {
@@ -223,10 +267,26 @@
             }
 
             function updateStats(stats) {
-                document.getElementById('statTodayOrders').textContent = stats.today_orders;
-                document.getElementById('statPendingPayment').textContent = stats.pending_payment;
-                document.getElementById('statProcessingOrders').textContent = stats.processing_orders;
-                document.getElementById('statTodayRevenue').textContent = 'Rp' + formatter.format(stats.today_revenue || 0);
+                const todayOrders = document.getElementById('statTodayOrders');
+                const pendingPayment = document.getElementById('statPendingPayment');
+                const processingOrders = document.getElementById('statProcessingOrders');
+                const todayRevenue = document.getElementById('statTodayRevenue');
+
+                if (todayOrders) {
+                    todayOrders.textContent = stats.today_orders;
+                }
+
+                if (pendingPayment) {
+                    pendingPayment.textContent = stats.pending_payment;
+                }
+
+                if (processingOrders) {
+                    processingOrders.textContent = stats.processing_orders;
+                }
+
+                if (todayRevenue) {
+                    todayRevenue.textContent = 'Rp' + formatter.format(stats.today_revenue || 0);
+                }
             }
 
             function currentClockText() {
@@ -280,8 +340,9 @@
                 }
             }
 
-            setInterval(syncOrders, 5000);
-        })();
-    </script>
+                setInterval(syncOrders, 5000);
+            })();
+        </script>
+    @endif
 </body>
 </html>

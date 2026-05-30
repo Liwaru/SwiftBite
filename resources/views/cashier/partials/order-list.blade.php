@@ -61,46 +61,56 @@
         @endif
     </article>
 @empty
-    <article class="order-card" data-order-id="0">
-        <div class="row">
-            <div>
-                <div class="badge-row">
-                    <span class="badge">Menunggu</span>
-                    <span class="badge payment pending">Tunai</span>
+    @php
+        $activeStatus = $status ?? request('status', 'aktif');
+    @endphp
+
+    @if (in_array($activeStatus, ['aktif', 'menunggu'], true))
+        <article class="order-card" data-order-id="0">
+            <div class="row">
+                <div>
+                    <div class="badge-row">
+                        <span class="badge">Menunggu</span>
+                        <span class="badge payment pending">Tunai</span>
+                    </div>
+                    <h3>Meja 06 &middot; #SB-1025</h3>
+                    <p class="order-meta">
+                        <span>18:35</span>
+                        <span>&middot;</span>
+                        <span class="wait-time">Menunggu 8 menit</span>
+                    </p>
                 </div>
-                <h3>Meja 06 &middot; #SB-1025</h3>
-                <p class="order-meta">
-                    <span>18:35</span>
-                    <span>&middot;</span>
-                    <span class="wait-time">Menunggu 8 menit</span>
-                </p>
+                <span class="price">Rp28.000</span>
             </div>
-            <span class="price">Rp28.000</span>
-        </div>
 
-        <div class="items">
-            <p>1x Roti Croissant <span class="muted">Rp18.000</span></p>
-            <p>1x Air Putih <span class="muted">Rp10.000</span></p>
-        </div>
-
-        <details class="order-detail">
-            <summary class="detail-toggle">Detail Pesanan</summary>
-            <div class="detail-grid">
-                <p>
-                    <span>Catatan pelanggan</span>
-                    <strong>-</strong>
-                </p>
-                <p>
-                    <span>Waktu bayar</span>
-                    <strong>-</strong>
-                </p>
+            <div class="items">
+                <p>1x Roti Croissant <span class="muted">Rp18.000</span></p>
+                <p>1x Air Putih <span class="muted">Rp10.000</span></p>
             </div>
-        </details>
 
-        <form class="status">
-            <button type="button" disabled>Terima Pesanan</button>
-        </form>
-    </article>
+            <details class="order-detail">
+                <summary class="detail-toggle">Detail Pesanan</summary>
+                <div class="detail-grid">
+                    <p>
+                        <span>Catatan pelanggan</span>
+                        <strong>-</strong>
+                    </p>
+                    <p>
+                        <span>Waktu bayar</span>
+                        <strong>-</strong>
+                    </p>
+                </div>
+            </details>
+
+            <form class="status">
+                <button type="button" disabled>Terima Pesanan</button>
+            </form>
+        </article>
+    @else
+        <p class="muted empty">
+            Belum ada pesanan {{ $activeStatus === 'diproses' ? 'diproses' : 'selesai' }}.
+        </p>
+    @endif
 @endforelse
 
 @if (method_exists($orders, 'hasPages') && $orders->hasPages())

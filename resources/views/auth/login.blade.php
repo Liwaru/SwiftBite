@@ -16,6 +16,8 @@
         }
 
         * { box-sizing: border-box; }
+        html, body, * { scrollbar-width: none; -ms-overflow-style: none; }
+        *::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
         body {
             margin: 0;

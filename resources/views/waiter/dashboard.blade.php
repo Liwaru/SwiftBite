@@ -14,6 +14,8 @@
             font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
         * { box-sizing: border-box; }
+        html, body, * { scrollbar-width: none; -ms-overflow-style: none; }
+        *::-webkit-scrollbar { display: none; width: 0; height: 0; }
         body { margin: 0; min-height: 100vh; background: #ffffff; color: #2b1c15; }
         .waiter-shell { min-height: 100vh; background: #ffffff; }
         .topbar {
@@ -42,6 +44,17 @@
         h1 { font-size: clamp(28px, 8vw, 40px); margin-bottom: 16px; }
         h2 { font-size: 20px; margin-bottom: 14px; }
         h3 { font-size: 18px; margin-bottom: 6px; }
+        .hero-card {
+            margin-bottom: 16px;
+            padding: 18px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--brown-light), var(--brown-dark));
+            color: var(--cream);
+            box-shadow: 0 12px 30px rgba(39, 20, 13, .18);
+        }
+        .eyebrow { margin-bottom: 7px; color: rgba(255, 246, 232, .76); font-size: 12px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
+        .hero-title { margin: 0; font-size: clamp(30px, 8vw, 42px); line-height: 1.05; }
+        .hero-subtitle { margin-top: 9px; color: rgba(255, 246, 232, .82); line-height: 1.5; }
         .notice { padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; background: #edf5e8; color: #355b28; border: 1px solid #c5ddb7; font-weight: 800; }
         .panel {
             background: linear-gradient(135deg, rgba(154, 98, 57, .94), rgba(90, 50, 31, .98) 52%, rgba(39, 20, 13, .98));
@@ -52,6 +65,11 @@
             padding: 16px;
         }
         .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+        .summary-table { width: 100%; margin-bottom: 16px; border-collapse: collapse; border-radius: 8px; overflow: hidden; }
+        .summary-table th, .summary-table td { padding: 11px 12px; border-top: 1px solid rgba(255, 246, 232, .16); text-align: left; }
+        .summary-table th { background: rgba(255, 246, 232, .1); color: rgba(255, 246, 232, .78); font-size: 12px; font-weight: 900; text-transform: uppercase; }
+        .summary-table th:last-child,
+        .summary-table td:last-child { text-align: center; font-weight: 900; }
         .tab { border: 1px solid rgba(255, 246, 232, .24); border-radius: 7px; background: rgba(255, 246, 232, .1); color: var(--cream); padding: 10px 12px; font-weight: 900; text-align: center; text-decoration: none; }
         .tab.active { background: var(--cream); border-color: var(--cream); color: var(--brown-dark); }
         .order-list { display: grid; gap: 12px; }
@@ -102,13 +120,29 @@
         </header>
 
         <main>
-            <h1>Pesanan Antar</h1>
+            <section class="hero-card">
+                <h1 class="hero-title">Pesanan Antar</h1>
+                <p class="hero-subtitle">Lihat pesanan yang perlu diantar dan tandai selesai setelah pesanan sampai ke customer.</p>
+            </section>
 
             @if (session('success'))
                 <div class="notice">{{ session('success') }}</div>
             @endif
 
             <section class="panel">
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Perlu Diantar</td><td>{{ $stats['aktif'] }}</td></tr>
+                        <tr><td>Selesai Hari Ini</td><td>{{ $stats['selesai_today'] }}</td></tr>
+                    </tbody>
+                </table>
+
                 <div class="tabs">
                     <a class="tab {{ $status === 'aktif' ? 'active' : '' }}" href="{{ route('waiter.dashboard', ['per_page' => $perPage]) }}">Aktif</a>
                     <a class="tab {{ $status === 'selesai' ? 'active' : '' }}" href="{{ route('waiter.dashboard', ['status' => 'selesai', 'per_page' => $perPage]) }}">Selesai</a>
@@ -149,7 +183,7 @@
                                 <p>{{ $order->notes ?: '-' }}</p>
                             </div>
 
-                            @if ($order->status === 'diproses')
+                            @if ($order->status === 'Siap Diantar')
                                 <form class="action" method="post" action="{{ route('waiter.orders.complete', $order) }}">
                                     @csrf
                                     @method('patch')
@@ -165,10 +199,10 @@
                                 <div class="card-head">
                                     <div>
                                         <div class="badge-row">
-                                            <span class="badge">Diproses</span>
+                                            <span class="badge">Siap Diantar</span>
                                             <span class="badge payment">TUNAI</span>
                                         </div>
-                                        <h3>Meja 06 &middot; #SB-1025</h3>
+                                        <h3>Meja 06</h3>
                                         <p class="muted">8 menit lalu</p>
                                     </div>
                                     <span class="price">Rp28.000</span>

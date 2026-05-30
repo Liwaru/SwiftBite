@@ -13,6 +13,21 @@
         h1 { font-size: clamp(30px, 4vw, 44px); margin-bottom: 22px; }
         h2 { font-size: 22px; margin-bottom: 14px; }
         .muted { color: #7a5a46; line-height: 1.5; }
+        .hero-card {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 16px;
+            padding: 22px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #9a6239, #27140d);
+            color: #fff8ed;
+            box-shadow: 0 16px 38px rgba(39, 20, 13, .13);
+        }
+        .eyebrow { margin-bottom: 8px; color: rgba(255, 248, 237, .76); font-size: 12px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
+        .hero-title { margin: 0; font-size: clamp(32px, 4vw, 46px); line-height: 1.05; }
+        .hero-subtitle { max-width: 720px; margin-top: 10px; color: rgba(255, 248, 237, .82); line-height: 1.55; }
         .stats { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 14px; margin-bottom: 18px; }
         .stat-card, .panel {
             background: linear-gradient(135deg, rgba(154, 98, 57, .94), rgba(90, 50, 31, .98) 52%, rgba(39, 20, 13, .98));
@@ -38,8 +53,12 @@
         .status-dot.processing { background: #73a8ff; }
         .status-dot.done { background: #8bd17c; }
         .status-dot.cancelled { background: #ef6f61; }
+        .summary-table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 8px; }
+        .summary-table th, .summary-table td { padding: 13px 14px; border-top: 1px solid rgba(255, 246, 232, .16); text-align: left; }
+        .summary-table th { background: rgba(255, 246, 232, .1); color: rgba(255, 246, 232, .78); font-size: 12px; font-weight: 900; text-transform: uppercase; }
+        .summary-table td:last-child { text-align: right; font-weight: 900; }
         @media (max-width: 980px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-        @media (max-width: 760px) { main { padding: 24px 16px 44px; } .stats { grid-template-columns: 1fr; } }
+        @media (max-width: 760px) { main { padding: 24px 16px 44px; } .hero-card { align-items: flex-start; flex-direction: column; } .stats { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -48,7 +67,13 @@
 
         <div class="content-with-sidebar">
             <main>
-                <h1>Dashboard Manager</h1>
+                <section class="hero-card">
+                    <div>
+                        <div class="eyebrow">Manager Operasional</div>
+                        <h1 class="hero-title">Dashboard Manager</h1>
+                        <p class="hero-subtitle">Pantau kondisi operasional SwiftBite Morning Bakery, mulai dari menu, meja QR, user aktif, sampai status pesanan hari ini.</p>
+                    </div>
+                </section>
 
                 <section class="stats" aria-label="Statistik operasional">
                     <article class="stat-card">
@@ -72,28 +97,21 @@
                 <section class="dashboard-row">
                     <div class="panel">
                         <h2>Ringkasan Pesanan Hari Ini</h2>
-                        <div class="summary-total">
-                            <span>Total Pesanan</span>
-                            <strong>{{ $stats['today_orders'] }}</strong>
-                        </div>
-                        <div class="order-breakdown">
-                            <div class="order-row">
-                                <span class="status-name"><span class="status-dot waiting"></span>Menunggu</span>
-                                <strong>{{ $stats['orders_today']['menunggu'] }}</strong>
-                            </div>
-                            <div class="order-row">
-                                <span class="status-name"><span class="status-dot processing"></span>Diproses</span>
-                                <strong>{{ $stats['orders_today']['diproses'] }}</strong>
-                            </div>
-                            <div class="order-row">
-                                <span class="status-name"><span class="status-dot done"></span>Selesai</span>
-                                <strong>{{ $stats['orders_today']['selesai'] }}</strong>
-                            </div>
-                            <div class="order-row">
-                                <span class="status-name"><span class="status-dot cancelled"></span>Dibatalkan</span>
-                                <strong>{{ $stats['orders_today']['dibatalkan'] }}</strong>
-                            </div>
-                        </div>
+                        <table class="summary-table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><span class="status-name"><span class="status-dot waiting"></span>Menunggu</span></td><td>{{ $stats['orders_today']['menunggu'] }}</td></tr>
+                                <tr><td><span class="status-name"><span class="status-dot processing"></span>Diproses</span></td><td>{{ $stats['orders_today']['diproses'] }}</td></tr>
+                                <tr><td><span class="status-name"><span class="status-dot done"></span>Selesai</span></td><td>{{ $stats['orders_today']['selesai'] }}</td></tr>
+                                <tr><td><span class="status-name"><span class="status-dot cancelled"></span>Dibatalkan</span></td><td>{{ $stats['orders_today']['dibatalkan'] }}</td></tr>
+                                <tr><td><strong>Total Pesanan</strong></td><td>{{ $stats['today_orders'] }}</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </section>
 

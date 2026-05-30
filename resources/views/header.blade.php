@@ -6,6 +6,19 @@
         --page-cream: #fff6e8;
     }
 
+    html,
+    body,
+    * {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    *::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+    }
+
     .app-shell {
         min-height: 100vh;
         background:
@@ -23,13 +36,17 @@
         display: flex;
         flex-direction: column;
         padding: 26px 18px 28px;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
         background:
             radial-gradient(circle at 18% 12%, rgba(255, 246, 232, .14), transparent 28%),
             linear-gradient(180deg, var(--sidebar-red-light) 0%, var(--sidebar-red) 38%, var(--sidebar-red-dark) 100%);
         color: #fff8ed;
         box-shadow: 14px 0 36px rgba(24, 13, 7, .34);
         transition: width .28s ease, padding .28s ease, box-shadow .28s ease;
+        -webkit-user-select: none;
+        user-select: none;
     }
 
     .sidebar-brand {
@@ -40,6 +57,7 @@
         margin-bottom: 22px;
         border-bottom: 1px solid rgba(255, 246, 232, .18);
         min-width: 0;
+        flex: 0 0 auto;
     }
 
     .sidebar-brand-link {
@@ -128,6 +146,7 @@
     .sidebar-nav {
         display: grid;
         gap: 10px;
+        flex: 0 0 auto;
     }
 
     .sidebar-link {
@@ -252,6 +271,7 @@
         display: grid;
         gap: 10px;
         padding-top: 22px;
+        flex: 0 0 auto;
     }
 
     .sidebar-account {
@@ -472,6 +492,14 @@
         border-radius: 9px;
     }
 
+    .app-shell.sidebar-collapsed .sidebar-group-toggle {
+        justify-content: center;
+    }
+
+    .app-shell.sidebar-collapsed .sidebar-caret {
+        display: none;
+    }
+
     .app-shell.sidebar-collapsed .sidebar-icon {
         flex-basis: auto;
     }
@@ -521,17 +549,17 @@
     $authLevel = (int) session('auth_level');
     $authName = session('auth_name', 'User');
     $roleName = match ($authLevel) {
-        5 => 'Owner',
-        4 => 'Manager',
-        3 => 'Cashier',
-        2 => 'Waiter',
+        4 => 'Owner',
+        3 => 'Manager',
+        2 => 'Cashier',
+        1 => 'Waiter',
         default => 'Customer',
     };
     $dashboardRoute = match ($authLevel) {
-        5 => route('owner.dashboard'),
-        4 => route('manager.dashboard'),
-        3 => route('cashier.dashboard'),
-        2 => route('waiter.dashboard'),
+        4 => route('owner.dashboard'),
+        3 => route('manager.dashboard'),
+        2 => route('cashier.dashboard'),
+        1 => route('waiter.dashboard'),
         default => route('customer.home'),
     };
 @endphp
@@ -554,7 +582,7 @@
     </div>
 
     <nav class="sidebar-nav">
-        @if ($authLevel === 1)
+        @if ($authLevel === 0)
             <a class="sidebar-link {{ request()->routeIs('customer.home') ? 'active' : '' }}" href="{{ route('customer.home') }}" title="Dashboard Pelanggan">
                 <span class="sidebar-icon">
                     <svg viewBox="0 0 24 24" fill="none">
@@ -567,7 +595,7 @@
             </a>
         @endif
 
-        @if ($authLevel === 2)
+        @if ($authLevel === 1)
             <a class="sidebar-link {{ request()->routeIs('waiter.dashboard') ? 'active' : '' }}" href="{{ route('waiter.dashboard') }}" title="Pesanan Antar">
                 <span class="sidebar-icon">
                     <svg viewBox="0 0 24 24" fill="none">
@@ -581,8 +609,8 @@
             </a>
         @endif
 
-        @if ($authLevel === 3)
-            <a class="sidebar-link {{ request()->routeIs('cashier.dashboard') ? 'active' : '' }}" href="{{ route('cashier.dashboard') }}" title="Pesanan">
+        @if ($authLevel === 2)
+            <a class="sidebar-link {{ request()->routeIs('cashier.orders') ? 'active' : '' }}" href="{{ route('cashier.orders') }}" title="Pesanan">
                 <span class="sidebar-icon">
                     <svg viewBox="0 0 24 24" fill="none">
                         <path d="M5 4h14v16H5V4Z" />
@@ -604,7 +632,7 @@
             </a>
         @endif
 
-        @if ($authLevel === 4)
+        @if ($authLevel === 3)
             @php
                 $dataMasterMenus = [
                     'users' => [
@@ -684,7 +712,7 @@
             @endforeach
         @endif
 
-        @if ($authLevel === 5)
+        @if ($authLevel === 4)
             <a class="sidebar-link {{ request()->routeIs('owner.dashboard') ? 'active' : '' }}" href="{{ route('owner.dashboard') }}" title="Dashboard Owner">
                 <span class="sidebar-icon">
                     <svg viewBox="0 0 24 24" fill="none">

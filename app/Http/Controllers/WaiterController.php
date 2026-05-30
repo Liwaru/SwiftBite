@@ -22,7 +22,12 @@ class WaiterController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        return view('waiter.dashboard', compact('orders', 'status', 'perPage'));
+        $stats = [
+            'aktif' => Order::where('status', 'diproses')->count(),
+            'selesai_today' => Order::where('status', 'selesai')->whereDate('updated_at', today())->count(),
+        ];
+
+        return view('waiter.dashboard', compact('orders', 'status', 'perPage', 'stats'));
     }
 
     public function complete(Order $order): RedirectResponse

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\DiningTable;
+use App\Models\Category;
 use App\Models\MenuItem;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -23,7 +24,7 @@ class DatabaseSeeder extends Seeder
             [
                 'email' => 'pelanggan@example.com',
                 'password' => 'pelanggan',
-                'level' => 1,
+                'level' => 0,
             ],
         );
 
@@ -32,7 +33,7 @@ class DatabaseSeeder extends Seeder
             [
                 'email' => 'kasir@example.com',
                 'password' => 'kasir',
-                'level' => 3,
+                'level' => 2,
             ],
         );
 
@@ -41,7 +42,7 @@ class DatabaseSeeder extends Seeder
             [
                 'email' => 'waiter@example.com',
                 'password' => 'waiter',
-                'level' => 2,
+                'level' => 1,
             ],
         );
 
@@ -50,7 +51,7 @@ class DatabaseSeeder extends Seeder
             [
                 'email' => 'manager@example.com',
                 'password' => 'manager',
-                'level' => 4,
+                'level' => 3,
             ],
         );
 
@@ -59,30 +60,52 @@ class DatabaseSeeder extends Seeder
             [
                 'email' => 'owner@example.com',
                 'password' => 'owner',
-                'level' => 5,
+                'level' => 4,
             ],
         );
 
         foreach (range(1, 6) as $number) {
             DiningTable::firstOrCreate(
-                ['name' => 'Meja ' . $number],
-                ['qr_token' => Str::random(16), 'is_active' => true],
+                ['nama_meja' => 'Meja ' . $number],
+                ['token' => Str::random(32), 'status' => 'kosong'],
             );
         }
 
         $menus = [
-            ['name' => 'Roti Srikaya', 'category' => 'Roti', 'description' => 'Roti lembut isi srikaya manis.', 'price' => 8000],
-            ['name' => 'Roti Sosis', 'category' => 'Roti', 'description' => 'Roti gurih dengan sosis panggang.', 'price' => 10000],
-            ['name' => 'Nasi Goreng Kampung', 'category' => 'Makanan', 'description' => 'Nasi goreng gurih dengan telur.', 'price' => 25000],
-            ['name' => 'Mie Goreng Seafood', 'category' => 'Makanan', 'description' => 'Mie goreng dengan topping seafood.', 'price' => 28000],
-            ['name' => 'Kopi Susu Panas', 'category' => 'Minuman', 'description' => 'Kopi susu klasik untuk sarapan.', 'price' => 12000],
-            ['name' => 'Teh Obeng', 'category' => 'Minuman', 'description' => 'Es teh manis khas Kepri.', 'price' => 7000],
+            ['name' => 'Butter Croissant', 'category' => 'Makanan', 'description' => 'Croissant klasik dengan aroma butter.', 'price' => 18000, 'stock' => 20],
+            ['name' => 'Chocolate Croissant', 'category' => 'Makanan', 'description' => 'Croissant isi cokelat lembut.', 'price' => 20000, 'stock' => 18],
+            ['name' => 'Almond Croissant', 'category' => 'Makanan', 'description' => 'Croissant almond dengan taburan kacang.', 'price' => 24000, 'stock' => 12],
+            ['name' => 'Cinnamon Roll', 'category' => 'Makanan', 'description' => 'Roti gulung kayu manis dengan glaze.', 'price' => 22000, 'stock' => 16],
+            ['name' => 'Pain au Chocolat', 'category' => 'Makanan', 'description' => 'Pastry lapis isi cokelat.', 'price' => 24000, 'stock' => 14],
+            ['name' => 'Cheese Bread', 'category' => 'Makanan', 'description' => 'Roti lembut dengan isian keju.', 'price' => 16000, 'stock' => 22],
+            ['name' => 'Sausage Roll', 'category' => 'Makanan', 'description' => 'Roti gurih isi sosis panggang.', 'price' => 19000, 'stock' => 15],
+            ['name' => 'Chicken Floss Bread', 'category' => 'Makanan', 'description' => 'Roti abon ayam gurih.', 'price' => 21000, 'stock' => 15],
+            ['name' => 'Donut Glazed', 'category' => 'Makanan', 'description' => 'Donat lembut dengan glaze manis.', 'price' => 14000, 'stock' => 24],
+            ['name' => 'Chocolate Muffin', 'category' => 'Makanan', 'description' => 'Muffin cokelat dengan tekstur moist.', 'price' => 18000, 'stock' => 18],
+            ['name' => 'Americano', 'category' => 'Minuman', 'description' => 'Kopi hitam espresso dan air panas.', 'price' => 18000, 'stock' => 30],
+            ['name' => 'Cafe Latte', 'category' => 'Minuman', 'description' => 'Espresso dengan susu steamed.', 'price' => 22000, 'stock' => 25],
+            ['name' => 'Cappuccino', 'category' => 'Minuman', 'description' => 'Espresso, susu, dan foam lembut.', 'price' => 24000, 'stock' => 25],
+            ['name' => 'Mocha', 'category' => 'Minuman', 'description' => 'Kopi susu dengan cokelat.', 'price' => 25000, 'stock' => 20],
+            ['name' => 'Chocolate Milk', 'category' => 'Minuman', 'description' => 'Susu cokelat dingin atau hangat.', 'price' => 18000, 'stock' => 24],
+            ['name' => 'Matcha Latte', 'category' => 'Minuman', 'description' => 'Matcha premium dengan susu.', 'price' => 25000, 'stock' => 20],
+            ['name' => 'Lemon Tea', 'category' => 'Minuman', 'description' => 'Teh lemon segar.', 'price' => 15000, 'stock' => 28],
+            ['name' => 'Mineral Water', 'category' => 'Minuman', 'description' => 'Air mineral botol.', 'price' => 10000, 'stock' => 40],
         ];
 
         foreach ($menus as $menu) {
-            MenuItem::firstOrCreate(
-                ['name' => $menu['name']],
-                $menu + ['is_available' => true],
+            $category = Category::firstOrCreate([
+                'nama_kategori' => $menu['category'],
+            ]);
+
+            MenuItem::updateOrCreate(
+                ['nama_menu' => $menu['name']],
+                [
+                    'id_kategori' => $category->id_kategori,
+                    'deskripsi' => $menu['description'],
+                    'harga' => $menu['price'],
+                    'stok' => $menu['stock'],
+                    'status' => 'tersedia',
+                ],
             );
         }
     }

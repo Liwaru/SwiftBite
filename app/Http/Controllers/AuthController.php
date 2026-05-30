@@ -14,10 +14,10 @@ class AuthController extends Controller
     {
         if ($request->session()->has('auth_user_id')) {
             return match ((int) $request->session()->get('auth_level')) {
-                5 => redirect()->route('owner.dashboard'),
-                4 => redirect()->route('manager.dashboard'),
-                3 => redirect()->route('cashier.dashboard'),
-                2 => redirect()->route('waiter.dashboard'),
+                4 => redirect()->route('owner.dashboard'),
+                3 => redirect()->route('manager.dashboard'),
+                2 => redirect()->route('cashier.dashboard'),
+                1 => redirect()->route('waiter.dashboard'),
                 default => redirect()->route('customer.home'),
             };
         }
@@ -49,10 +49,10 @@ class AuthController extends Controller
         ]);
 
         return match ($user->level) {
-            5 => redirect()->route('owner.dashboard'),
-            4 => redirect()->route('manager.dashboard'),
-            3 => redirect()->route('cashier.dashboard'),
-            2 => redirect()->route('waiter.dashboard'),
+            4 => redirect()->route('owner.dashboard'),
+            3 => redirect()->route('manager.dashboard'),
+            2 => redirect()->route('cashier.dashboard'),
+            1 => redirect()->route('waiter.dashboard'),
             default => redirect()->route('customer.home'),
         };
     }
