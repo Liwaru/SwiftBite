@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MenuItem;
 use App\Models\Order;
+use App\Support\ActivityRecorder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -30,6 +31,7 @@ class CashierController extends Controller
 
         $menuItems = MenuItem::with('categoryModel')
             ->where('status', 'tersedia')
+            ->where('stok', '>', 0)
             ->orderBy('nama_menu')
             ->limit(8)
             ->get();
@@ -118,6 +120,8 @@ class CashierController extends Controller
         abort_unless($order->status === 'menunggu', 403);
 
         $order->update($validated);
+
+        ActivityRecorder::activity('Cashier', 'Menerima pesanan #' . $order->kode_pesanan);
 
         return back()->with('success', 'Status pesanan diperbarui.');
     }

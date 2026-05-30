@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\DiningTable;
 use App\Models\MenuItem;
 use App\Models\Order;
+use App\Support\ActivityRecorder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class CustomerMenuController extends Controller
@@ -21,6 +23,7 @@ class CustomerMenuController extends Controller
 
         $menuItems = MenuItem::with('categoryModel')
             ->where('status', 'tersedia')
+            ->where('stok', '>', 0)
             ->orderBy('nama_menu')
             ->get()
             ->groupBy('category');
@@ -51,12 +54,29 @@ class CustomerMenuController extends Controller
                 ->withInput();
         }
 
-        $items = MenuItem::whereIn('id_menu', $quantities->keys())
-            ->where('status', 'tersedia')
-            ->get();
-
-        $order = DB::transaction(function () use ($table, $validated, $quantities, $items) {
+        $order = DB::transaction(function () use ($table, $validated, $quantities) {
             $total = 0;
+            $items = MenuItem::whereIn('id_menu', $quantities->keys())
+                ->where('status', 'tersedia')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id_menu');
+
+            foreach ($quantities as $menuId => $quantity) {
+                $item = $items->get((int) $menuId);
+
+                if (! $item) {
+                    throw ValidationException::withMessages([
+                        'quantities' => 'Beberapa menu sudah tidak tersedia.',
+                    ]);
+                }
+
+                if ((int) $item->stok < (int) $quantity) {
+                    throw ValidationException::withMessages([
+                        'quantities' => 'Stok ' . $item->nama_menu . ' tidak cukup. Stok saat ini ' . $item->stok . ' pcs.',
+                    ]);
+                }
+            }
 
             $orderData = [
                 'id_meja' => $table->id_meja,
@@ -86,12 +106,16 @@ class CustomerMenuController extends Controller
                     'qty' => $quantity,
                     'subtotal' => $subtotal,
                 ]);
+
+                $item->decrement('stok', $quantity);
             }
 
             $order->update(['total_harga' => $total]);
 
             return $order;
         });
+
+        ActivityRecorder::activity('Customer', 'Membuat pesanan baru dari ' . ($table->nama_meja ?? 'meja') . ' #' . $order->kode_pesanan, $validated['customer_name'] ?? 'Customer');
 
         return redirect()
             ->route('customer.orders.show', [$table->token, $order])

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Support\ActivityRecorder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -35,6 +36,8 @@ class WaiterController extends Controller
         abort_unless($order->status === 'diproses', 403);
 
         $order->update(['status' => 'selesai']);
+
+        ActivityRecorder::activity('Waiter', 'Menyelesaikan pesanan #' . $order->kode_pesanan);
 
         return back()->with('success', 'Pesanan ditandai selesai.');
     }

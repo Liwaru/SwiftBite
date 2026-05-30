@@ -182,6 +182,13 @@
         }
         .section-head { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; margin-bottom: 16px; }
         .section-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+        .section-action-row { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+        .section-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
         .section-add-btn {
             display: inline-flex;
             align-items: center;
@@ -199,17 +206,34 @@
             transition: background .2s ease, color .2s ease, border-color .2s ease;
         }
         .section-add-btn:hover {
+            background: #fffdfa;
+            color: var(--brown-dark);
+            border-color: #fffdfa;
+        }
+        .section-secondary-btn {
             background: transparent;
             color: #fff8ed;
-            border-color: rgba(255, 246, 232, .86);
+            border-color: rgba(255, 246, 232, .62);
         }
+        .section-secondary-btn:hover,
         .section-manage-btn.is-active {
-            background: transparent;
-            color: #fff8ed;
+            background: #fff6e8;
+            color: var(--brown-dark);
             border-color: rgba(255, 246, 232, .86);
         }
-        .section-title { font-size: 22px; font-weight: 900; }
-        .section-subtitle { margin-top: 5px; color: rgba(255, 248, 237, .76); font-size: 14px; font-weight: 700; line-height: 1.45; }
+        .section-title { font-size: 24px; line-height: 1.08; font-weight: 900; }
+        .section-subtitle { margin-top: 9px; color: rgba(255, 248, 237, .78); font-size: 14px; font-weight: 700; line-height: 1.45; }
+        .section-meta {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            border-radius: 999px;
+            background: rgba(255, 246, 232, .12);
+            color: #fff8ed;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 900;
+        }
         .bulk-toolbar {
             display: none;
             align-items: center;
@@ -340,6 +364,113 @@
             color: #2c642b;
             border-color: #9ad28e;
         }
+        .stock-current {
+            display: grid;
+            gap: 7px;
+            padding: 10px;
+            border-radius: 8px;
+            background: #fff6e8;
+            border: 1px solid #ead4ba;
+        }
+        .stock-current-label {
+            color: #7a5a46;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .stock-current-value {
+            color: var(--brown-dark);
+            font-size: 18px;
+            line-height: 1;
+            font-weight: 900;
+        }
+        .stock-badge-status {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            border-radius: 999px;
+            padding: 5px 9px;
+            font-size: 11px;
+            font-weight: 900;
+        }
+        .stock-badge-status.safe { background: #e6ffd9; color: #2c642b; border: 1px solid #9ad28e; }
+        .stock-badge-status.low { background: #fff0b8; color: #755000; border: 1px solid #dfc25f; }
+        .stock-badge-status.empty { background: #ffe2dc; color: #7b2418; border: 1px solid #e5a08d; }
+        .stock-actions { grid-template-columns: 1fr; }
+        .stock-modal-summary {
+            display: grid;
+            gap: 6px;
+            padding: 13px;
+            border-radius: 8px;
+            background: rgba(255, 246, 232, .1);
+            border: 1px solid rgba(255, 246, 232, .2);
+        }
+        .stock-modal-product {
+            color: #fff8ed;
+            font-size: 18px;
+            font-weight: 900;
+        }
+        .stock-modal-current {
+            color: rgba(255, 248, 237, .78);
+            font-size: 14px;
+            font-weight: 800;
+        }
+        .stock-change-options {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .stock-change-option {
+            position: relative;
+            display: block;
+            align-items: center;
+            min-height: 42px;
+            border: 1px solid rgba(255, 246, 232, .28);
+            border-radius: 8px;
+            background: rgba(255, 246, 232, .08);
+            color: #fff8ed;
+            padding: 0;
+            text-align: center;
+            font-weight: 900;
+            cursor: pointer;
+            transition: background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+        }
+        .stock-change-option:hover {
+            border-color: rgba(255, 246, 232, .68);
+            transform: translateY(-1px);
+        }
+        .stock-change-option input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .stock-change-option:has(input:checked) {
+            background: #fff6e8;
+            border-color: #fff6e8;
+            color: var(--brown-dark);
+            box-shadow: 0 10px 22px rgba(24, 13, 7, .16);
+        }
+        .stock-change-option span {
+            display: contents;
+        }
+        .stock-change-option b,
+        .stock-change-option em {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-style: normal;
+            font-weight: 900;
+        }
+        .stock-change-option b {
+            left: 26%;
+            width: 16px;
+            text-align: center;
+        }
+        .stock-change-option em {
+            left: calc(26% + 22px);
+            text-align: left;
+            white-space: nowrap;
+        }
         .menu-detail-thumb {
             width: 96px;
             height: 96px;
@@ -357,6 +488,13 @@
             border-radius: 8px;
             padding: 12px 14px;
             font-weight: 900;
+            cursor: pointer;
+            transition: opacity .2s ease, transform .2s ease;
+        }
+        .success-banner.is-hidden, .error-banner.is-hidden {
+            opacity: 0;
+            transform: translateY(-4px);
+            pointer-events: none;
         }
         .success-banner { background: #e6ffd9; color: #2c642b; border: 1px solid #9ad28e; }
         .error-banner { background: #ffe8dd; color: #7a2414; border: 1px solid #e5a08d; }
@@ -368,6 +506,78 @@
         .page-current { background: #fff6e8; color: var(--brown-dark); }
         .page-disabled { opacity: .45; }
         .panel { max-width: 820px; margin-top: 24px; background: #fff6e8; border: 1px solid #e1ad73; border-radius: 8px; padding: 18px; box-shadow: 0 12px 30px rgba(39, 20, 13, .12); }
+        .database-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+        .database-card {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 250px;
+            padding: 18px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--brown-light), var(--brown-dark));
+            color: #fff8ed;
+            border: 1px solid rgba(255, 246, 232, .22);
+            box-shadow: 0 16px 38px rgba(39, 20, 13, .13);
+        }
+        .database-card h2 { margin: 0; font-size: 22px; }
+        .database-card p { color: rgba(255, 248, 237, .76); line-height: 1.5; }
+        .database-card form { display: grid; gap: 10px; margin-top: auto; }
+        .database-card input[type="file"],
+        .database-card input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid rgba(255, 246, 232, .28);
+            border-radius: 8px;
+            background: #fffdfa;
+            color: #2b1c15;
+            padding: 12px 13px;
+            font: inherit;
+        }
+        .database-note {
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: rgba(255, 246, 232, .1);
+            color: rgba(255, 248, 237, .78);
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.45;
+        }
+        .activity-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .activity-tab {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 246, 232, .24);
+            border-radius: 999px;
+            background: rgba(255, 246, 232, .1);
+            color: #fff8ed;
+            padding: 9px 13px;
+            font-weight: 900;
+            text-decoration: none;
+        }
+        .activity-tab.active { background: #fff6e8; border-color: #fff6e8; color: var(--brown-dark); }
+        .change-action { text-transform: capitalize; }
+        .restore-btn {
+            border: 0;
+            border-radius: 7px;
+            background: #fff6e8;
+            color: var(--brown-dark);
+            padding: 9px 11px;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+        .restore-badge {
+            display: inline-flex;
+            border-radius: 999px;
+            background: rgba(126, 211, 134, .18);
+            border: 1px solid rgba(126, 211, 134, .42);
+            color: #c9f5ce;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 900;
+        }
         .modal-shell {
             position: fixed;
             inset: 0;
@@ -405,13 +615,14 @@
         .modal-title { font-size: 22px; font-weight: 900; }
         .modal-subtitle { margin-top: 4px; color: rgba(255, 248, 237, .78); font-size: 14px; line-height: 1.45; }
         .modal-close {
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             border: 1px solid rgba(255, 246, 232, .72);
             border-radius: 8px;
             background: rgba(255, 246, 232, .9);
             color: var(--brown-dark);
             font: inherit;
+            font-size: 18px;
             font-weight: 900;
             cursor: pointer;
         }
@@ -496,6 +707,20 @@
         .detail-row:last-child { border-bottom: 0; padding-bottom: 0; }
         .detail-label { color: rgba(255, 248, 237, .72); font-size: 13px; font-weight: 900; }
         .detail-value { color: #fff8ed; font-weight: 900; overflow-wrap: anywhere; }
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: rgba(255, 246, 232, .1);
+            color: #fff8ed;
+            font-weight: 900;
+        }
+        .modal-dialog .table-wrap table { min-width: 0; }
+        .modal-dialog .table-wrap th,
+        .modal-dialog .table-wrap td { padding: 12px 14px; }
         .ghost-btn, .submit-btn {
             border-radius: 8px;
             padding: 12px 14px;
@@ -509,7 +734,7 @@
         .ghost-btn:hover { background: var(--cream-soft); }
         .submit-btn:hover { background: transparent; color: #fff8ed; }
         @media (max-width: 1180px) { .menu-rail { grid-auto-columns: calc((100% - 28px) / 3); } }
-        @media (max-width: 980px) { .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filter-form { grid-template-columns: 1fr; } .filter-actions { justify-content: stretch; } .filter-actions > * { flex: 1; } .menu-rail { grid-auto-columns: calc((100% - 14px) / 2); } }
+        @media (max-width: 980px) { .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filter-form { grid-template-columns: 1fr; } .filter-actions { justify-content: stretch; } .filter-actions > * { flex: 1; } .menu-rail { grid-auto-columns: calc((100% - 14px) / 2); } .database-grid { grid-template-columns: 1fr; } }
         @media (max-width: 760px) { main { padding: 24px 16px 44px; } .hero-card, .table-header, .section-head { align-items: flex-start; flex-direction: column; } .section-actions { width: 100%; justify-content: flex-start; } .summary-grid { grid-template-columns: 1fr; } .pagination-wrap { justify-content: flex-start; } .detail-row { grid-template-columns: 1fr; gap: 4px; } .menu-carousel { grid-template-columns: 1fr; } .menu-carousel-btn { display: none; } .menu-rail { grid-auto-columns: minmax(210px, 82vw); } }
     </style>
 </head>
@@ -631,7 +856,7 @@
                                                 <th>Nama</th>
                                                 <th>Username</th>
                                                 <th>Email</th>
-                                                <th>Role</th>
+                                                <th>Dari</th>
                                                 <th>Status</th>
                                                 <th>Aksi</th>
                                             </tr>
@@ -709,7 +934,7 @@
                                             <div class="modal-title" id="modalEditUserTitle{{ $user->getKey() }}">Edit User</div>
                                             <div class="modal-subtitle">Perbarui akun {{ $user->name }}. Nama user otomatis mengikuti username.</div>
                                         </div>
-                                        <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">X</button>
+                                        <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
                                     </div>
 
                                     <form method="POST" action="{{ route('manager.users.update', $user) }}" class="modal-form">
@@ -719,12 +944,12 @@
 
                                         <div class="field-group">
                                             <label for="editUsername{{ $user->getKey() }}">Username</label>
-                                            <input id="editUsername{{ $user->getKey() }}" type="text" name="username" value="{{ old('modal_id') === $editModalId ? old('username', $user->username ?? $user->name) : ($user->username ?? $user->name) }}" required>
+                                            <input id="editUsername{{ $user->getKey() }}" type="text" name="username" value="{{ old('modal_id') === $editModalId ? old('username', $user->username ?? $user->name) : ($user->username ?? $user->name) }}" minlength="3" maxlength="15" required>
                                         </div>
 
                                         <div class="field-group">
                                             <label for="editPassword{{ $user->getKey() }}">Password Baru</label>
-                                            <input id="editPassword{{ $user->getKey() }}" type="password" name="password" placeholder="Kosongkan jika tidak diubah">
+                                            <input id="editPassword{{ $user->getKey() }}" type="password" name="password" minlength="6" maxlength="20" placeholder="Kosongkan jika tidak diubah">
                                         </div>
 
                                         <div class="field-group">
@@ -752,7 +977,7 @@
                                             <div class="modal-title" id="modalDetailUserTitle{{ $user->getKey() }}">Detail User</div>
                                             <div class="modal-subtitle">Informasi akun {{ $user->name }}.</div>
                                         </div>
-                                        <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">X</button>
+                                        <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
                                     </div>
 
                                     <div class="detail-list">
@@ -801,7 +1026,7 @@
                                     <div class="modal-title" id="modalCreateUserTitle">Tambah User</div>
                                     <div class="modal-subtitle">Buat akun baru untuk waiter atau cashier. Nama user otomatis mengikuti username.</div>
                                 </div>
-                                <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">X</button>
+                                <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
                             </div>
 
                             <form method="POST" action="{{ route('manager.users.store') }}" class="modal-form">
@@ -809,12 +1034,12 @@
                                 <input type="hidden" name="modal_id" value="create-user">
                                 <div class="field-group">
                                     <label for="createUsername">Username</label>
-                                    <input id="createUsername" type="text" name="username" value="{{ old('username') }}" placeholder="Contoh: waiter2" required>
+                                    <input id="createUsername" type="text" name="username" value="{{ old('username') }}" minlength="3" maxlength="15" placeholder="Maksimal 15 karakter" required>
                                 </div>
 
                                 <div class="field-group">
                                     <label for="createPassword">Password</label>
-                                    <input id="createPassword" type="password" name="password" placeholder="Minimal 6 karakter" required>
+                                    <input id="createPassword" type="password" name="password" minlength="6" maxlength="20" placeholder="6-20 karakter" required>
                                 </div>
 
                                 <div class="field-group">
@@ -831,6 +1056,184 @@
                                     <button type="submit" class="submit-btn">Simpan User</button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                @elseif ($section === 'stock')
+                    <div class="page-shell">
+                        <section class="hero-card">
+                            <div>
+                                <div class="eyebrow">Manager Operasional</div>
+                                <h1 class="hero-title">Stok Produk</h1>
+                                <p class="hero-subtitle">Pantau dan kelola jumlah stok makanan dan minuman SwiftBite Morning Bakery.</p>
+                            </div>
+                        </section>
+
+                        @php
+                            $renderStockSection = function ($title, $description, $items) {
+                                return compact('title', 'description', 'items');
+                            };
+
+                            $stockSections = [
+                                $renderStockSection('Makanan', 'Kelola stok produk makanan dan bakery.', $foodStockItems),
+                                $renderStockSection('Minuman', 'Kelola stok produk minuman.', $drinkStockItems),
+                            ];
+                        @endphp
+
+                        <section class="summary-grid">
+                            <article class="summary-card">
+                                <div class="summary-label">Total Produk</div>
+                                <div class="summary-value">{{ number_format($stockSummary['total_produk']) }}</div>
+                                <div class="summary-note">Produk yang memiliki stok</div>
+                            </article>
+                            <article class="summary-card is-accent">
+                                <div class="summary-label">Stok Aman</div>
+                                <div class="summary-value">{{ number_format($stockSummary['stok_aman']) }}</div>
+                                <div class="summary-note">Lebih dari 5 pcs</div>
+                            </article>
+                            <article class="summary-card">
+                                <div class="summary-label">Stok Menipis</div>
+                                <div class="summary-value">{{ number_format($stockSummary['stok_menipis']) }}</div>
+                                <div class="summary-note">1 sampai 5 pcs</div>
+                            </article>
+                            <article class="summary-card">
+                                <div class="summary-label">Stok Habis</div>
+                                <div class="summary-value">{{ number_format($stockSummary['stok_habis']) }}</div>
+                                <div class="summary-note">0 pcs</div>
+                            </article>
+                        </section>
+
+                        @if (session('success') || $errors->any())
+                            <div class="feedback-stack">
+                                @if (session('success'))
+                                    <div class="success-banner">{{ session('success') }}</div>
+                                @endif
+
+                                @if ($errors->any())
+                                    <div class="error-banner">
+                                        @foreach ($errors->all() as $error)
+                                            <div>{{ $error }}</div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        <div class="menu-sections">
+                            @foreach ($stockSections as $stockSection)
+                                <section class="section-card">
+                                    <div class="section-head">
+                                        <div>
+                                            <div class="section-title-row">
+                                                <div class="section-title">{{ $stockSection['title'] }}</div>
+                                                <div class="section-meta">{{ $stockSection['items']->count() }} Produk</div>
+                                            </div>
+                                            <div class="section-subtitle">{{ $stockSection['description'] }}</div>
+                                        </div>
+                                    </div>
+
+                                    @if ($stockSection['items']->isEmpty())
+                                        <div class="empty-state">Belum ada produk {{ strtolower($stockSection['title']) }}.</div>
+                                    @else
+                                        <div class="menu-carousel">
+                                            <button type="button" class="menu-carousel-btn js-menu-scroll" data-direction="-1" aria-label="Geser stok {{ $stockSection['title'] }} ke kiri">&lsaquo;</button>
+
+                                            <div class="menu-rail">
+                                                @foreach ($stockSection['items'] as $menu)
+                                                    @php
+                                                        $stock = (int) $menu->stok;
+                                                        $stockStatus = $stock <= 0 ? 'Habis' : ($stock <= 5 ? 'Menipis' : 'Aman');
+                                                        $stockClass = $stock <= 0 ? 'empty' : ($stock <= 5 ? 'low' : 'safe');
+                                                        $initial = strtoupper(substr($menu->nama_menu, 0, 1));
+                                                    @endphp
+
+                                                    <article class="menu-card">
+                                                        <div class="menu-thumb">
+                                                            @if ($menu->foto)
+                                                                <img src="{{ asset($menu->foto) }}" alt="{{ $menu->nama_menu }}">
+                                                            @else
+                                                                {{ $initial }}
+                                                            @endif
+                                                        </div>
+
+                                                        <div class="menu-card-body">
+                                                            <div class="menu-card-name">{{ $menu->nama_menu }}</div>
+                                                            <div class="stock-current">
+                                                                <div class="stock-current-label">Stok Saat Ini</div>
+                                                                <div class="stock-current-value">{{ number_format($stock) }} pcs</div>
+                                                                <div><span class="stock-badge-status {{ $stockClass }}">{{ $stockStatus }}</span></div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="menu-card-actions stock-actions">
+                                                            <button
+                                                                type="button"
+                                                                class="row-action js-open-modal js-stock-menu"
+                                                                data-modal="stock-menu"
+                                                                data-action="{{ route('manager.stock.update', $menu) }}"
+                                                                data-name="{{ $menu->nama_menu }}"
+                                                                data-stock="{{ $stock }}"
+                                                            >Kelola Stok</button>
+                                                        </div>
+                                                    </article>
+                                                @endforeach
+                                            </div>
+
+                                            <button type="button" class="menu-carousel-btn js-menu-scroll" data-direction="1" aria-label="Geser stok {{ $stockSection['title'] }} ke kanan">&rsaquo;</button>
+                                        </div>
+                                    @endif
+                                </section>
+                            @endforeach
+                        </div>
+
+                        <div class="modal-shell" id="modal-stock-menu" aria-hidden="true">
+                            <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalStockMenuTitle">
+                                <div class="modal-header">
+                                    <div>
+                                        <div class="modal-title" id="modalStockMenuTitle">Kelola Stok</div>
+                                        <div class="modal-subtitle js-stock-menu-subtitle">Perbarui jumlah stok produk.</div>
+                                    </div>
+                                    <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
+                                </div>
+
+                                <form method="POST" action="#" class="modal-form js-stock-form">
+                                    @csrf
+                                    @method('patch')
+
+                                    <div class="stock-modal-summary">
+                                        <div class="stock-modal-product js-stock-product-name">-</div>
+                                        <div class="stock-modal-current">Stok saat ini: <span class="js-stock-current">0</span> pcs</div>
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label>Jenis Perubahan</label>
+                                        <div class="stock-change-options">
+                                            <label class="stock-change-option" for="stockChangeAdd">
+                                                <input id="stockChangeAdd" type="radio" name="change_type" value="add" checked>
+                                                <span><b>+</b><em>Tambah Stok</em></span>
+                                            </label>
+                                            <label class="stock-change-option" for="stockChangeSubtract">
+                                                <input id="stockChangeSubtract" type="radio" name="change_type" value="subtract">
+                                                <span><b>-</b><em>Kurangi Stok</em></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label for="stockAmountInput">Jumlah Perubahan</label>
+                                        <input id="stockAmountInput" type="number" name="amount" min="1" max="999" step="1" placeholder="Contoh: 5" required>
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label for="stockNote">Keterangan (Opsional)</label>
+                                        <input id="stockNote" type="text" name="note" maxlength="120" placeholder="Contoh: Restock pagi, penyesuaian stok">
+                                    </div>
+
+                                    <div class="modal-actions">
+                                        <button type="button" class="ghost-btn js-close-modal">Batal</button>
+                                        <button type="submit" class="submit-btn">Simpan Stok</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 @elseif ($section === 'menus')
@@ -898,25 +1301,28 @@
                                 <section class="section-card">
                                     <div class="section-head">
                                         <div>
-                                            <div class="section-title">{{ $menuSection['title'] }}</div>
+                                            <div class="section-title-row">
+                                                <div class="section-title">{{ $menuSection['title'] }}</div>
+                                                <div class="section-meta">{{ $menuSection['items']->count() }} Menu</div>
+                                            </div>
                                             <div class="section-subtitle">{{ $menuSection['description'] }}</div>
                                         </div>
                                         <div class="section-actions">
                                             <button type="button" class="section-add-btn js-open-modal" data-modal="create-menu" data-category="{{ $menuSection['title'] }}">
-                                                Tambah {{ $menuSection['title'] }}
+                                                + Tambah {{ $menuSection['title'] }}
                                             </button>
-                                            <button type="button" class="section-add-btn section-manage-btn js-toggle-menu-manage">
+                                            <button type="button" class="section-add-btn section-secondary-btn section-manage-btn js-toggle-menu-manage">
                                                 Kelola Menu
                                             </button>
-                                            <span class="count-badge">{{ $menuSection['items']->count() }} Menu</span>
                                         </div>
                                     </div>
 
                                     @if ($menuSection['items']->isEmpty())
                                         <div class="empty-state">Belum ada menu {{ strtolower($menuSection['title']) }}.</div>
                                     @else
-                                        <form method="POST" action="{{ route('manager.menus.confirm-destroy') }}" class="js-bulk-delete-form">
+                                        <form method="POST" action="{{ route('manager.menus.destroy') }}" class="js-bulk-delete-form">
                                             @csrf
+                                            @method('delete')
 
                                             <div class="bulk-toolbar">
                                                 <span><span class="js-selected-count">0</span> menu dipilih</span>
@@ -936,7 +1342,7 @@
                                                         $initial = strtoupper(substr($menu->nama_menu, 0, 1));
                                                     @endphp
 
-                                                    <article class="menu-card">
+                                                    <article class="menu-card" data-menu-id="{{ $menu->getKey() }}" data-menu-name="{{ $menu->nama_menu }}" data-menu-category="{{ $menu->category }}" data-menu-price="Rp{{ number_format($menu->harga, 0, ',', '.') }}">
                                                         <input type="checkbox" class="menu-select-control js-menu-select" name="menu_ids[]" value="{{ $menu->getKey() }}" aria-label="Pilih {{ $menu->nama_menu }}">
                                                         <div class="menu-thumb">
                                                             @if ($menu->foto)
@@ -953,7 +1359,16 @@
                                                         </div>
 
                                                         <div class="menu-card-actions">
-                                                            <button type="button" class="row-action">Edit</button>
+                                                            <button
+                                                                type="button"
+                                                                class="row-action js-open-modal js-edit-menu"
+                                                                data-modal="edit-menu"
+                                                                data-action="{{ route('manager.menus.update', $menu) }}"
+                                                                data-name="{{ $menu->nama_menu }}"
+                                                                data-price="{{ (int) $menu->harga }}"
+                                                                data-status="{{ $menu->status }}"
+                                                                data-photo="{{ $menu->foto ? asset($menu->foto) : '' }}"
+                                                            >Edit</button>
                                                             <button type="button" class="row-action js-single-delete-menu" data-menu-id="{{ $menu->getKey() }}">Hapus</button>
                                                         </div>
                                                     </article>
@@ -975,7 +1390,7 @@
                                         <div class="modal-title" id="modalCreateMenuTitle">Tambah Menu</div>
                                         <div class="modal-subtitle" id="modalCreateMenuSubtitle">Tambahkan menu baru ke SwiftBite Morning Bakery.</div>
                                     </div>
-                                    <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">X</button>
+                                    <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
                                 </div>
 
                                 <form method="POST" action="{{ route('manager.menus.store') }}" class="modal-form js-menu-create-form">
@@ -1001,12 +1416,12 @@
 
                                     <div class="field-group">
                                         <label for="createMenuName">Nama <span class="js-menu-category-label">Makanan</span></label>
-                                        <input id="createMenuName" type="text" name="name" value="{{ old('name') }}" placeholder="Contoh: Butter Croissant" required>
+                                        <input id="createMenuName" type="text" name="name" value="{{ old('name') }}" maxlength="20" placeholder="Maksimal 20 karakter" required>
                                     </div>
 
                                     <div class="field-group">
                                         <label for="createMenuPrice">Harga</label>
-                                        <input id="createMenuPrice" type="number" name="price" value="{{ old('price') }}" min="0" step="1000" placeholder="Contoh: 18000" required>
+                                        <input id="createMenuPrice" type="number" name="price" value="{{ old('price') }}" min="0" max="50000" step="1000" placeholder="Maksimal 50000" required>
                                     </div>
 
                                     <div class="modal-actions">
@@ -1017,10 +1432,108 @@
                             </div>
                         </div>
 
-                        <form method="POST" action="{{ route('manager.menus.confirm-destroy') }}" class="js-single-delete-form" hidden>
+                        <form method="POST" action="{{ route('manager.menus.destroy') }}" class="js-single-delete-form" hidden>
                             @csrf
+                            @method('delete')
                             <input type="hidden" name="menu_ids[]" class="js-single-delete-id">
                         </form>
+
+                        <div class="modal-shell" id="modal-edit-menu" aria-hidden="true">
+                            <div class="modal-dialog menu-create-dialog" role="dialog" aria-modal="true" aria-labelledby="modalEditMenuTitle">
+                                <div class="modal-header">
+                                    <div>
+                                        <div class="modal-title" id="modalEditMenuTitle">Edit Menu</div>
+                                        <div class="modal-subtitle">Perbarui gambar, nama, harga, dan status menu.</div>
+                                    </div>
+                                    <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
+                                </div>
+
+                                <form method="POST" action="#" class="modal-form js-menu-edit-form">
+                                    @csrf
+                                    @method('patch')
+                                    <input type="hidden" name="image_data" class="js-edit-cropped-image">
+
+                                    <div class="field-group">
+                                        <label for="editMenuPhoto">Gambar Menu</label>
+                                        <input id="editMenuPhoto" type="file" class="js-edit-crop-input" accept="image/png,image/jpeg,image/webp">
+                                    </div>
+
+                                    <div class="crop-panel">
+                                        <div class="crop-box js-edit-crop-box">
+                                            <div class="crop-empty js-edit-crop-empty">Gambar saat ini akan tetap dipakai jika tidak memilih gambar baru.</div>
+                                            <img class="crop-image js-edit-crop-image" alt="Preview crop menu">
+                                        </div>
+                                        <div class="crop-tools">
+                                            <label for="editMenuZoom">Zoom Gambar</label>
+                                            <input id="editMenuZoom" type="range" class="js-edit-crop-zoom" min="1" max="2.5" step="0.01" value="1" disabled>
+                                        </div>
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label for="editMenuName">Nama Menu</label>
+                                        <input id="editMenuName" type="text" name="name" maxlength="20" placeholder="Maksimal 20 karakter" required>
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label for="editMenuPrice">Harga</label>
+                                        <input id="editMenuPrice" type="number" name="price" min="0" max="50000" step="1000" placeholder="Maksimal 50000" required>
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label for="editMenuStatus">Status</label>
+                                        <select id="editMenuStatus" name="status" required>
+                                            <option value="tersedia">Aktif</option>
+                                            <option value="habis">Nonaktif</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="modal-actions">
+                                        <button type="button" class="ghost-btn js-close-modal">Batal</button>
+                                        <button type="submit" class="submit-btn">Simpan Perubahan</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="modal-shell" id="modal-confirm-delete-menu" aria-hidden="true">
+                            <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalConfirmDeleteMenuTitle">
+                                <div class="modal-header">
+                                    <div>
+                                        <div class="modal-title" id="modalConfirmDeleteMenuTitle">Hapus Menu?</div>
+                                        <div class="modal-subtitle">Pastikan menu yang dipilih memang ingin dihapus.</div>
+                                    </div>
+                                    <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
+                                </div>
+
+                                <div class="detail-list">
+                                    <div class="summary-total" style="margin-bottom: 0;">
+                                        <span><span class="js-delete-menu-count">0</span> menu akan dihapus.</span>
+                                    </div>
+
+                                    <div class="table-wrap">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Nama Menu</th>
+                                                    <th>Kategori</th>
+                                                    <th>Harga</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="js-delete-menu-list"></tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="summary-total js-delete-menu-more" style="display: none; margin-top: 10px;">
+                                        <span></span>
+                                    </div>
+
+                                    <div class="modal-actions">
+                                        <button type="button" class="ghost-btn js-close-modal">Batal</button>
+                                        <button type="button" class="submit-btn js-confirm-delete-menu">Hapus Terpilih</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         @foreach ($foodMenuItems->concat($drinkMenuItems) as $menu)
                             @php
@@ -1036,7 +1549,7 @@
                                             <div class="modal-title" id="modalDetailMenuTitle{{ $menu->getKey() }}">Detail Menu</div>
                                             <div class="modal-subtitle">Informasi lengkap menu {{ $menu->nama_menu }}.</div>
                                         </div>
-                                        <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">X</button>
+                                        <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
                                     </div>
 
                                     <div class="detail-list">
@@ -1082,6 +1595,228 @@
                             </div>
                         @endforeach
                     </div>
+                @elseif ($section === 'activity')
+                    <div class="page-shell">
+                        <section class="hero-card">
+                            <div>
+                                <div class="eyebrow">Manager Monitoring</div>
+                                <h1 class="hero-title">Catatan Aktivitas</h1>
+                                <p class="hero-subtitle">Pantau aktivitas semua role dan perubahan data penting pada sistem SwiftBite Morning Bakery.</p>
+                            </div>
+                        </section>
+
+                        @if (session('success') || $errors->any())
+                            <div class="feedback-stack">
+                                @if (session('success'))
+                                    <div class="success-banner">{{ session('success') }}</div>
+                                @endif
+
+                                @if ($errors->any())
+                                    <div class="error-banner">
+                                        @foreach ($errors->all() as $error)
+                                            <div>{{ $error }}</div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        <section class="table-card">
+                            <div class="table-header">
+                                <div>
+                                    <div class="table-title">{{ $tab === 'data' ? 'Data Perubahan' : 'Aktivitas Pengguna' }}</div>
+                                    <div class="table-subtitle">{{ $tab === 'data' ? 'Riwayat tambah, edit, hapus, dan pemulihan data.' : 'Riwayat aktivitas dari customer, waiter, cashier, manager, dan owner.' }}</div>
+                                </div>
+                            </div>
+
+                            <div class="activity-tabs">
+                                <a class="activity-tab {{ $tab === 'activity' ? 'active' : '' }}" href="{{ route('manager.page', ['section' => 'activity']) }}">Catatan Aktivitas</a>
+                                <a class="activity-tab {{ $tab === 'data' ? 'active' : '' }}" href="{{ route('manager.page', ['section' => 'activity', 'tab' => 'data']) }}">Data Perubahan</a>
+                            </div>
+
+                            @if ($tab === 'activity')
+                                <form class="filter-form" method="GET" action="{{ route('manager.page', ['section' => 'activity']) }}">
+                                    <div class="filter-field">
+                                        <label for="activityRoleFilter">Filter Role</label>
+                                        <select id="activityRoleFilter" name="role">
+                                            @foreach ($activityRoleOptions as $roleOption)
+                                                <option value="{{ $roleOption }}" @selected($activityRole === $roleOption)>
+                                                    {{ $roleOption === 'semua' ? 'Semua Role' : $roleOption }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="filter-actions">
+                                        <button class="filter-btn" type="submit">Terapkan</button>
+                                        <a class="filter-link" href="{{ route('manager.page', ['section' => 'activity']) }}">Reset</a>
+                                    </div>
+                                </form>
+
+                                <div class="table-wrap">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Waktu</th>
+                                                <th>Dari</th>
+                                                <th>Pengguna</th>
+                                                <th>Aktivitas</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($activityLogs as $log)
+                                                <tr>
+                                                    <td>{{ $log->created_at?->format('d M Y H:i') }}</td>
+                                                    <td><span class="pill">{{ $log->role }}</span></td>
+                                                    <td>{{ $log->user_name ?: '-' }}</td>
+                                                    <td>{{ $log->activity }}</td>
+                                                </tr>
+                                            @empty
+                                                <tr><td colspan="4" class="empty-state">Belum ada catatan aktivitas.</td></tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                @if ($activityLogs->hasPages())
+                                    <div class="pagination-wrap">{{ $activityLogs->links() }}</div>
+                                @endif
+                            @else
+                                <form class="filter-form" method="GET" action="{{ route('manager.page', ['section' => 'activity']) }}">
+                                    <input type="hidden" name="tab" value="data">
+                                    <div class="filter-field">
+                                        <label for="dataChangeFilter">Filter Aksi</label>
+                                        <select id="dataChangeFilter" name="change">
+                                            @foreach ($dataChangeOptions as $changeOption)
+                                                <option value="{{ $changeOption }}" @selected($changeFilter === $changeOption)>
+                                                    {{ $changeOption === 'semua' ? 'Semua' : $changeOption }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="filter-actions">
+                                        <button class="filter-btn" type="submit">Terapkan</button>
+                                        <a class="filter-link" href="{{ route('manager.page', ['section' => 'activity', 'tab' => 'data']) }}">Reset</a>
+                                    </div>
+                                </form>
+
+                                <div class="table-wrap">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Waktu</th>
+                                                <th>Aksi</th>
+                                                <th>Data</th>
+                                                <th>Nama Data</th>
+                                                <th>Oleh</th>
+                                                <th>Status</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($dataChanges as $change)
+                                                <tr>
+                                                    <td>{{ $change->created_at?->format('d M Y H:i') }}</td>
+                                                    <td class="change-action">{{ $change->action }}</td>
+                                                    <td>{{ $change->data_type }}</td>
+                                                    <td>{{ $change->data_name }}</td>
+                                                    <td>{{ $change->actor_role }}{{ $change->actor_name ? ' - '.$change->actor_name : '' }}</td>
+                                                    <td>
+                                                        @if ($change->restored_at)
+                                                            <span class="restore-badge">Dipulihkan</span>
+                                                        @else
+                                                            <span class="pill">{{ $change->action === 'Hapus' ? 'Terhapus' : 'Aktif' }}</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @if (! $change->restored_at && in_array($change->data_type, ['Menu', 'User'], true))
+                                                            <form method="POST" action="{{ route('manager.activity.restore', $change) }}">
+                                                                @csrf
+                                                                <button class="restore-btn" type="submit">{{ $change->action === 'Hapus' ? 'Pulihkan' : 'Kembalikan' }}</button>
+                                                            </form>
+                                                        @else
+                                                            <span class="muted-text">-</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr><td colspan="7" class="empty-state">Belum ada data perubahan.</td></tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                @if ($dataChanges->hasPages())
+                                    <div class="pagination-wrap">{{ $dataChanges->links() }}</div>
+                                @endif
+                            @endif
+                        </section>
+                    </div>
+                @elseif ($section === 'database')
+                    <div class="page-shell">
+                        <section class="hero-card">
+                            <div>
+                                <div class="eyebrow">Manager Sistem</div>
+                                <h1 class="hero-title">Database</h1>
+                                <p class="hero-subtitle">Kelola backup, import, dan reset data operasional SwiftBite Morning Bakery.</p>
+                            </div>
+                        </section>
+
+                        @if (session('success') || $errors->any())
+                            <div class="feedback-stack">
+                                @if (session('success'))
+                                    <div class="success-banner">{{ session('success') }}</div>
+                                @endif
+
+                                @if ($errors->any())
+                                    <div class="error-banner">
+                                        @foreach ($errors->all() as $error)
+                                            <div>{{ $error }}</div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        <section class="database-grid">
+                            <article class="database-card">
+                                <div>
+                                    <h2>Backup Database</h2>
+                                    <p>Unduh file SQL berisi data utama aplikasi: user, meja, menu, pesanan, dan detail pesanan.</p>
+                                </div>
+                                <div class="database-note">Gunakan backup sebelum import atau reset data.</div>
+                                <form method="POST" action="{{ route('manager.database.backup') }}">
+                                    @csrf
+                                    <button type="submit" class="submit-btn">Backup Sekarang</button>
+                                </form>
+                            </article>
+
+                            <article class="database-card">
+                                <div>
+                                    <h2>Import Database</h2>
+                                    <p>Upload file SQL hasil backup SwiftBite untuk mengembalikan data.</p>
+                                </div>
+                                <form method="POST" action="{{ route('manager.database.import') }}" enctype="multipart/form-data">
+                                    @csrf
+                                    <input type="file" name="database_file" accept=".sql,.txt" required>
+                                    <button type="submit" class="submit-btn">Import Database</button>
+                                </form>
+                            </article>
+
+                            <article class="database-card">
+                                <div>
+                                    <h2>Reset Database</h2>
+                                    <p>Mengosongkan data operasional: meja, menu, kategori, pesanan, dan detail pesanan. Akun user tetap disimpan.</p>
+                                </div>
+                                <div class="database-note">Ketik <strong>RESET DATABASE</strong> untuk konfirmasi.</div>
+                                <form method="POST" action="{{ route('manager.database.reset') }}">
+                                    @csrf
+                                    @method('delete')
+                                    <input type="text" name="confirmation" placeholder="RESET DATABASE" required>
+                                    <button type="submit" class="submit-btn">Reset Database</button>
+                                </form>
+                            </article>
+                        </section>
+                    </div>
                 @else
                     <h1>{{ $page['title'] }}</h1>
                     <p class="muted">{{ $page['description'] }}</p>
@@ -1098,7 +1833,25 @@
             const modalTriggers = document.querySelectorAll('.js-open-modal');
             const closeButtons = document.querySelectorAll('.js-close-modal');
             const modals = document.querySelectorAll('.modal-shell');
+            let pendingDeleteForm = null;
             const cropState = {
+                image: null,
+                box: null,
+                img: null,
+                zoomInput: null,
+                hiddenInput: null,
+                empty: null,
+                baseWidth: 0,
+                baseHeight: 0,
+                offsetX: 0,
+                offsetY: 0,
+                startX: 0,
+                startY: 0,
+                startOffsetX: 0,
+                startOffsetY: 0,
+                isDragging: false,
+            };
+            const editCropState = {
                 image: null,
                 box: null,
                 img: null,
@@ -1125,6 +1878,7 @@
                 const title = document.getElementById('modalCreateMenuTitle');
                 const subtitle = document.getElementById('modalCreateMenuSubtitle');
                 const categoryInput = document.getElementById('createMenuCategory');
+                const nameInput = document.getElementById('createMenuName');
 
                 document.querySelectorAll('.js-menu-category-label').forEach((label) => {
                     label.textContent = category;
@@ -1140,6 +1894,94 @@
 
                 if (categoryInput) {
                     categoryInput.value = category;
+                }
+
+                if (nameInput) {
+                    nameInput.placeholder = category === 'Minuman' ? 'Contoh: Air Putih, maks. 20 karakter' : 'Contoh: Croissant, maks. 20 karakter';
+                }
+            }
+
+            function prepareEditMenuModal(trigger) {
+                if (trigger.dataset.modal !== 'edit-menu') {
+                    return;
+                }
+
+                const form = document.querySelector('.js-menu-edit-form');
+                const nameInput = document.getElementById('editMenuName');
+                const priceInput = document.getElementById('editMenuPrice');
+                const statusInput = document.getElementById('editMenuStatus');
+                const fileInput = document.querySelector('.js-edit-crop-input');
+
+                if (form) {
+                    form.action = trigger.dataset.action || '#';
+                }
+
+                if (nameInput) {
+                    nameInput.value = trigger.dataset.name || '';
+                }
+
+                if (priceInput) {
+                    priceInput.value = trigger.dataset.price || '';
+                }
+
+                if (statusInput) {
+                    statusInput.value = trigger.dataset.status || 'tersedia';
+                }
+
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+
+                resetEditCropPreview(trigger.dataset.photo || '');
+            }
+
+            function prepareStockMenuModal(trigger) {
+                if (trigger.dataset.modal !== 'stock-menu') {
+                    return;
+                }
+
+                const form = document.querySelector('.js-stock-form');
+                const title = document.getElementById('modalStockMenuTitle');
+                const subtitle = document.querySelector('.js-stock-menu-subtitle');
+                const productName = document.querySelector('.js-stock-product-name');
+                const currentStock = document.querySelector('.js-stock-current');
+                const amountInput = document.getElementById('stockAmountInput');
+                const addInput = document.getElementById('stockChangeAdd');
+                const noteInput = document.getElementById('stockNote');
+                const name = trigger.dataset.name || 'Produk';
+                const stock = trigger.dataset.stock || '0';
+
+                if (form) {
+                    form.action = trigger.dataset.action || '#';
+                }
+
+                if (title) {
+                    title.textContent = 'Kelola Stok';
+                }
+
+                if (subtitle) {
+                    subtitle.textContent = 'Perbarui stok untuk ' + name + '.';
+                }
+
+                if (productName) {
+                    productName.textContent = name;
+                }
+
+                if (currentStock) {
+                    currentStock.textContent = stock;
+                }
+
+                if (amountInput) {
+                    amountInput.value = '';
+                    amountInput.max = '999';
+                }
+
+                if (addInput) {
+                    addInput.checked = true;
+                }
+
+                if (noteInput) {
+                    noteInput.value = '';
                 }
             }
 
@@ -1281,6 +2123,178 @@
                 form.addEventListener('submit', writeCroppedImage);
             }
 
+            function resetEditCropPreview(photoUrl) {
+                editCropState.image = null;
+                editCropState.offsetX = 0;
+                editCropState.offsetY = 0;
+
+                if (editCropState.hiddenInput) {
+                    editCropState.hiddenInput.value = '';
+                }
+
+                if (editCropState.zoomInput) {
+                    editCropState.zoomInput.value = '1';
+                    editCropState.zoomInput.disabled = true;
+                }
+
+                if (editCropState.img && photoUrl) {
+                    editCropState.img.src = photoUrl;
+                    editCropState.img.style.display = 'block';
+                    editCropState.img.style.width = '100%';
+                    editCropState.img.style.height = '100%';
+                    editCropState.img.style.objectFit = 'cover';
+                    editCropState.img.style.transform = 'none';
+                    editCropState.img.style.left = '0';
+                    editCropState.img.style.top = '0';
+                } else if (editCropState.img) {
+                    editCropState.img.removeAttribute('src');
+                    editCropState.img.style.display = 'none';
+                }
+
+                if (editCropState.empty) {
+                    editCropState.empty.style.display = photoUrl ? 'none' : 'grid';
+                }
+            }
+
+            function updateEditCropImage() {
+                if (!editCropState.image || !editCropState.box || !editCropState.img || !editCropState.zoomInput) {
+                    return;
+                }
+
+                const zoom = Number(editCropState.zoomInput.value || 1);
+                const boxWidth = editCropState.box.clientWidth;
+                const boxHeight = editCropState.box.clientHeight;
+                const width = editCropState.baseWidth * zoom;
+                const height = editCropState.baseHeight * zoom;
+                const maxOffsetX = Math.max(0, (width - boxWidth) / 2);
+                const maxOffsetY = Math.max(0, (height - boxHeight) / 2);
+
+                editCropState.offsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, editCropState.offsetX));
+                editCropState.offsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, editCropState.offsetY));
+                editCropState.img.style.left = '50%';
+                editCropState.img.style.top = '50%';
+                editCropState.img.style.objectFit = '';
+                editCropState.img.style.width = editCropState.baseWidth + 'px';
+                editCropState.img.style.height = editCropState.baseHeight + 'px';
+                editCropState.img.style.transform = 'translate(calc(-50% + ' + editCropState.offsetX + 'px), calc(-50% + ' + editCropState.offsetY + 'px)) scale(' + zoom + ')';
+            }
+
+            function setEditCropImage(file) {
+                if (!file || !editCropState.img || !editCropState.box || !editCropState.zoomInput) {
+                    return;
+                }
+
+                const reader = new FileReader();
+
+                reader.onload = () => {
+                    const image = new Image();
+
+                    image.onload = () => {
+                        const boxWidth = editCropState.box.clientWidth;
+                        const boxHeight = editCropState.box.clientHeight;
+                        const coverScale = Math.max(boxWidth / image.naturalWidth, boxHeight / image.naturalHeight);
+
+                        editCropState.image = image;
+                        editCropState.baseWidth = image.naturalWidth * coverScale;
+                        editCropState.baseHeight = image.naturalHeight * coverScale;
+                        editCropState.offsetX = 0;
+                        editCropState.offsetY = 0;
+                        editCropState.zoomInput.value = '1';
+                        editCropState.zoomInput.disabled = false;
+                        editCropState.img.src = reader.result;
+                        editCropState.img.style.display = 'block';
+
+                        if (editCropState.empty) {
+                            editCropState.empty.style.display = 'none';
+                        }
+
+                        updateEditCropImage();
+                    };
+
+                    image.src = reader.result;
+                };
+
+                reader.readAsDataURL(file);
+            }
+
+            function writeEditCroppedImage() {
+                if (!editCropState.image || !editCropState.box || !editCropState.hiddenInput || !editCropState.zoomInput) {
+                    return;
+                }
+
+                const canvas = document.createElement('canvas');
+                const boxWidth = editCropState.box.clientWidth;
+                const boxHeight = editCropState.box.clientHeight;
+                const zoom = Number(editCropState.zoomInput.value || 1);
+                const scale = (editCropState.baseWidth * zoom) / editCropState.image.naturalWidth;
+                const imageLeft = (boxWidth - editCropState.baseWidth * zoom) / 2 + editCropState.offsetX;
+                const imageTop = (boxHeight - editCropState.baseHeight * zoom) / 2 + editCropState.offsetY;
+                const sourceX = Math.max(0, -imageLeft / scale);
+                const sourceY = Math.max(0, -imageTop / scale);
+                const sourceWidth = Math.min(editCropState.image.naturalWidth - sourceX, boxWidth / scale);
+                const sourceHeight = Math.min(editCropState.image.naturalHeight - sourceY, boxHeight / scale);
+
+                canvas.width = 800;
+                canvas.height = 500;
+                canvas.getContext('2d').drawImage(editCropState.image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, 800, 500);
+                editCropState.hiddenInput.value = canvas.toDataURL('image/jpeg', .9);
+            }
+
+            function initEditMenuCropper() {
+                editCropState.box = document.querySelector('.js-edit-crop-box');
+                editCropState.img = document.querySelector('.js-edit-crop-image');
+                editCropState.zoomInput = document.querySelector('.js-edit-crop-zoom');
+                editCropState.hiddenInput = document.querySelector('.js-edit-cropped-image');
+                editCropState.empty = document.querySelector('.js-edit-crop-empty');
+
+                const fileInput = document.querySelector('.js-edit-crop-input');
+                const form = document.querySelector('.js-menu-edit-form');
+
+                if (!editCropState.box || !editCropState.img || !fileInput || !form) {
+                    return;
+                }
+
+                fileInput.addEventListener('change', () => {
+                    setEditCropImage(fileInput.files ? fileInput.files[0] : null);
+                });
+
+                editCropState.zoomInput?.addEventListener('input', updateEditCropImage);
+
+                editCropState.box.addEventListener('pointerdown', (event) => {
+                    if (!editCropState.image || event.button !== 0) {
+                        return;
+                    }
+
+                    editCropState.isDragging = true;
+                    editCropState.startX = event.clientX;
+                    editCropState.startY = event.clientY;
+                    editCropState.startOffsetX = editCropState.offsetX;
+                    editCropState.startOffsetY = editCropState.offsetY;
+                    editCropState.box.classList.add('is-dragging');
+                    editCropState.box.setPointerCapture(event.pointerId);
+                });
+
+                editCropState.box.addEventListener('pointermove', (event) => {
+                    if (!editCropState.isDragging) {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    editCropState.offsetX = editCropState.startOffsetX + event.clientX - editCropState.startX;
+                    editCropState.offsetY = editCropState.startOffsetY + event.clientY - editCropState.startY;
+                    updateEditCropImage();
+                });
+
+                function stopEditCropDrag() {
+                    editCropState.isDragging = false;
+                    editCropState.box.classList.remove('is-dragging');
+                }
+
+                editCropState.box.addEventListener('pointerup', stopEditCropDrag);
+                editCropState.box.addEventListener('pointercancel', stopEditCropDrag);
+                form.addEventListener('submit', writeEditCroppedImage);
+            }
+
             function openModal(id) {
                 const modal = document.getElementById('modal-' + id);
 
@@ -1305,7 +2319,18 @@
             modalTriggers.forEach((trigger) => {
                 trigger.addEventListener('click', () => {
                     prepareCreateMenuModal(trigger);
+                    prepareEditMenuModal(trigger);
+                    prepareStockMenuModal(trigger);
                     openModal(trigger.dataset.modal);
+                });
+            });
+
+            document.querySelectorAll('.success-banner, .error-banner').forEach((banner) => {
+                banner.addEventListener('click', () => {
+                    banner.classList.add('is-hidden');
+                    setTimeout(() => {
+                        banner.remove();
+                    }, 220);
                 });
             });
 
@@ -1407,6 +2432,46 @@
                 }
             }
 
+            function openDeleteMenuModal(form, cards) {
+                const count = cards.length;
+                const list = document.querySelector('.js-delete-menu-list');
+                const moreInfo = document.querySelector('.js-delete-menu-more');
+
+                pendingDeleteForm = form;
+
+                document.querySelectorAll('.js-delete-menu-count').forEach((element) => {
+                    element.textContent = count;
+                });
+
+                if (list) {
+                    list.innerHTML = '';
+                    cards.slice(0, 5).forEach((card) => {
+                        const row = document.createElement('tr');
+
+                        [card.dataset.menuName || '-', card.dataset.menuCategory || '-', card.dataset.menuPrice || '-'].forEach((value) => {
+                            const cell = document.createElement('td');
+                            cell.textContent = value;
+                            row.appendChild(cell);
+                        });
+
+                        list.appendChild(row);
+                    });
+                }
+
+                if (moreInfo) {
+                    const remaining = Math.max(0, count - 5);
+                    const text = moreInfo.querySelector('span');
+
+                    moreInfo.style.display = remaining > 0 ? 'flex' : 'none';
+
+                    if (text) {
+                        text.textContent = '+' + remaining + ' menu lainnya akan ikut dihapus.';
+                    }
+                }
+
+                openModal('confirm-delete-menu');
+            }
+
             document.querySelectorAll('.section-card').forEach((section) => {
                 const manageButton = section.querySelector('.js-toggle-menu-manage');
                 const cancelButton = section.querySelector('.js-cancel-menu-manage');
@@ -1446,11 +2511,27 @@
                 });
 
                 form?.addEventListener('submit', (event) => {
-                    const selected = section.querySelectorAll('.js-menu-select:checked').length;
+                    const selected = Array.from(section.querySelectorAll('.js-menu-select:checked'));
 
-                    if (selected === 0) {
-                        event.preventDefault();
+                    event.preventDefault();
+
+                    if (selected.length === 0) {
+                        return;
                     }
+
+                    openDeleteMenuModal(form, selected.map((checkbox) => checkbox.closest('.menu-card')).filter(Boolean));
+                });
+            });
+
+            document.querySelectorAll('.js-confirm-delete-menu').forEach((button) => {
+                button.addEventListener('click', () => {
+                    if (!pendingDeleteForm) {
+                        return;
+                    }
+
+                    const form = pendingDeleteForm;
+                    pendingDeleteForm = null;
+                    form.submit();
                 });
             });
 
@@ -1458,17 +2539,19 @@
                 button.addEventListener('click', () => {
                     const form = document.querySelector('.js-single-delete-form');
                     const input = document.querySelector('.js-single-delete-id');
+                    const card = button.closest('.menu-card');
 
-                    if (!form || !input) {
+                    if (!form || !input || !card) {
                         return;
                     }
 
                     input.value = button.dataset.menuId || '';
-                    form.submit();
+                    openDeleteMenuModal(form, [card]);
                 });
             });
 
             initMenuCropper();
+            initEditMenuCropper();
 
             document.addEventListener('keydown', (event) => {
                 if (event.key === 'Escape') {
@@ -1487,6 +2570,10 @@
             @if ($section === 'menus' && $errors->any())
                 prepareCreateMenuModal({ dataset: { modal: 'create-menu', category: @json(old('category', 'Makanan')) } });
                 openModal('create-menu');
+            @endif
+
+            @if ($section === 'stock' && $errors->any())
+                openModal('stock-menu');
             @endif
         })();
     </script>

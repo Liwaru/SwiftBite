@@ -31,8 +31,13 @@ Route::middleware(['simple.auth', 'user.level:3'])->group(function () {
     Route::post('/manager/users', [ManagerController::class, 'storeUser'])->name('manager.users.store');
     Route::patch('/manager/users/{user}', [ManagerController::class, 'updateUser'])->name('manager.users.update');
     Route::post('/manager/menus', [ManagerController::class, 'storeMenu'])->name('manager.menus.store');
-    Route::post('/manager/menus/confirm-delete', [ManagerController::class, 'confirmDestroyMenus'])->name('manager.menus.confirm-destroy');
+    Route::patch('/manager/menus/{menu}', [ManagerController::class, 'updateMenu'])->name('manager.menus.update');
     Route::delete('/manager/menus', [ManagerController::class, 'destroyMenus'])->name('manager.menus.destroy');
+    Route::patch('/manager/stock/{menu}', [ManagerController::class, 'updateStock'])->name('manager.stock.update');
+    Route::post('/manager/database/backup', [ManagerController::class, 'backupDatabase'])->name('manager.database.backup');
+    Route::post('/manager/database/import', [ManagerController::class, 'importDatabase'])->name('manager.database.import');
+    Route::delete('/manager/database/reset', [ManagerController::class, 'resetDatabase'])->name('manager.database.reset');
+    Route::post('/manager/activity/data/{change}/restore', [ManagerController::class, 'restoreDataChange'])->name('manager.activity.restore');
     Route::get('/manager/{section}', [ManagerController::class, 'page'])->name('manager.page');
 });
 
