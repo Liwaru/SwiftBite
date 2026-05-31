@@ -187,7 +187,17 @@ class ManagerController extends Controller
                 ->withQueryString();
         }
 
-        return view('manager.page', $data);
+        $views = [
+            'users' => 'manager.data_user',
+            'menus' => 'manager.data_menu',
+            'tables' => 'manager.data_meja',
+            'stock' => 'manager.stok_produk',
+            'access' => 'manager.hak_akses',
+            'database' => 'manager.database',
+            'activity' => 'manager.catatan_aktivitas',
+        ];
+
+        return view($views[$section], $data);
     }
 
     public function storeUser(Request $request): RedirectResponse
