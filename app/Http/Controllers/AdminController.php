@@ -37,7 +37,7 @@ class AdminController extends Controller
         DiningTable::create([
             'nama_meja' => $validated['name'],
             'token' => Str::random(32),
-            'status' => 'kosong',
+            'status' => 'aktif',
         ]);
 
         return back()->with('success', 'Meja baru berhasil dibuat.');

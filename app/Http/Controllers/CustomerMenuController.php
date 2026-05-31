@@ -21,6 +21,10 @@ class CustomerMenuController extends Controller
         $table = DiningTable::where('token', $token)
             ->firstOrFail();
 
+        if (! $this->tableIsActive($table)) {
+            return view('customer.table-inactive', compact('table'));
+        }
+
         $menuItems = MenuItem::with('categoryModel')
             ->where('status', 'tersedia')
             ->where('stok', '>', 0)
@@ -35,6 +39,12 @@ class CustomerMenuController extends Controller
     {
         $table = DiningTable::where('token', $token)
             ->firstOrFail();
+
+        if (! $this->tableIsActive($table)) {
+            return redirect()
+                ->route('customer.menu', $table->token)
+                ->withErrors(['table' => 'Meja ini sedang nonaktif dan belum bisa menerima pesanan.']);
+        }
 
         $validated = $request->validate([
             'customer_name' => ['nullable', 'string', 'max:100'],
@@ -131,5 +141,10 @@ class CustomerMenuController extends Controller
         $order->load('items.menuItem');
 
         return view('customer.receipt', compact('table', 'order'));
+    }
+
+    private function tableIsActive(DiningTable $table): bool
+    {
+        return in_array($table->status, ['aktif', 'kosong', 'terisi'], true);
     }
 }

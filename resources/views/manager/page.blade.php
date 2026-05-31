@@ -56,6 +56,22 @@
         .eyebrow { margin-bottom: 8px; color: rgba(255, 248, 237, .76); font-size: 12px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
         .hero-title { margin: 0; font-size: clamp(32px, 4vw, 46px); line-height: 1.05; }
         .hero-subtitle { max-width: 720px; margin-top: 10px; color: rgba(255, 248, 237, .82); line-height: 1.55; }
+        .hero-action {
+            align-self: center;
+            min-width: 152px;
+            min-height: 46px;
+            border-radius: 8px;
+            background: #fff6e8;
+            color: var(--brown-dark);
+            border-color: #fff6e8;
+            box-shadow: 0 12px 28px rgba(24, 13, 7, .16);
+        }
+        .hero-action:hover {
+            background: #fffdfa;
+            color: var(--brown-dark);
+            border-color: #fffdfa;
+            transform: translateY(-1px);
+        }
         .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
         .summary-card { padding: 18px; background: linear-gradient(135deg, #8f5735, #4a2618); color: #fff8ed; }
         .summary-card.is-accent { background: linear-gradient(135deg, #a96f45, #5a321f); color: #fff8ed; }
@@ -471,6 +487,138 @@
             text-align: left;
             white-space: nowrap;
         }
+        .table-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+        }
+        .table-card-item {
+            position: relative;
+            display: grid;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #fffdfa;
+            border: 1px solid #ead4ba;
+            color: var(--brown-dark);
+            box-shadow: 0 12px 24px rgba(24, 13, 7, .14);
+        }
+        .table-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .table-card-title {
+            font-size: 17px;
+            line-height: 1.2;
+            font-weight: 900;
+        }
+        .table-more-wrap { position: relative; }
+        .table-more-btn {
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ead4ba;
+            border-radius: 8px;
+            background: #fff6e8;
+            color: var(--brown-dark);
+            font: inherit;
+            font-size: 18px;
+            line-height: 1;
+            font-weight: 900;
+            cursor: pointer;
+        }
+        .table-more-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            z-index: 5;
+            display: none;
+            min-width: 128px;
+            padding: 6px;
+            border-radius: 8px;
+            background: #fffdfa;
+            border: 1px solid #ead4ba;
+            box-shadow: 0 12px 28px rgba(24, 13, 7, .18);
+        }
+        .table-more-wrap.is-open .table-more-menu { display: grid; }
+        .table-menu-action {
+            width: 100%;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: #7b2418;
+            padding: 9px 10px;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 900;
+            text-align: left;
+            cursor: pointer;
+        }
+        .table-menu-action:hover { background: #ffe2dc; }
+        .qr-box {
+            display: grid;
+            place-items: center;
+            min-height: 132px;
+            border-radius: 8px;
+            background: #fff6e8;
+            border: 1px solid #ead4ba;
+            overflow: hidden;
+        }
+        .qr-box svg {
+            width: 108px;
+            height: 108px;
+        }
+        .table-link {
+            color: #7a5a46;
+            font-size: 12px;
+            font-weight: 800;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .table-card-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .table-status {
+            background: #e6ffd9;
+            color: #1f5b1d;
+            border: 1px solid #7fbe73;
+        }
+        .table-status.inactive {
+            background: #ffe2dc;
+            color: #7b2418;
+            border-color: #e5a08d;
+        }
+        .qr-preview {
+            display: grid;
+            place-items: center;
+            padding: 16px;
+            border-radius: 8px;
+            background: #fffdfa;
+            border: 1px solid rgba(255, 246, 232, .22);
+        }
+        .qr-preview svg {
+            width: min(260px, 100%);
+            height: auto;
+        }
+        .qr-url {
+            margin-top: 10px;
+            color: rgba(255, 248, 237, .78);
+            font-size: 13px;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+        .qr-modal-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+        }
         .menu-detail-thumb {
             width: 96px;
             height: 96px;
@@ -734,8 +882,8 @@
         .ghost-btn:hover { background: var(--cream-soft); }
         .submit-btn:hover { background: transparent; color: #fff8ed; }
         @media (max-width: 1180px) { .menu-rail { grid-auto-columns: calc((100% - 28px) / 3); } }
-        @media (max-width: 980px) { .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filter-form { grid-template-columns: 1fr; } .filter-actions { justify-content: stretch; } .filter-actions > * { flex: 1; } .menu-rail { grid-auto-columns: calc((100% - 14px) / 2); } .database-grid { grid-template-columns: 1fr; } }
-        @media (max-width: 760px) { main { padding: 24px 16px 44px; } .hero-card, .table-header, .section-head { align-items: flex-start; flex-direction: column; } .section-actions { width: 100%; justify-content: flex-start; } .summary-grid { grid-template-columns: 1fr; } .pagination-wrap { justify-content: flex-start; } .detail-row { grid-template-columns: 1fr; gap: 4px; } .menu-carousel { grid-template-columns: 1fr; } .menu-carousel-btn { display: none; } .menu-rail { grid-auto-columns: minmax(210px, 82vw); } }
+        @media (max-width: 980px) { .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filter-form { grid-template-columns: 1fr; } .filter-actions { justify-content: stretch; } .filter-actions > * { flex: 1; } .menu-rail { grid-auto-columns: calc((100% - 14px) / 2); } .database-grid { grid-template-columns: 1fr; } .table-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 760px) { main { padding: 24px 16px 44px; } .hero-card, .table-header, .section-head { align-items: flex-start; flex-direction: column; } .section-actions { width: 100%; justify-content: flex-start; } .summary-grid { grid-template-columns: 1fr; } .pagination-wrap { justify-content: flex-start; } .detail-row { grid-template-columns: 1fr; gap: 4px; } .menu-carousel { grid-template-columns: 1fr; } .menu-carousel-btn { display: none; } .menu-rail { grid-auto-columns: minmax(210px, 82vw); } .table-grid { grid-template-columns: 1fr; } .qr-modal-actions { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -1056,6 +1204,228 @@
                                     <button type="submit" class="submit-btn">Simpan User</button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                @elseif ($section === 'tables')
+                    <div class="page-shell">
+                        <section class="hero-card">
+                            <div>
+                                <div class="eyebrow">Manager Operasional</div>
+                                <h1 class="hero-title">Data Meja</h1>
+                                <p class="hero-subtitle">Kelola meja dan QR Code yang langsung membuka daftar makanan dan minuman customer.</p>
+                            </div>
+                        </section>
+
+                        <section class="summary-grid">
+                            <article class="summary-card">
+                                <div class="summary-label">Total Meja</div>
+                                <div class="summary-value">{{ number_format($tableSummary['total']) }}</div>
+                                <div class="summary-note">Meja yang terdaftar</div>
+                            </article>
+                            <article class="summary-card is-accent">
+                                <div class="summary-label">Meja Aktif</div>
+                                <div class="summary-value">{{ number_format($tableSummary['aktif']) }}</div>
+                                <div class="summary-note">Bisa dipakai customer</div>
+                            </article>
+                            <article class="summary-card">
+                                <div class="summary-label">Meja Nonaktif</div>
+                                <div class="summary-value">{{ number_format($tableSummary['nonaktif']) }}</div>
+                                <div class="summary-note">Sedang tidak digunakan</div>
+                            </article>
+                            <article class="summary-card">
+                                <div class="summary-label">Pesanan Hari Ini</div>
+                                <div class="summary-value">{{ number_format($tableSummary['today_orders']) }}</div>
+                                <div class="summary-note">Pesanan dari customer</div>
+                            </article>
+                        </section>
+
+                        @if (session('success') || $errors->any())
+                            <div class="feedback-stack">
+                                @if (session('success'))
+                                    <div class="success-banner">{{ session('success') }}</div>
+                                @endif
+
+                                @if ($errors->any())
+                                    <div class="error-banner">
+                                        @foreach ($errors->all() as $error)
+                                            <div>{{ $error }}</div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        <section class="section-card">
+                            <div class="section-head">
+                                <div>
+                                    <div class="section-title-row">
+                                        <div class="section-title">Daftar Meja</div>
+                                        <div class="section-meta">{{ $tables->count() }} Meja</div>
+                                    </div>
+                                    <div class="section-subtitle">Customer cukup scan QR untuk langsung masuk ke menu makanan dan minuman.</div>
+                                </div>
+                                <div class="section-actions">
+                                    <button type="button" class="section-add-btn js-open-modal" data-modal="create-table">+ Tambah Meja</button>
+                                </div>
+                            </div>
+
+                            @if ($tables->isEmpty())
+                                <div class="empty-state">Belum ada data meja.</div>
+                            @else
+                                <div class="table-grid">
+                                    @foreach ($tables as $table)
+                                        @php
+                                            $tableActive = ! in_array($table->status, ['nonaktif', 'inactive'], true);
+                                            $tableUrl = route('customer.menu', $table->qr_token);
+                                            $tablePath = parse_url($tableUrl, PHP_URL_PATH) ?: $tableUrl;
+                                        @endphp
+
+                                        <article class="table-card-item">
+                                            <div class="table-card-head">
+                                                <div class="table-card-title">{{ $table->nama_meja }}</div>
+                                                <div class="table-more-wrap">
+                                                    <button type="button" class="table-more-btn js-table-more" aria-label="Menu {{ $table->nama_meja }}">⋮</button>
+                                                    <div class="table-more-menu">
+                                                        <form method="POST" action="{{ route('manager.tables.destroy', $table) }}" class="js-delete-table-form" data-table-name="{{ $table->nama_meja }}">
+                                                            @csrf
+                                                            @method('delete')
+                                                            <button type="submit" class="table-menu-action">Hapus</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="qr-box">
+                                                {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(108)->margin(1)->generate($tableUrl) !!}
+                                            </div>
+                                            <div class="table-link">{{ $tablePath }}</div>
+                                            <div><span class="status-badge table-status {{ $tableActive ? '' : 'inactive' }}">{{ $tableActive ? 'Aktif' : 'Nonaktif' }}</span></div>
+                                            <div class="table-card-actions">
+                                                <button
+                                                    type="button"
+                                                    class="row-action js-open-modal js-table-qr"
+                                                    data-modal="table-qr"
+                                                    data-name="{{ $table->nama_meja }}"
+                                                    data-url="{{ $tableUrl }}"
+                                                >Lihat QR</button>
+                                                <button
+                                                    type="button"
+                                                    class="row-action js-open-modal js-edit-table"
+                                                    data-modal="edit-table"
+                                                    data-action="{{ route('manager.tables.update', $table) }}"
+                                                    data-name="{{ $table->nama_meja }}"
+                                                    data-status="{{ $tableActive ? 'aktif' : 'nonaktif' }}"
+                                                >Edit</button>
+                                            </div>
+                                        </article>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </section>
+
+                        <div class="modal-shell" id="modal-create-table" aria-hidden="true">
+                            <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalCreateTableTitle">
+                                <div class="modal-header">
+                                    <div>
+                                        <div class="modal-title" id="modalCreateTableTitle">Tambah Meja</div>
+                                        <div class="modal-subtitle">Buat meja baru dan token QR akan dibuat otomatis.</div>
+                                    </div>
+                                    <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
+                                </div>
+                                <form method="POST" action="{{ route('manager.tables.store') }}" class="modal-form">
+                                    @csrf
+                                    <input type="hidden" name="modal_id" value="create-table">
+                                    <div class="field-group">
+                                        <label for="createTableName">Nama Meja</label>
+                                        <input id="createTableName" type="text" name="name" value="{{ old('modal_id') === 'create-table' ? old('name') : '' }}" maxlength="7" placeholder="Contoh: Meja 8" required>
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="createTableStatus">Status</label>
+                                        <select id="createTableStatus" name="status" required>
+                                            <option value="aktif" @selected(old('status', 'aktif') === 'aktif')>Aktif</option>
+                                            <option value="nonaktif" @selected(old('status') === 'nonaktif')>Nonaktif</option>
+                                        </select>
+                                    </div>
+                                    <div class="modal-actions">
+                                        <button type="button" class="ghost-btn js-close-modal">Batal</button>
+                                        <button type="submit" class="submit-btn">Simpan Meja</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="modal-shell" id="modal-edit-table" aria-hidden="true">
+                            <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalEditTableTitle">
+                                <div class="modal-header">
+                                    <div>
+                                        <div class="modal-title" id="modalEditTableTitle">Edit Meja</div>
+                                        <div class="modal-subtitle">Perbarui nama dan status meja.</div>
+                                    </div>
+                                    <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
+                                </div>
+                                <form method="POST" action="#" class="modal-form js-table-edit-form">
+                                    @csrf
+                                    @method('patch')
+                                    <input type="hidden" name="modal_id" value="edit-table">
+                                    <div class="field-group">
+                                        <label for="editTableName">Nama Meja</label>
+                                        <input id="editTableName" type="text" name="name" maxlength="7" placeholder="Contoh: Meja 8" required>
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="editTableStatus">Status</label>
+                                        <select id="editTableStatus" name="status" required>
+                                            <option value="aktif">Aktif</option>
+                                            <option value="nonaktif">Nonaktif</option>
+                                        </select>
+                                    </div>
+                                    <div class="modal-actions">
+                                        <button type="button" class="ghost-btn js-close-modal">Batal</button>
+                                        <button type="submit" class="submit-btn">Simpan Perubahan</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="modal-shell" id="modal-table-qr" aria-hidden="true">
+                            <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTableQrTitle">
+                                <div class="modal-header">
+                                    <div>
+                                        <div class="modal-title" id="modalTableQrTitle">QR Meja</div>
+                                        <div class="modal-subtitle js-table-qr-subtitle">Scan QR untuk langsung membuka menu customer.</div>
+                                    </div>
+                                    <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
+                                </div>
+                                <div class="modal-form">
+                                    <div class="qr-preview js-table-qr-preview"></div>
+                                    <div class="qr-url js-table-qr-url">-</div>
+                                    <div class="modal-actions qr-modal-actions">
+                                        <button type="button" class="ghost-btn js-close-modal">Tutup</button>
+                                        <button type="button" class="submit-btn js-download-table-qr">Download PNG</button>
+                                        <button type="button" class="submit-btn js-print-table-qr">Cetak QR</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-shell" id="modal-delete-table" aria-hidden="true">
+                            <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalDeleteTableTitle">
+                                <div class="modal-header">
+                                    <div>
+                                        <div class="modal-title" id="modalDeleteTableTitle">Hapus Meja?</div>
+                                        <div class="modal-subtitle">Meja yang dihapus tidak akan tampil di Data Meja.</div>
+                                    </div>
+                                    <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
+                                </div>
+                                <div class="modal-form">
+                                    <div class="stock-modal-summary">
+                                        <div class="stock-modal-product js-delete-table-name">-</div>
+                                        <div class="stock-modal-current">Pastikan meja ini memang tidak digunakan lagi.</div>
+                                    </div>
+                                    <div class="modal-actions">
+                                        <button type="button" class="ghost-btn js-close-modal">Batal</button>
+                                        <button type="button" class="submit-btn js-confirm-delete-table">Hapus</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 @elseif ($section === 'stock')
@@ -1728,7 +2098,7 @@
                                                         @endif
                                                     </td>
                                                     <td>
-                                                        @if (! $change->restored_at && in_array($change->data_type, ['Menu', 'User'], true))
+                                                        @if (! $change->restored_at && in_array($change->data_type, ['Menu', 'User', 'Meja'], true))
                                                             <form method="POST" action="{{ route('manager.activity.restore', $change) }}">
                                                                 @csrf
                                                                 <button class="restore-btn" type="submit">{{ $change->action === 'Hapus' ? 'Pulihkan' : 'Kembalikan' }}</button>
@@ -1834,6 +2204,11 @@
             const closeButtons = document.querySelectorAll('.js-close-modal');
             const modals = document.querySelectorAll('.modal-shell');
             let pendingDeleteForm = null;
+            let pendingDeleteTableForm = null;
+            const tableQrState = {
+                name: '',
+                url: '',
+            };
             const cropState = {
                 image: null,
                 box: null,
@@ -1983,6 +2358,168 @@
                 if (noteInput) {
                     noteInput.value = '';
                 }
+            }
+
+            function prepareEditTableModal(trigger) {
+                if (trigger.dataset.modal !== 'edit-table') {
+                    return;
+                }
+
+                const form = document.querySelector('.js-table-edit-form');
+                const nameInput = document.getElementById('editTableName');
+                const statusInput = document.getElementById('editTableStatus');
+
+                if (form) {
+                    form.action = trigger.dataset.action || '#';
+                }
+
+                if (nameInput) {
+                    nameInput.value = trigger.dataset.name || '';
+                }
+
+                if (statusInput) {
+                    statusInput.value = trigger.dataset.status || 'aktif';
+                }
+            }
+
+            function prepareTableQrModal(trigger) {
+                if (trigger.dataset.modal !== 'table-qr') {
+                    return;
+                }
+
+                const title = document.getElementById('modalTableQrTitle');
+                const subtitle = document.querySelector('.js-table-qr-subtitle');
+                const preview = document.querySelector('.js-table-qr-preview');
+                const urlText = document.querySelector('.js-table-qr-url');
+                const card = trigger.closest('.table-card-item');
+                const qrBox = card ? card.querySelector('.qr-box') : null;
+                const name = trigger.dataset.name || 'Meja';
+                const url = trigger.dataset.url || '#';
+                tableQrState.name = name;
+                tableQrState.url = url;
+
+                if (title) {
+                    title.textContent = 'QR ' + name;
+                }
+
+                if (subtitle) {
+                    subtitle.textContent = 'Scan QR untuk langsung membuka menu customer ' + name + '.';
+                }
+
+                if (preview) {
+                    preview.innerHTML = qrBox ? qrBox.innerHTML : '';
+                }
+
+                if (urlText) {
+                    urlText.textContent = url;
+                }
+
+            }
+
+            function tableQrFileName() {
+                const baseName = (tableQrState.name || 'meja')
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-|-$/g, '') || 'meja';
+
+                return 'swiftbite-' + baseName + '-qr.png';
+            }
+
+            function getTableQrSvg() {
+                const preview = document.querySelector('.js-table-qr-preview');
+                return preview ? preview.querySelector('svg') : null;
+            }
+
+            function escapeHtml(value) {
+                const wrapper = document.createElement('div');
+                wrapper.textContent = value || '';
+                return wrapper.innerHTML;
+            }
+
+            function downloadTableQrPng() {
+                const svg = getTableQrSvg();
+
+                if (!svg) {
+                    return;
+                }
+
+                const serializer = new XMLSerializer();
+                const svgText = serializer.serializeToString(svg);
+                const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(svgBlob);
+                const image = new Image();
+
+                image.onload = () => {
+                    const size = 900;
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+
+                    canvas.width = size;
+                    canvas.height = size;
+                    context.fillStyle = '#ffffff';
+                    context.fillRect(0, 0, size, size);
+                    context.drawImage(image, 40, 40, size - 80, size - 80);
+                    URL.revokeObjectURL(url);
+
+                    const link = document.createElement('a');
+                    link.download = tableQrFileName();
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                };
+
+                image.src = url;
+            }
+
+            function printTableQr() {
+                const svg = getTableQrSvg();
+
+                if (!svg) {
+                    return;
+                }
+
+                const name = tableQrState.name || 'Meja';
+                const url = tableQrState.url || '';
+                const svgText = new XMLSerializer().serializeToString(svg);
+                const printWindow = window.open('', '_blank', 'width=520,height=720');
+                const safeName = escapeHtml(name);
+                const safeUrl = escapeHtml(url);
+
+                if (!printWindow) {
+                    return;
+                }
+
+                printWindow.document.write(`
+                    <!doctype html>
+                    <html lang="id">
+                    <head>
+                        <meta charset="utf-8">
+                        <title>QR ${safeName}</title>
+                        <style>
+                            body { margin: 0; font-family: Arial, sans-serif; color: #2a1309; }
+                            .sheet { min-height: 100vh; display: grid; place-items: center; padding: 32px; box-sizing: border-box; }
+                            .card { width: 100%; max-width: 360px; text-align: center; border: 2px solid #5a2b17; border-radius: 16px; padding: 28px; }
+                            .brand { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+                            h1 { font-size: 34px; margin: 0 0 18px; }
+                            svg { width: 260px; height: 260px; }
+                            .url { margin-top: 18px; font-size: 12px; overflow-wrap: anywhere; }
+                            @media print { .sheet { padding: 0; } .card { border-color: #000; } }
+                        </style>
+                    </head>
+                    <body>
+                        <main class="sheet">
+                            <section class="card">
+                                <div class="brand">SwiftBite Morning Bakery</div>
+                                <h1>${safeName}</h1>
+                                ${svgText}
+                                <div class="url">${safeUrl}</div>
+                            </section>
+                        </main>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => printWindow.print(), 250);
             }
 
             function updateCropImage() {
@@ -2321,9 +2858,14 @@
                     prepareCreateMenuModal(trigger);
                     prepareEditMenuModal(trigger);
                     prepareStockMenuModal(trigger);
+                    prepareEditTableModal(trigger);
+                    prepareTableQrModal(trigger);
                     openModal(trigger.dataset.modal);
                 });
             });
+
+            document.querySelector('.js-download-table-qr')?.addEventListener('click', downloadTableQrPng);
+            document.querySelector('.js-print-table-qr')?.addEventListener('click', printTableQr);
 
             document.querySelectorAll('.success-banner, .error-banner').forEach((banner) => {
                 banner.addEventListener('click', () => {
@@ -2331,6 +2873,54 @@
                     setTimeout(() => {
                         banner.remove();
                     }, 220);
+                });
+            });
+
+            document.querySelectorAll('.js-table-more').forEach((button) => {
+                button.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    const wrap = button.closest('.table-more-wrap');
+
+                    document.querySelectorAll('.table-more-wrap.is-open').forEach((opened) => {
+                        if (opened !== wrap) {
+                            opened.classList.remove('is-open');
+                        }
+                    });
+
+                    wrap?.classList.toggle('is-open');
+                });
+            });
+
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.table-more-wrap.is-open').forEach((wrap) => {
+                    wrap.classList.remove('is-open');
+                });
+            });
+
+            document.querySelectorAll('.js-delete-table-form').forEach((form) => {
+                form.addEventListener('submit', (event) => {
+                    event.preventDefault();
+                    pendingDeleteTableForm = form;
+
+                    const name = document.querySelector('.js-delete-table-name');
+
+                    if (name) {
+                        name.textContent = form.dataset.tableName || 'Meja';
+                    }
+
+                    openModal('delete-table');
+                });
+            });
+
+            document.querySelectorAll('.js-confirm-delete-table').forEach((button) => {
+                button.addEventListener('click', () => {
+                    if (!pendingDeleteTableForm) {
+                        return;
+                    }
+
+                    const form = pendingDeleteTableForm;
+                    pendingDeleteTableForm = null;
+                    form.submit();
                 });
             });
 
@@ -2574,6 +3164,10 @@
 
             @if ($section === 'stock' && $errors->any())
                 openModal('stock-menu');
+            @endif
+
+            @if ($section === 'tables' && $errors->any())
+                openModal(@json(old('modal_id', 'create-table')));
             @endif
         })();
     </script>

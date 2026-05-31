@@ -30,6 +30,9 @@ Route::middleware(['simple.auth', 'user.level:3'])->group(function () {
     Route::get('/manager', [ManagerController::class, 'dashboard'])->name('manager.dashboard');
     Route::post('/manager/users', [ManagerController::class, 'storeUser'])->name('manager.users.store');
     Route::patch('/manager/users/{user}', [ManagerController::class, 'updateUser'])->name('manager.users.update');
+    Route::post('/manager/tables', [ManagerController::class, 'storeTable'])->name('manager.tables.store');
+    Route::patch('/manager/tables/{table}', [ManagerController::class, 'updateTable'])->name('manager.tables.update');
+    Route::delete('/manager/tables/{table}', [ManagerController::class, 'destroyTable'])->name('manager.tables.destroy');
     Route::post('/manager/menus', [ManagerController::class, 'storeMenu'])->name('manager.menus.store');
     Route::patch('/manager/menus/{menu}', [ManagerController::class, 'updateMenu'])->name('manager.menus.update');
     Route::delete('/manager/menus', [ManagerController::class, 'destroyMenus'])->name('manager.menus.destroy');

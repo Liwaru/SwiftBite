@@ -67,7 +67,7 @@ class DatabaseSeeder extends Seeder
         foreach (range(1, 6) as $number) {
             DiningTable::firstOrCreate(
                 ['nama_meja' => 'Meja ' . $number],
-                ['token' => Str::random(32), 'status' => 'kosong'],
+                ['token' => Str::random(32), 'status' => 'aktif'],
             );
         }
 

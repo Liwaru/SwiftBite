@@ -142,6 +142,18 @@ class ManagerController extends Controller
             ];
         }
 
+        if ($section === 'tables') {
+            $tables = DiningTable::orderBy('nama_meja')->get();
+
+            $data['tables'] = $tables;
+            $data['tableSummary'] = [
+                'total' => $tables->count(),
+                'aktif' => $tables->filter(fn (DiningTable $table) => $this->tableIsActive($table))->count(),
+                'nonaktif' => $tables->filter(fn (DiningTable $table) => ! $this->tableIsActive($table))->count(),
+                'today_orders' => Order::whereDate('created_at', today())->count(),
+            ];
+        }
+
         if ($section === 'activity') {
             $tab = request('tab') === 'data' ? 'data' : 'activity';
             $activityRole = (string) request('role', 'semua');
@@ -237,6 +249,73 @@ class ManagerController extends Controller
         return redirect()
             ->route('manager.page', 'users')
             ->with('success', 'Data user berhasil diperbarui.');
+    }
+
+    public function storeTable(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:7'],
+            'status' => ['required', Rule::in(['aktif', 'nonaktif'])],
+        ]);
+
+        $tableName = $this->normalizeTableName($validated['name']);
+
+        if (DiningTable::where('nama_meja', $tableName)->exists()) {
+            return back()
+                ->withErrors(['name' => 'Nama meja sudah digunakan.'])
+                ->withInput();
+        }
+
+        $table = DiningTable::create([
+            'nama_meja' => $tableName,
+            'token' => $this->generateUniqueTableToken(),
+            'status' => $validated['status'] === 'nonaktif' ? 'nonaktif' : 'aktif',
+        ]);
+
+        ActivityRecorder::dataChange('Tambah', 'Meja', $table->nama_meja, null, $this->tableSnapshot($table), $table);
+
+        return redirect()
+            ->route('manager.page', 'tables')
+            ->with('success', 'Meja baru berhasil ditambahkan.');
+    }
+
+    public function updateTable(Request $request, DiningTable $table): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:7'],
+            'status' => ['required', Rule::in(['aktif', 'nonaktif'])],
+        ]);
+
+        $tableName = $this->normalizeTableName($validated['name']);
+
+        if (DiningTable::where('nama_meja', $tableName)->whereKeyNot($table->getKey())->exists()) {
+            return back()
+                ->withErrors(['name' => 'Nama meja sudah digunakan.'])
+                ->withInput();
+        }
+
+        $before = $this->tableSnapshot($table);
+
+        $table->update([
+            'nama_meja' => $tableName,
+            'status' => $validated['status'] === 'nonaktif' ? 'nonaktif' : 'aktif',
+        ]);
+
+        ActivityRecorder::dataChange('Edit', 'Meja', $table->nama_meja, $before, $this->tableSnapshot($table), $table);
+
+        return redirect()
+            ->route('manager.page', 'tables')
+            ->with('success', 'Data meja berhasil diperbarui.');
+    }
+
+    public function destroyTable(DiningTable $table): RedirectResponse
+    {
+        ActivityRecorder::dataChange('Hapus', 'Meja', $table->nama_meja, $this->tableSnapshot($table), null, $table);
+        $table->delete();
+
+        return redirect()
+            ->route('manager.page', 'tables')
+            ->with('success', 'Meja berhasil dihapus.');
     }
 
     public function storeMenu(Request $request): RedirectResponse
@@ -403,6 +482,8 @@ class ManagerController extends Controller
             $this->restoreMenuChange($change);
         } elseif ($change->data_type === 'User') {
             $this->restoreUserChange($change);
+        } elseif ($change->data_type === 'Meja') {
+            $this->restoreTableChange($change);
         } else {
             return back()->withErrors(['restore' => 'Jenis data belum mendukung pemulihan.']);
         }
@@ -531,6 +612,41 @@ class ManagerController extends Controller
         ];
     }
 
+    private function tableSnapshot(DiningTable $table): array
+    {
+        return [
+            'id_meja' => $table->id_meja,
+            'nama_meja' => $table->nama_meja,
+            'token' => $table->token,
+            'status' => $table->status,
+        ];
+    }
+
+    private function tableIsActive(DiningTable $table): bool
+    {
+        return in_array($table->status, ['aktif', 'kosong', 'terisi'], true);
+    }
+
+    private function normalizeTableName(string $name): string
+    {
+        $name = trim(preg_replace('/\s+/', ' ', $name));
+
+        if (preg_match('/^meja\s*0*(\d+)$/i', $name, $matches)) {
+            return 'Meja ' . (int) $matches[1];
+        }
+
+        return Str::title($name);
+    }
+
+    private function generateUniqueTableToken(): string
+    {
+        do {
+            $token = Str::random(32);
+        } while (DiningTable::where('token', $token)->exists());
+
+        return $token;
+    }
+
     private function userSnapshot(User $user): array
     {
         return [
@@ -591,6 +707,30 @@ class ManagerController extends Controller
                 'email' => $snapshot['email'],
                 'level' => $snapshot['level'],
                 'password' => $snapshot['password'],
+            ],
+        );
+    }
+
+    private function restoreTableChange(DataChange $change): void
+    {
+        if ($change->action === 'Tambah' && $change->target_id) {
+            DiningTable::whereKey($change->target_id)->delete();
+
+            return;
+        }
+
+        $snapshot = $change->before_data;
+
+        if (! is_array($snapshot)) {
+            return;
+        }
+
+        DiningTable::updateOrCreate(
+            ['id_meja' => $snapshot['id_meja']],
+            [
+                'nama_meja' => $snapshot['nama_meja'],
+                'token' => $snapshot['token'],
+                'status' => $snapshot['status'] ?? 'aktif',
             ],
         );
     }
