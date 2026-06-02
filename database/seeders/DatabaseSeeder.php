@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\DiningTable;
 use App\Models\Category;
+use App\Models\Ingredient;
+use App\Models\IngredientPurchase;
 use App\Models\MenuItem;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -33,7 +35,7 @@ class DatabaseSeeder extends Seeder
             [
                 'email' => 'kasir@example.com',
                 'password' => 'kasir',
-                'level' => 2,
+                'level' => 3,
             ],
         );
 
@@ -47,11 +49,20 @@ class DatabaseSeeder extends Seeder
         );
 
         User::updateOrCreate(
+            ['name' => 'chef'],
+            [
+                'email' => 'chef@example.com',
+                'password' => 'chef',
+                'level' => 2,
+            ],
+        );
+
+        User::updateOrCreate(
             ['name' => 'manager'],
             [
                 'email' => 'manager@example.com',
                 'password' => 'manager',
-                'level' => 3,
+                'level' => 4,
             ],
         );
 
@@ -60,7 +71,7 @@ class DatabaseSeeder extends Seeder
             [
                 'email' => 'owner@example.com',
                 'password' => 'owner',
-                'level' => 4,
+                'level' => 5,
             ],
         );
 
@@ -106,6 +117,57 @@ class DatabaseSeeder extends Seeder
                     'foto' => $menu['photo'] ?? null,
                     'stok' => $menu['stock'],
                     'status' => 'tersedia',
+                ],
+            );
+        }
+
+        $ingredients = [
+            ['name' => 'Tepung Terigu', 'stock' => 20, 'unit' => 'kg', 'minimum' => 5],
+            ['name' => 'Mentega', 'stock' => 8, 'unit' => 'kg', 'minimum' => 3],
+            ['name' => 'Gula Pasir', 'stock' => 12, 'unit' => 'kg', 'minimum' => 4],
+            ['name' => 'Cokelat', 'stock' => 6, 'unit' => 'kg', 'minimum' => 2],
+            ['name' => 'Susu', 'stock' => 15, 'unit' => 'liter', 'minimum' => 5],
+            ['name' => 'Telur', 'stock' => 60, 'unit' => 'pcs', 'minimum' => 20],
+            ['name' => 'Ragi', 'stock' => 2, 'unit' => 'kg', 'minimum' => 1],
+            ['name' => 'Keju', 'stock' => 5, 'unit' => 'kg', 'minimum' => 2],
+        ];
+
+        foreach ($ingredients as $ingredient) {
+            Ingredient::updateOrCreate(
+                ['nama_bahan' => $ingredient['name']],
+                [
+                    'stok' => $ingredient['stock'],
+                    'satuan' => $ingredient['unit'],
+                    'stok_minimum' => $ingredient['minimum'],
+                ],
+            );
+        }
+
+        $purchases = [
+            ['ingredient' => 'Tepung Terigu', 'qty' => 10, 'unit' => 'kg', 'price' => 150000, 'note' => 'Pembelian Tepung Terigu'],
+            ['ingredient' => 'Mentega', 'qty' => 5, 'unit' => 'kg', 'price' => 200000, 'note' => 'Pembelian Mentega'],
+            ['ingredient' => 'Gula Pasir', 'qty' => 8, 'unit' => 'kg', 'price' => 120000, 'note' => 'Pembelian Gula Pasir'],
+            ['ingredient' => 'Cokelat', 'qty' => 4, 'unit' => 'kg', 'price' => 180000, 'note' => 'Pembelian Cokelat'],
+            ['ingredient' => 'Susu', 'qty' => 10, 'unit' => 'liter', 'price' => 160000, 'note' => 'Pembelian Susu'],
+        ];
+
+        foreach ($purchases as $index => $purchase) {
+            $ingredient = Ingredient::where('nama_bahan', $purchase['ingredient'])->first();
+
+            if (! $ingredient) {
+                continue;
+            }
+
+            IngredientPurchase::updateOrCreate(
+                [
+                    'id_bahan' => $ingredient->id_bahan,
+                    'note' => $purchase['note'],
+                ],
+                [
+                    'qty' => $purchase['qty'],
+                    'satuan' => $purchase['unit'],
+                    'harga_total' => $purchase['price'],
+                    'purchased_at' => now()->subDays($index),
                 ],
             );
         }

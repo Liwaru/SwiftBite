@@ -201,6 +201,139 @@
                 document.querySelectorAll('.js-edit-package-qty').forEach((input) => {
                     input.value = items[input.dataset.menuId] || 0;
                 });
+
+                if (form) {
+                    const builder = form.querySelector('.js-package-builder');
+
+                    if (builder) {
+                        syncPackageBuilder(builder);
+                    }
+                }
+            }
+
+            function selectedPackageItems(builder) {
+                return Array.from(builder.querySelectorAll('.js-package-qty'))
+                    .map((input) => ({
+                        id: input.dataset.menuId,
+                        name: input.dataset.menuName || 'Menu',
+                        quantity: Math.max(0, Number(input.value || 0)),
+                        input,
+                    }))
+                    .filter((item) => item.quantity > 0);
+            }
+
+            function syncPackageBuilder(builder) {
+                const selected = selectedPackageItems(builder);
+                const list = builder.querySelector('.js-package-selected-list');
+                const count = builder.querySelector('.js-package-selected-count');
+
+                builder.querySelectorAll('.package-picker-row').forEach((row) => {
+                    const check = row.querySelector('.js-package-check');
+                    const quantity = row.querySelector('.js-package-qty');
+                    const isSelected = Number(quantity?.value || 0) > 0;
+
+                    if (check) {
+                        check.checked = isSelected;
+                    }
+
+                    row.classList.toggle('is-selected', isSelected);
+                });
+
+                if (count) {
+                    count.textContent = selected.length + ' Menu';
+                }
+
+                if (!list) {
+                    return;
+                }
+
+                list.innerHTML = '';
+
+                if (selected.length === 0) {
+                    const empty = document.createElement('span');
+                    empty.className = 'package-selected-empty';
+                    empty.textContent = 'Belum ada menu dipilih.';
+                    list.appendChild(empty);
+                    return;
+                }
+
+                selected.forEach((item) => {
+                    const chip = document.createElement('span');
+                    chip.className = 'package-chip';
+
+                    const text = document.createElement('span');
+                    text.textContent = item.quantity + 'x ' + item.name;
+
+                    const remove = document.createElement('button');
+                    remove.type = 'button';
+                    remove.className = 'js-package-remove';
+                    remove.dataset.menuId = item.id;
+                    remove.setAttribute('aria-label', 'Hapus ' + item.name + ' dari paket');
+                    remove.textContent = 'x';
+
+                    chip.appendChild(text);
+                    chip.appendChild(remove);
+                    list.appendChild(chip);
+                });
+            }
+
+            function initPackageBuilders() {
+                document.querySelectorAll('.js-package-builder').forEach((builder) => {
+                    const toggle = builder.querySelector('.js-package-picker-toggle');
+                    const panel = builder.querySelector('.js-package-picker-panel');
+                    const search = builder.querySelector('.js-package-search');
+
+                    toggle?.addEventListener('click', () => {
+                        const isOpen = panel?.classList.toggle('is-open') || false;
+                        toggle.textContent = isOpen ? 'Tutup Pilihan' : '+ Tambah Menu';
+                    });
+
+                    search?.addEventListener('input', () => {
+                        const keyword = search.value.trim().toLowerCase();
+
+                        builder.querySelectorAll('.package-picker-row').forEach((row) => {
+                            const haystack = ((row.dataset.menuName || '') + ' ' + (row.dataset.menuCategory || '')).toLowerCase();
+                            row.classList.toggle('is-hidden', keyword !== '' && !haystack.includes(keyword));
+                        });
+                    });
+
+                    builder.querySelectorAll('.js-package-check').forEach((check) => {
+                        check.addEventListener('change', () => {
+                            const quantity = builder.querySelector('.js-package-qty[data-menu-id="' + check.dataset.menuId + '"]');
+
+                            if (quantity) {
+                                quantity.value = check.checked ? Math.max(1, Number(quantity.value || 0)) : 0;
+                            }
+
+                            syncPackageBuilder(builder);
+                        });
+                    });
+
+                    builder.querySelectorAll('.js-package-qty').forEach((input) => {
+                        input.addEventListener('input', () => {
+                            input.value = Math.max(0, Number(input.value || 0));
+                            syncPackageBuilder(builder);
+                        });
+                    });
+
+                    builder.querySelector('.js-package-selected-list')?.addEventListener('click', (event) => {
+                        const remove = event.target.closest('.js-package-remove');
+
+                        if (!remove) {
+                            return;
+                        }
+
+                        const quantity = builder.querySelector('.js-package-qty[data-menu-id="' + remove.dataset.menuId + '"]');
+
+                        if (quantity) {
+                            quantity.value = 0;
+                        }
+
+                        syncPackageBuilder(builder);
+                    });
+
+                    syncPackageBuilder(builder);
+                });
             }
 
             function prepareEditTableModal(trigger) {
@@ -986,6 +1119,7 @@
 
             initMenuCropper();
             initEditMenuCropper();
+            initPackageBuilders();
 
             document.addEventListener('keydown', (event) => {
                 if (event.key === 'Escape') {
@@ -1014,6 +1148,10 @@
 
             @if ($section === 'stock' && $errors->any())
                 openModal('stock-menu');
+            @endif
+
+            @if ($section === 'ingredients' && $errors->any())
+                openModal(@json(old('modal_id', 'create-ingredient')));
             @endif
 
             @if ($section === 'tables' && $errors->any())

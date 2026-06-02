@@ -308,21 +308,34 @@
                                         <input id="createPackageName" type="text" name="name" value="{{ old('name') }}" maxlength="40" placeholder="Contoh: Paket Hemat Pagi" required>
                                     </div>
 
-                                    <div class="package-picker">
+                                    <div class="package-builder js-package-builder">
+                                        <div class="package-selected-head">
+                                            <span>Menu Dipilih</span>
+                                            <span class="package-selected-count js-package-selected-count">0 Menu</span>
+                                        </div>
+                                        <div class="package-selected-list js-package-selected-list">
+                                            <span class="package-selected-empty">Belum ada menu dipilih.</span>
+                                        </div>
+                                        <button type="button" class="package-add-menu-btn js-package-picker-toggle">+ Tambah Menu</button>
+
+                                        <div class="package-picker js-package-picker-panel">
+                                            <input type="search" class="package-search js-package-search" placeholder="Cari menu..." aria-label="Cari menu paket">
                                         @foreach ($availablePackageMenuItems->groupBy(fn ($menu) => $menu->category) as $category => $items)
                                             <div class="package-picker-group">
                                                 <div class="package-picker-title">{{ $category }}</div>
                                                 @foreach ($items as $menu)
-                                                    <label class="package-picker-row" for="packageItem{{ $menu->getKey() }}">
-                                                        <span>
+                                                    <label class="package-picker-row" for="packageCheck{{ $menu->getKey() }}" data-menu-name="{{ strtolower($menu->nama_menu) }}" data-menu-category="{{ strtolower($menu->category) }}">
+                                                        <input id="packageCheck{{ $menu->getKey() }}" type="checkbox" class="js-package-check" data-menu-id="{{ $menu->getKey() }}">
+                                                        <span class="package-picker-info">
                                                             <strong>{{ $menu->nama_menu }}</strong>
-                                                            <em>Rp{{ number_format($menu->harga, 0, ',', '.') }}</em>
+                                                            <em>{{ $menu->category }} · Rp{{ number_format($menu->harga, 0, ',', '.') }}</em>
                                                         </span>
-                                                        <input id="packageItem{{ $menu->getKey() }}" type="number" name="items[{{ $menu->getKey() }}]" value="{{ old('items.' . $menu->getKey(), 0) }}" min="0" max="99" aria-label="Jumlah {{ $menu->nama_menu }}">
+                                                        <input type="number" name="items[{{ $menu->getKey() }}]" class="package-qty js-package-qty" data-menu-id="{{ $menu->getKey() }}" data-menu-name="{{ $menu->nama_menu }}" value="{{ old('items.' . $menu->getKey(), 0) }}" min="0" max="99" aria-label="Jumlah {{ $menu->nama_menu }}">
                                                     </label>
                                                 @endforeach
                                             </div>
                                         @endforeach
+                                        </div>
                                     </div>
 
                                     <div class="field-group">
@@ -363,21 +376,34 @@
                                         <input id="editPackageName" type="text" name="name" class="js-edit-package-name" maxlength="40" required>
                                     </div>
 
-                                    <div class="package-picker">
+                                    <div class="package-builder js-package-builder">
+                                        <div class="package-selected-head">
+                                            <span>Menu Dipilih</span>
+                                            <span class="package-selected-count js-package-selected-count">0 Menu</span>
+                                        </div>
+                                        <div class="package-selected-list js-package-selected-list">
+                                            <span class="package-selected-empty">Belum ada menu dipilih.</span>
+                                        </div>
+                                        <button type="button" class="package-add-menu-btn js-package-picker-toggle">+ Tambah Menu</button>
+
+                                        <div class="package-picker js-package-picker-panel">
+                                            <input type="search" class="package-search js-package-search" placeholder="Cari menu..." aria-label="Cari menu paket">
                                         @foreach ($availablePackageMenuItems->groupBy(fn ($menu) => $menu->category) as $category => $items)
                                             <div class="package-picker-group">
                                                 <div class="package-picker-title">{{ $category }}</div>
                                                 @foreach ($items as $menu)
-                                                    <label class="package-picker-row" for="editPackageItem{{ $menu->getKey() }}">
-                                                        <span>
+                                                    <label class="package-picker-row" for="editPackageCheck{{ $menu->getKey() }}" data-menu-name="{{ strtolower($menu->nama_menu) }}" data-menu-category="{{ strtolower($menu->category) }}">
+                                                        <input id="editPackageCheck{{ $menu->getKey() }}" type="checkbox" class="js-package-check" data-menu-id="{{ $menu->getKey() }}">
+                                                        <span class="package-picker-info">
                                                             <strong>{{ $menu->nama_menu }}</strong>
-                                                            <em>Rp{{ number_format($menu->harga, 0, ',', '.') }}</em>
+                                                            <em>{{ $menu->category }} · Rp{{ number_format($menu->harga, 0, ',', '.') }}</em>
                                                         </span>
-                                                        <input id="editPackageItem{{ $menu->getKey() }}" type="number" name="items[{{ $menu->getKey() }}]" class="js-edit-package-qty" data-menu-id="{{ $menu->getKey() }}" value="0" min="0" max="99" aria-label="Jumlah {{ $menu->nama_menu }}">
+                                                        <input type="number" name="items[{{ $menu->getKey() }}]" class="package-qty js-package-qty js-edit-package-qty" data-menu-id="{{ $menu->getKey() }}" data-menu-name="{{ $menu->nama_menu }}" value="0" min="0" max="99" aria-label="Jumlah {{ $menu->nama_menu }}">
                                                     </label>
                                                 @endforeach
                                             </div>
                                         @endforeach
+                                        </div>
                                     </div>
 
                                     <div class="field-group">

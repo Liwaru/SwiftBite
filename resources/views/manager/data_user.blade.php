@@ -15,16 +15,18 @@
                     @php
                         $roleLabels = [
                             1 => 'Waiter',
-                            2 => 'Cashier',
-                            3 => 'Manager',
-                            4 => 'Owner',
+                            2 => 'Chef',
+                            3 => 'Cashier',
+                            4 => 'Manager',
+                            5 => 'Owner',
                         ];
 
                         $roleClasses = [
                             1 => 'waiter',
-                            2 => 'cashier',
-                            3 => 'manager',
-                            4 => 'owner',
+                            2 => 'chef',
+                            3 => 'cashier',
+                            4 => 'manager',
+                            5 => 'owner',
                         ];
                     @endphp
 
@@ -54,9 +56,9 @@
                                 <div class="summary-note">Akun kasir operasional</div>
                             </article>
                             <article class="summary-card">
-                                <div class="summary-label">Pengelola</div>
-                                <div class="summary-value">{{ number_format($summary['pengelola']) }}</div>
-                                <div class="summary-note">Manager dan owner</div>
+                                <div class="summary-label">Chef</div>
+                                <div class="summary-value">{{ number_format($summary['chef']) }}</div>
+                                <div class="summary-note">Akun dapur dan bahan</div>
                             </article>
                         </section>
 
@@ -223,9 +225,10 @@
                                             <label for="editRole{{ $user->getKey() }}">Role</label>
                                             <select id="editRole{{ $user->getKey() }}" name="level" required>
                                                 <option value="1" @selected((string) (old('modal_id') === $editModalId ? old('level', $user->level) : $user->level) === '1')>Waiter</option>
-                                                <option value="2" @selected((string) (old('modal_id') === $editModalId ? old('level', $user->level) : $user->level) === '2')>Cashier</option>
-                                                <option value="3" @selected((string) (old('modal_id') === $editModalId ? old('level', $user->level) : $user->level) === '3')>Manager</option>
-                                                <option value="4" @selected((string) (old('modal_id') === $editModalId ? old('level', $user->level) : $user->level) === '4')>Owner</option>
+                                                <option value="2" @selected((string) (old('modal_id') === $editModalId ? old('level', $user->level) : $user->level) === '2')>Chef</option>
+                                                <option value="3" @selected((string) (old('modal_id') === $editModalId ? old('level', $user->level) : $user->level) === '3')>Cashier</option>
+                                                <option value="4" @selected((string) (old('modal_id') === $editModalId ? old('level', $user->level) : $user->level) === '4')>Manager</option>
+                                                <option value="5" @selected((string) (old('modal_id') === $editModalId ? old('level', $user->level) : $user->level) === '5')>Owner</option>
                                             </select>
                                         </div>
 
@@ -291,7 +294,7 @@
                             <div class="modal-header">
                                 <div>
                                     <div class="modal-title" id="modalCreateUserTitle">Tambah User</div>
-                                    <div class="modal-subtitle">Buat akun baru untuk waiter atau cashier. Nama user otomatis mengikuti username.</div>
+                                    <div class="modal-subtitle">Buat akun baru untuk waiter, chef, atau cashier. Nama user otomatis mengikuti username.</div>
                                 </div>
                                 <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
                             </div>
@@ -314,7 +317,8 @@
                                     <select id="createRole" name="level" required>
                                         <option value="" disabled @selected(old('level') === null)>Pilih role</option>
                                         <option value="1" @selected(old('level') === '1')>Waiter</option>
-                                        <option value="2" @selected(old('level') === '2')>Cashier</option>
+                                        <option value="2" @selected(old('level') === '2')>Chef</option>
+                                        <option value="3" @selected(old('level') === '3')>Cashier</option>
                                     </select>
                                 </div>
 

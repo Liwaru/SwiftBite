@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CashierController;
+use App\Http\Controllers\ChefController;
 use App\Http\Controllers\CustomerMenuController;
 use App\Http\Controllers\CustomerPageController;
 use App\Http\Controllers\ManagerController;
@@ -26,7 +27,14 @@ Route::middleware(['simple.auth', 'user.level:1'])->group(function () {
     Route::patch('/waiter/orders/{order}/complete', [WaiterController::class, 'complete'])->name('waiter.orders.complete');
 });
 
-Route::middleware(['simple.auth', 'user.level:3'])->group(function () {
+Route::middleware(['simple.auth', 'user.level:2'])->group(function () {
+    Route::get('/chef', [ChefController::class, 'dashboard'])->name('chef.dashboard');
+    Route::get('/chef/orders', [ChefController::class, 'orders'])->name('chef.orders');
+    Route::get('/chef/ingredients', [ChefController::class, 'ingredients'])->name('chef.ingredients');
+    Route::post('/chef/ingredients/{ingredient}/use', [ChefController::class, 'useIngredient'])->name('chef.ingredients.use');
+});
+
+Route::middleware(['simple.auth', 'user.level:4'])->group(function () {
     Route::get('/manager', [ManagerController::class, 'dashboard'])->name('manager.dashboard');
     Route::post('/manager/users', [ManagerController::class, 'storeUser'])->name('manager.users.store');
     Route::patch('/manager/users/{user}', [ManagerController::class, 'updateUser'])->name('manager.users.update');
@@ -39,6 +47,9 @@ Route::middleware(['simple.auth', 'user.level:3'])->group(function () {
     Route::post('/manager/packages', [ManagerController::class, 'storePackage'])->name('manager.packages.store');
     Route::patch('/manager/packages/{package}', [ManagerController::class, 'updatePackage'])->name('manager.packages.update');
     Route::delete('/manager/packages/{package}', [ManagerController::class, 'destroyPackage'])->name('manager.packages.destroy');
+    Route::post('/manager/ingredients', [ManagerController::class, 'storeIngredient'])->name('manager.ingredients.store');
+    Route::patch('/manager/ingredients/{ingredient}', [ManagerController::class, 'updateIngredient'])->name('manager.ingredients.update');
+    Route::delete('/manager/ingredients/{ingredient}', [ManagerController::class, 'destroyIngredient'])->name('manager.ingredients.destroy');
     Route::patch('/manager/stock/{menu}', [ManagerController::class, 'updateStock'])->name('manager.stock.update');
     Route::post('/manager/database/backup', [ManagerController::class, 'backupDatabase'])->name('manager.database.backup');
     Route::post('/manager/database/import', [ManagerController::class, 'importDatabase'])->name('manager.database.import');
@@ -47,18 +58,22 @@ Route::middleware(['simple.auth', 'user.level:3'])->group(function () {
     Route::get('/manager/{section}', [ManagerController::class, 'page'])->name('manager.page');
 });
 
-Route::middleware(['simple.auth', 'user.level:4'])->group(function () {
+Route::middleware(['simple.auth', 'user.level:5'])->group(function () {
     Route::get('/owner', [OwnerController::class, 'dashboard'])->name('owner.dashboard');
+    Route::get('/owner/sales', [OwnerController::class, 'sales'])->name('owner.sales');
+    Route::get('/owner/finance', [OwnerController::class, 'finance'])->name('owner.finance');
+    Route::get('/owner/products', [OwnerController::class, 'products'])->name('owner.products');
+    Route::get('/owner/ingredients', [OwnerController::class, 'ingredients'])->name('owner.ingredients');
 });
 
-Route::middleware(['simple.auth', 'user.level:3,4'])->group(function () {
+Route::middleware(['simple.auth', 'user.level:4,5'])->group(function () {
     Route::get('/admin', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::post('/admin/tables', [AdminController::class, 'storeTable'])->name('admin.tables.store');
     Route::post('/admin/menu-items', [AdminController::class, 'storeMenuItem'])->name('admin.menu-items.store');
     Route::patch('/admin/orders/{order}/status', [AdminController::class, 'updateOrderStatus'])->name('admin.orders.status');
 });
 
-Route::middleware(['simple.auth', 'user.level:2'])->group(function () {
+Route::middleware(['simple.auth', 'user.level:3'])->group(function () {
     Route::get('/kasir', [CashierController::class, 'dashboard'])->name('cashier.dashboard');
     Route::get('/kasir/pesanan', [CashierController::class, 'orders'])->name('cashier.orders');
     Route::get('/kasir/live-orders', [CashierController::class, 'liveOrders'])->name('cashier.orders.live');

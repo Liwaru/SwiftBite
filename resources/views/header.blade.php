@@ -559,16 +559,18 @@
     $authLevel = (int) session('auth_level');
     $authName = session('auth_name', 'User');
     $roleName = match ($authLevel) {
-        4 => 'Owner',
-        3 => 'Manager',
-        2 => 'Cashier',
+        5 => 'Owner',
+        4 => 'Manager',
+        3 => 'Cashier',
+        2 => 'Chef',
         1 => 'Waiter',
         default => 'Customer',
     };
     $dashboardRoute = match ($authLevel) {
-        4 => route('owner.dashboard'),
-        3 => route('manager.dashboard'),
-        2 => route('cashier.dashboard'),
+        5 => route('owner.dashboard'),
+        4 => route('manager.dashboard'),
+        3 => route('cashier.dashboard'),
+        2 => route('chef.dashboard'),
         1 => route('waiter.dashboard'),
         default => route('customer.home'),
     };
@@ -620,6 +622,37 @@
         @endif
 
         @if ($authLevel === 2)
+            <a class="sidebar-link {{ request()->routeIs('chef.dashboard') ? 'active' : '' }}" href="{{ route('chef.dashboard') }}" title="Dashboard Chef">
+                <span class="sidebar-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M6 12h12" />
+                        <path d="M7 5h10l1 7H6l1-7Z" />
+                        <path d="M8 12v8h8v-8" />
+                    </svg>
+                </span>
+                <span class="sidebar-label">Dashboard Chef</span>
+            </a>
+            <a class="sidebar-link {{ request()->routeIs('chef.orders') ? 'active' : '' }}" href="{{ route('chef.orders') }}" title="Pesanan Diproses">
+                <span class="sidebar-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5 4h14v16H5V4Z" />
+                        <path d="M8 8h8M8 12h8M8 16h5" />
+                    </svg>
+                </span>
+                <span class="sidebar-label">Pesanan Diproses</span>
+            </a>
+            <a class="sidebar-link {{ request()->routeIs('chef.ingredients') ? 'active' : '' }}" href="{{ route('chef.ingredients') }}" title="Data Bahan">
+                <span class="sidebar-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M6 4h12l-1 16H7L6 4Z" />
+                        <path d="M9 8h6M9 12h6M9 16h4" />
+                    </svg>
+                </span>
+                <span class="sidebar-label">Data Bahan</span>
+            </a>
+        @endif
+
+        @if ($authLevel === 3)
             <a class="sidebar-link {{ request()->routeIs('cashier.orders') ? 'active' : '' }}" href="{{ route('cashier.orders') }}" title="Pesanan">
                 <span class="sidebar-icon">
                     <svg viewBox="0 0 24 24" fill="none">
@@ -642,7 +675,7 @@
             </a>
         @endif
 
-        @if ($authLevel === 3)
+        @if ($authLevel === 4)
             @php
                 $dataMasterMenus = [
                     'users' => [
@@ -652,6 +685,10 @@
                     'menus' => [
                         'label' => 'Data Menu',
                         'icon' => '<path d="M5 4h14v16H5V4Z" /><path d="M9 8h6M9 12h6M9 16h3" /><path d="M7 8h.01M7 12h.01M7 16h.01" />',
+                    ],
+                    'ingredients' => [
+                        'label' => 'Data Bahan',
+                        'icon' => '<path d="M6 4h12l-1 16H7L6 4Z" /><path d="M9 8h6M9 12h6M9 16h4" />',
                     ],
                     'tables' => [
                         'label' => 'Data Meja',
@@ -722,18 +759,47 @@
             @endforeach
         @endif
 
-        @if ($authLevel === 4)
-            <a class="sidebar-link {{ request()->routeIs('owner.dashboard') ? 'active' : '' }}" href="{{ route('owner.dashboard') }}" title="Dashboard Owner">
-                <span class="sidebar-icon">
-                    <svg viewBox="0 0 24 24" fill="none">
-                        <path d="M12 3l8 5v8l-8 5-8-5V8l8-5Z" />
-                        <path d="M12 7v10" />
-                        <path d="M8 10l4 2 4-2" />
-                    </svg>
-                </span>
-                <span class="sidebar-label">Dashboard Owner</span>
-            </a>
+        @if ($authLevel === 5)
+            @php
+                $ownerMenus = [
+                    ['route' => 'owner.sales', 'label' => 'Penjualan', 'title' => 'Laporan Penjualan', 'icon' => '<path d="M4 19V5" /><path d="M8 17V9" /><path d="M12 17V7" /><path d="M16 17v-5" /><path d="M20 17V4" />'],
+                    ['route' => 'owner.finance', 'label' => 'Keuangan', 'title' => 'Laporan Keuangan', 'icon' => '<path d="M4 7h16v12H4V7Z" /><path d="M8 7V5h8v2" /><path d="M8 13h.01M12 13h.01M16 13h.01" />'],
+                    ['route' => 'owner.products', 'label' => 'Produk', 'title' => 'Laporan Produk', 'icon' => '<path d="M5 4h14v16H5V4Z" /><path d="M8 8h8M8 12h8M8 16h5" />'],
+                    ['route' => 'owner.ingredients', 'label' => 'Bahan', 'title' => 'Laporan Bahan', 'icon' => '<path d="M6 4h12l-1 16H7L6 4Z" /><path d="M9 8h6M9 12h6M9 16h4" />'],
+                ];
+                $ownerReportOpen = request()->routeIs('owner.sales', 'owner.finance', 'owner.products', 'owner.ingredients');
+            @endphp
+
+            <details class="sidebar-group" @open($ownerReportOpen)>
+                <summary class="sidebar-link sidebar-group-toggle">
+                    <span class="sidebar-icon">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M4 19V5" />
+                            <path d="M8 17V9" />
+                            <path d="M12 17V7" />
+                            <path d="M16 17v-5" />
+                            <path d="M20 17V4" />
+                        </svg>
+                    </span>
+                    <span class="sidebar-label">Laporan</span>
+                    <span class="sidebar-caret">▼</span>
+                </summary>
+
+                <div class="sidebar-subnav">
+                    @foreach ($ownerMenus as $menu)
+                        <a class="sidebar-link {{ request()->routeIs($menu['route']) ? 'active' : '' }}" href="{{ route($menu['route']) }}" title="{{ $menu['title'] }}">
+                            <span class="sidebar-icon">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    {!! $menu['icon'] !!}
+                                </svg>
+                            </span>
+                            <span class="sidebar-label">{{ $menu['label'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </details>
         @endif
+
     </nav>
 
     <div class="sidebar-footer">

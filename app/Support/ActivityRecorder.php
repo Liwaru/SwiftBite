@@ -41,9 +41,10 @@ class ActivityRecorder
     private static function roleName(): string
     {
         return match ((int) session('auth_level')) {
-            4 => 'Owner',
-            3 => 'Manager',
-            2 => 'Cashier',
+            5 => 'Owner',
+            4 => 'Manager',
+            3 => 'Cashier',
+            2 => 'Chef',
             1 => 'Waiter',
             default => 'Customer',
         };

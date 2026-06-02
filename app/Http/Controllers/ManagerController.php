@@ -7,6 +7,8 @@ use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\DataChange;
 use App\Models\MenuItem;
+use App\Models\Ingredient;
+use App\Models\IngredientUsage;
 use App\Models\Order;
 use App\Models\Package;
 use App\Models\User;
@@ -22,9 +24,9 @@ use Illuminate\View\View;
 
 class ManagerController extends Controller
 {
-    private array $backupTables = ['users', 'tables', 'categories', 'menus', 'packages', 'package_items', 'orders', 'order_details'];
+    private array $backupTables = ['users', 'tables', 'categories', 'menus', 'packages', 'package_items', 'ingredients', 'ingredient_usages', 'orders', 'order_details'];
 
-    private array $resetTables = ['order_details', 'orders', 'package_items', 'packages', 'menus', 'categories', 'tables'];
+    private array $resetTables = ['order_details', 'orders', 'ingredient_usages', 'ingredients', 'package_items', 'packages', 'menus', 'categories', 'tables'];
 
     public function dashboard(): View
     {
@@ -34,7 +36,7 @@ class ManagerController extends Controller
             'total_menu' => MenuItem::count(),
             'total_tables' => DiningTable::count(),
             'today_orders' => (clone $todayOrders)->count(),
-            'active_users' => User::whereIn('level', [1, 2, 3, 4])->count(),
+            'active_users' => User::whereIn('level', [1, 2, 3, 4, 5])->count(),
             'orders_today' => [
                 'menunggu' => (clone $todayOrders)->where('status', 'menunggu')->count(),
                 'diproses' => (clone $todayOrders)->where('status', 'diproses')->count(),
@@ -51,6 +53,7 @@ class ManagerController extends Controller
         $pages = [
             'users' => ['title' => 'Data User', 'description' => 'Kelola akun pengguna dan role di SwiftBite.'],
             'menus' => ['title' => 'Data Menu', 'description' => 'Kelola menu makanan dan minuman.'],
+            'ingredients' => ['title' => 'Data Bahan', 'description' => 'Kelola bahan baku bakery dan status stok.'],
             'tables' => ['title' => 'Data Meja', 'description' => 'Kelola meja dan QR ordering.'],
             'stock' => ['title' => 'Stok Produk', 'description' => 'Pantau stok makanan dan minuman.'],
             'access' => ['title' => 'Hak Akses', 'description' => 'Kelola hak akses berdasarkan role.'],
@@ -65,9 +68,10 @@ class ManagerController extends Controller
         if ($section === 'users') {
             $roleOptions = [
                 1 => 'Waiter',
-                2 => 'Cashier',
-                3 => 'Manager',
-                4 => 'Owner',
+                2 => 'Chef',
+                3 => 'Cashier',
+                4 => 'Manager',
+                5 => 'Owner',
             ];
 
             $filters = [
@@ -76,7 +80,7 @@ class ManagerController extends Controller
             ];
 
             $usersQuery = User::query()
-                ->whereIn('level', [1, 2, 3, 4])
+                ->whereIn('level', [1, 2, 3, 4, 5])
                 ->when($filters['q'] !== '', function ($query) use ($filters) {
                     $query->where(function ($search) use ($filters) {
                         $search->where('name', 'like', '%' . $filters['q'] . '%')
@@ -93,10 +97,27 @@ class ManagerController extends Controller
             $data['filters'] = $filters;
             $data['roleOptions'] = $roleOptions;
             $data['summary'] = [
-                'total_user' => User::whereIn('level', [1, 2, 3, 4])->count(),
+                'total_user' => User::whereIn('level', [1, 2, 3, 4, 5])->count(),
                 'waiter' => User::where('level', 1)->count(),
-                'cashier' => User::where('level', 2)->count(),
-                'pengelola' => User::whereIn('level', [3, 4])->count(),
+                'chef' => User::where('level', 2)->count(),
+                'cashier' => User::where('level', 3)->count(),
+                'pengelola' => User::whereIn('level', [4, 5])->count(),
+            ];
+        }
+
+        if ($section === 'ingredients') {
+            $ingredients = Ingredient::query()
+                ->withSum(['usages as used_today' => fn ($query) => $query->whereDate('created_at', today())], 'qty')
+                ->orderBy('nama_bahan')
+                ->get();
+
+            $data['ingredients'] = $ingredients;
+            $data['ingredientSummary'] = [
+                'total' => $ingredients->count(),
+                'aman' => $ingredients->filter(fn (Ingredient $ingredient) => $ingredient->status_label === 'Aman')->count(),
+                'menipis' => $ingredients->filter(fn (Ingredient $ingredient) => $ingredient->status_label === 'Menipis')->count(),
+                'habis' => $ingredients->filter(fn (Ingredient $ingredient) => $ingredient->status_label === 'Habis')->count(),
+                'penggunaan_hari_ini' => IngredientUsage::whereDate('created_at', today())->sum('qty'),
             ];
         }
 
@@ -168,7 +189,7 @@ class ManagerController extends Controller
             $tab = request('tab') === 'data' ? 'data' : 'activity';
             $activityRole = (string) request('role', 'semua');
             $changeFilter = (string) request('change', 'semua');
-            $activityRoleOptions = ['semua', 'Customer', 'Cashier', 'Waiter', 'Manager', 'Owner'];
+            $activityRoleOptions = ['semua', 'Customer', 'Waiter', 'Chef', 'Cashier', 'Manager', 'Owner'];
             $dataChangeOptions = ['semua', 'Tambah', 'Edit', 'Hapus', 'Dipulihkan'];
 
             if (! in_array($activityRole, $activityRoleOptions, true)) {
@@ -200,6 +221,7 @@ class ManagerController extends Controller
         $views = [
             'users' => 'manager.data_user',
             'menus' => 'manager.data_menu',
+            'ingredients' => 'manager.data_bahan',
             'tables' => 'manager.data_meja',
             'stock' => 'manager.stok_produk',
             'access' => 'manager.hak_akses',
@@ -215,7 +237,7 @@ class ManagerController extends Controller
         $validated = $request->validate([
             'username' => ['required', 'string', 'min:3', 'max:15', 'alpha_dash', 'unique:users,name'],
             'password' => ['required', 'string', 'min:6', 'max:20'],
-            'level' => ['required', Rule::in([1, 2])],
+            'level' => ['required', Rule::in([1, 2, 3])],
         ]);
 
         $username = strtolower($validated['username']);
@@ -246,7 +268,7 @@ class ManagerController extends Controller
                 Rule::unique('users', 'name')->ignore($user->getKey(), $user->getKeyName()),
             ],
             'password' => ['nullable', 'string', 'min:6', 'max:20'],
-            'level' => ['required', Rule::in([1, 2, 3, 4])],
+            'level' => ['required', Rule::in([1, 2, 3, 4, 5])],
         ]);
 
         $username = strtolower($validated['username']);
@@ -470,6 +492,69 @@ class ManagerController extends Controller
             ->with('success', 'Stok produk berhasil diperbarui.');
     }
 
+    public function storeIngredient(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:100', 'unique:ingredients,nama_bahan'],
+            'stock' => ['required', 'numeric', 'min:0', 'max:99999'],
+            'unit' => ['required', 'string', 'max:20'],
+            'minimum_stock' => ['required', 'numeric', 'min:0', 'max:99999'],
+        ]);
+
+        $ingredient = Ingredient::create([
+            'nama_bahan' => Str::title($validated['name']),
+            'stok' => $validated['stock'],
+            'satuan' => strtolower($validated['unit']),
+            'stok_minimum' => $validated['minimum_stock'],
+        ]);
+
+        ActivityRecorder::dataChange('Tambah', 'Bahan', $ingredient->nama_bahan, null, $this->ingredientSnapshot($ingredient), $ingredient);
+
+        return redirect()
+            ->route('manager.page', 'ingredients')
+            ->with('success', 'Data bahan berhasil ditambahkan.');
+    }
+
+    public function updateIngredient(Request $request, Ingredient $ingredient): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('ingredients', 'nama_bahan')->ignore($ingredient->getKey(), $ingredient->getKeyName()),
+            ],
+            'stock' => ['required', 'numeric', 'min:0', 'max:99999'],
+            'unit' => ['required', 'string', 'max:20'],
+            'minimum_stock' => ['required', 'numeric', 'min:0', 'max:99999'],
+        ]);
+
+        $before = $this->ingredientSnapshot($ingredient);
+
+        $ingredient->update([
+            'nama_bahan' => Str::title($validated['name']),
+            'stok' => $validated['stock'],
+            'satuan' => strtolower($validated['unit']),
+            'stok_minimum' => $validated['minimum_stock'],
+        ]);
+
+        ActivityRecorder::dataChange('Edit', 'Bahan', $ingredient->nama_bahan, $before, $this->ingredientSnapshot($ingredient), $ingredient);
+
+        return redirect()
+            ->route('manager.page', 'ingredients')
+            ->with('success', 'Data bahan berhasil diperbarui.');
+    }
+
+    public function destroyIngredient(Ingredient $ingredient): RedirectResponse
+    {
+        ActivityRecorder::dataChange('Hapus', 'Bahan', $ingredient->nama_bahan, $this->ingredientSnapshot($ingredient), null, $ingredient);
+        $ingredient->delete();
+
+        return redirect()
+            ->route('manager.page', 'ingredients')
+            ->with('success', 'Data bahan berhasil dihapus.');
+    }
+
     public function storePackage(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -661,6 +746,8 @@ class ManagerController extends Controller
             $this->restoreTableChange($change);
         } elseif ($change->data_type === 'Paket') {
             $this->restorePackageChange($change);
+        } elseif ($change->data_type === 'Bahan') {
+            $this->restoreIngredientChange($change);
         } else {
             return back()->withErrors(['restore' => 'Jenis data belum mendukung pemulihan.']);
         }
@@ -818,6 +905,17 @@ class ManagerController extends Controller
         ];
     }
 
+    private function ingredientSnapshot(Ingredient $ingredient): array
+    {
+        return [
+            'id_bahan' => $ingredient->id_bahan,
+            'nama_bahan' => $ingredient->nama_bahan,
+            'stok' => $ingredient->stok,
+            'satuan' => $ingredient->satuan,
+            'stok_minimum' => $ingredient->stok_minimum,
+        ];
+    }
+
     private function tableIsActive(DiningTable $table): bool
     {
         return in_array($table->status, ['aktif', 'kosong', 'terisi'], true);
@@ -969,5 +1067,30 @@ class ManagerController extends Controller
                 ]);
             }
         });
+    }
+
+    private function restoreIngredientChange(DataChange $change): void
+    {
+        if ($change->action === 'Tambah' && $change->target_id) {
+            Ingredient::whereKey($change->target_id)->delete();
+
+            return;
+        }
+
+        $snapshot = $change->before_data;
+
+        if (! is_array($snapshot)) {
+            return;
+        }
+
+        Ingredient::updateOrCreate(
+            ['id_bahan' => $snapshot['id_bahan']],
+            [
+                'nama_bahan' => $snapshot['nama_bahan'],
+                'stok' => $snapshot['stok'],
+                'satuan' => $snapshot['satuan'],
+                'stok_minimum' => $snapshot['stok_minimum'],
+            ],
+        );
     }
 }
