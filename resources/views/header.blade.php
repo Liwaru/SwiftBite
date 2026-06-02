@@ -460,6 +460,12 @@
         margin-left: 88px;
     }
 
+    .app-shell.sidebar-collapsed .content-with-sidebar > main {
+        width: 100%;
+        max-width: 1180px;
+        margin-inline: auto;
+    }
+
     .app-shell.sidebar-collapsed .sidebar-brand {
         display: grid;
         place-items: center;
@@ -523,6 +529,10 @@
         .content-with-sidebar,
         .app-shell.sidebar-collapsed .content-with-sidebar {
             margin-left: 0;
+        }
+
+        .app-shell.sidebar-collapsed .content-with-sidebar > main {
+            max-width: none;
         }
 
         .app-shell.sidebar-collapsed .sidebar {

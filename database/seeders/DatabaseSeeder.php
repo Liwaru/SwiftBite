@@ -82,14 +82,14 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Chicken Floss Bread', 'category' => 'Makanan', 'description' => 'Roti abon ayam gurih.', 'price' => 21000, 'stock' => 15, 'photo' => 'images/chicken-floss-bread.jpg'],
             ['name' => 'Donut Glazed', 'category' => 'Makanan', 'description' => 'Donat lembut dengan glaze manis.', 'price' => 14000, 'stock' => 24, 'photo' => 'images/donut-glazed.jpg'],
             ['name' => 'Chocolate Muffin', 'category' => 'Makanan', 'description' => 'Muffin cokelat dengan tekstur moist.', 'price' => 18000, 'stock' => 18, 'photo' => 'images/chocolate-muffin.webp'],
-            ['name' => 'Americano', 'category' => 'Minuman', 'description' => 'Kopi hitam espresso dan air panas.', 'price' => 18000, 'stock' => 30],
-            ['name' => 'Cafe Latte', 'category' => 'Minuman', 'description' => 'Espresso dengan susu steamed.', 'price' => 22000, 'stock' => 25],
-            ['name' => 'Cappuccino', 'category' => 'Minuman', 'description' => 'Espresso, susu, dan foam lembut.', 'price' => 24000, 'stock' => 25],
-            ['name' => 'Mocha', 'category' => 'Minuman', 'description' => 'Kopi susu dengan cokelat.', 'price' => 25000, 'stock' => 20],
-            ['name' => 'Chocolate Milk', 'category' => 'Minuman', 'description' => 'Susu cokelat dingin atau hangat.', 'price' => 18000, 'stock' => 24],
-            ['name' => 'Matcha Latte', 'category' => 'Minuman', 'description' => 'Matcha premium dengan susu.', 'price' => 25000, 'stock' => 20],
-            ['name' => 'Lemon Tea', 'category' => 'Minuman', 'description' => 'Teh lemon segar.', 'price' => 15000, 'stock' => 28],
-            ['name' => 'Mineral Water', 'category' => 'Minuman', 'description' => 'Air mineral botol.', 'price' => 10000, 'stock' => 40],
+            ['name' => 'Americano', 'category' => 'Minuman', 'description' => 'Kopi hitam espresso dan air panas.', 'price' => 18000, 'stock' => 30, 'photo' => 'images/americano.jpg'],
+            ['name' => 'Cafe Latte', 'category' => 'Minuman', 'description' => 'Espresso dengan susu steamed.', 'price' => 22000, 'stock' => 25, 'photo' => 'images/cafe-latte.jpg'],
+            ['name' => 'Cappuccino', 'category' => 'Minuman', 'description' => 'Espresso, susu, dan foam lembut.', 'price' => 24000, 'stock' => 25, 'photo' => 'images/cappuccino.jpg'],
+            ['name' => 'Mocha', 'category' => 'Minuman', 'description' => 'Kopi susu dengan cokelat.', 'price' => 25000, 'stock' => 20, 'photo' => 'images/mocha.jpg'],
+            ['name' => 'Chocolate Milk', 'category' => 'Minuman', 'description' => 'Susu cokelat dingin atau hangat.', 'price' => 18000, 'stock' => 24, 'photo' => 'images/chocolate-milk.jpg'],
+            ['name' => 'Matcha Latte', 'category' => 'Minuman', 'description' => 'Matcha premium dengan susu.', 'price' => 25000, 'stock' => 20, 'photo' => 'images/matcha-latte.jpg'],
+            ['name' => 'Lemon Tea', 'category' => 'Minuman', 'description' => 'Teh lemon segar.', 'price' => 15000, 'stock' => 28, 'photo' => 'images/lemon-tea.jpg'],
+            ['name' => 'Mineral Water', 'category' => 'Minuman', 'description' => 'Air mineral botol.', 'price' => 10000, 'stock' => 40, 'photo' => 'images/mineral-water.jpg'],
         ];
 
         foreach ($menus as $menu) {

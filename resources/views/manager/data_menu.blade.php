@@ -49,9 +49,9 @@
                                 <div class="summary-note">Kopi dan non-kopi</div>
                             </article>
                             <article class="summary-card">
-                                <div class="summary-label">Menu Aktif</div>
-                                <div class="summary-value">{{ number_format($menuSummary['aktif']) }}</div>
-                                <div class="summary-note">Menu yang tersedia</div>
+                                <div class="summary-label">Total Paket</div>
+                                <div class="summary-value">{{ number_format($menuSummary['paket']) }}</div>
+                                <div class="summary-note">Promo bundling aktif</div>
                             </article>
                         </section>
 
@@ -72,6 +72,82 @@
                         @endif
 
                         <div class="menu-sections">
+                            <section class="section-card">
+                                <div class="section-head">
+                                    <div>
+                                        <div class="section-title-row">
+                                            <div class="section-title">Paket Promo</div>
+                                            <div class="section-meta">{{ $packageItems->count() }} Paket</div>
+                                        </div>
+                                        <div class="section-subtitle">Kelola paket bundling makanan dan minuman.</div>
+                                    </div>
+                                    <div class="section-actions">
+                                        <button type="button" class="section-add-btn js-open-modal" data-modal="create-package">
+                                            + Tambah Paket
+                                        </button>
+                                    </div>
+                                </div>
+
+                                @if ($packageItems->isEmpty())
+                                    <div class="empty-state">Belum ada paket promo.</div>
+                                @else
+                                    <div class="menu-carousel">
+                                        <button type="button" class="menu-carousel-btn js-menu-scroll" data-direction="-1" aria-label="Geser paket promo ke kiri">&lsaquo;</button>
+
+                                        <div class="menu-rail">
+                                            @foreach ($packageItems as $package)
+                                                @php
+                                                    $initial = strtoupper(substr($package->nama_paket, 0, 1));
+                                                    $packageStatusLabel = $package->status === 'tersedia' ? 'Aktif' : 'Nonaktif';
+                                                @endphp
+
+                                                <article class="menu-card package-card" data-menu-name="{{ $package->nama_paket }}">
+                                                    <div class="menu-thumb">
+                                                        @if ($package->foto)
+                                                            <img src="{{ asset($package->foto) }}" alt="{{ $package->nama_paket }}">
+                                                        @else
+                                                            {{ $initial }}
+                                                        @endif
+                                                    </div>
+
+                                                    <div class="menu-card-body">
+                                                        <div class="menu-card-name">{{ $package->nama_paket }}</div>
+                                                        <div class="package-lines">
+                                                            @foreach ($package->items as $packageItem)
+                                                                <div>{{ $packageItem->qty }} {{ $packageItem->menuItem?->nama_menu ?? 'Menu' }}</div>
+                                                            @endforeach
+                                                        </div>
+                                                        <div class="menu-card-price">Rp{{ number_format($package->harga, 0, ',', '.') }}</div>
+                                                        <div><span class="status-badge">{{ $packageStatusLabel }}</span></div>
+                                                    </div>
+
+                                                    <div class="menu-card-actions">
+                                                        <button
+                                                            type="button"
+                                                            class="row-action js-open-modal js-edit-package"
+                                                            data-modal="edit-package"
+                                                            data-action="{{ route('manager.packages.update', $package) }}"
+                                                            data-name="{{ $package->nama_paket }}"
+                                                            data-price="{{ (int) $package->harga }}"
+                                                            data-status="{{ $package->status }}"
+                                                            data-photo="{{ $package->foto ? asset($package->foto) : '' }}"
+                                                            data-items='@json($package->items->mapWithKeys(fn ($item) => [$item->id_menu => $item->qty]))'
+                                                        >Edit</button>
+                                                        <form method="POST" action="{{ route('manager.packages.destroy', $package) }}" class="package-delete-form" onsubmit="return confirm('Hapus paket promo ini?')">
+                                                            @csrf
+                                                            @method('delete')
+                                                            <button type="submit" class="row-action">Hapus</button>
+                                                        </form>
+                                                    </div>
+                                                </article>
+                                            @endforeach
+                                        </div>
+
+                                        <button type="button" class="menu-carousel-btn js-menu-scroll" data-direction="1" aria-label="Geser paket promo ke kanan">&rsaquo;</button>
+                                    </div>
+                                @endif
+                            </section>
+
                             @foreach ($menuSections as $menuSection)
                                 <section class="section-card">
                                     <div class="section-head">
@@ -170,6 +246,7 @@
 
                                 <form method="POST" action="{{ route('manager.menus.store') }}" class="modal-form js-menu-create-form">
                                     @csrf
+                                    <input type="hidden" name="modal_id" value="create-menu">
                                     <input type="hidden" name="category" id="createMenuCategory" value="Makanan">
                                     <input type="hidden" name="image_data" class="js-cropped-image">
 
@@ -202,6 +279,123 @@
                                     <div class="modal-actions">
                                         <button type="button" class="ghost-btn js-close-modal">Batal</button>
                                         <button type="submit" class="submit-btn">Simpan Menu</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="modal-shell" id="modal-create-package" aria-hidden="true">
+                            <div class="modal-dialog menu-create-dialog package-create-dialog" role="dialog" aria-modal="true" aria-labelledby="modalCreatePackageTitle">
+                                <div class="modal-header">
+                                    <div>
+                                        <div class="modal-title" id="modalCreatePackageTitle">Tambah Paket Promo</div>
+                                        <div class="modal-subtitle">Buat paket bundling dari makanan dan minuman yang tersedia.</div>
+                                    </div>
+                                    <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
+                                </div>
+
+                                <form method="POST" action="{{ route('manager.packages.store') }}" class="modal-form package-form" enctype="multipart/form-data">
+                                    @csrf
+                                    <input type="hidden" name="modal_id" value="create-package">
+
+                                    <div class="field-group">
+                                        <label for="createPackagePhoto">Gambar Paket</label>
+                                        <input id="createPackagePhoto" type="file" name="photo" accept="image/png,image/jpeg,image/webp">
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label for="createPackageName">Nama Paket</label>
+                                        <input id="createPackageName" type="text" name="name" value="{{ old('name') }}" maxlength="40" placeholder="Contoh: Paket Hemat Pagi" required>
+                                    </div>
+
+                                    <div class="package-picker">
+                                        @foreach ($availablePackageMenuItems->groupBy(fn ($menu) => $menu->category) as $category => $items)
+                                            <div class="package-picker-group">
+                                                <div class="package-picker-title">{{ $category }}</div>
+                                                @foreach ($items as $menu)
+                                                    <label class="package-picker-row" for="packageItem{{ $menu->getKey() }}">
+                                                        <span>
+                                                            <strong>{{ $menu->nama_menu }}</strong>
+                                                            <em>Rp{{ number_format($menu->harga, 0, ',', '.') }}</em>
+                                                        </span>
+                                                        <input id="packageItem{{ $menu->getKey() }}" type="number" name="items[{{ $menu->getKey() }}]" value="{{ old('items.' . $menu->getKey(), 0) }}" min="0" max="99" aria-label="Jumlah {{ $menu->nama_menu }}">
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        @endforeach
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label for="createPackagePrice">Harga Paket</label>
+                                        <input id="createPackagePrice" type="number" name="price" value="{{ old('price') }}" min="0" max="500000" step="1000" placeholder="Contoh: 25000" required>
+                                    </div>
+
+                                    <div class="modal-actions">
+                                        <button type="button" class="ghost-btn js-close-modal">Batal</button>
+                                        <button type="submit" class="submit-btn">Simpan Paket</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="modal-shell" id="modal-edit-package" aria-hidden="true">
+                            <div class="modal-dialog menu-create-dialog package-create-dialog" role="dialog" aria-modal="true" aria-labelledby="modalEditPackageTitle">
+                                <div class="modal-header">
+                                    <div>
+                                        <div class="modal-title" id="modalEditPackageTitle">Edit Paket Promo</div>
+                                        <div class="modal-subtitle">Perbarui gambar, nama, isi paket, harga, dan status.</div>
+                                    </div>
+                                    <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
+                                </div>
+
+                                <form method="POST" action="#" class="modal-form package-form js-package-edit-form" enctype="multipart/form-data">
+                                    @csrf
+                                    @method('patch')
+                                    <input type="hidden" name="modal_id" value="edit-package">
+
+                                    <div class="field-group">
+                                        <label for="editPackagePhoto">Gambar Paket</label>
+                                        <input id="editPackagePhoto" type="file" name="photo" class="js-edit-package-photo" accept="image/png,image/jpeg,image/webp">
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label for="editPackageName">Nama Paket</label>
+                                        <input id="editPackageName" type="text" name="name" class="js-edit-package-name" maxlength="40" required>
+                                    </div>
+
+                                    <div class="package-picker">
+                                        @foreach ($availablePackageMenuItems->groupBy(fn ($menu) => $menu->category) as $category => $items)
+                                            <div class="package-picker-group">
+                                                <div class="package-picker-title">{{ $category }}</div>
+                                                @foreach ($items as $menu)
+                                                    <label class="package-picker-row" for="editPackageItem{{ $menu->getKey() }}">
+                                                        <span>
+                                                            <strong>{{ $menu->nama_menu }}</strong>
+                                                            <em>Rp{{ number_format($menu->harga, 0, ',', '.') }}</em>
+                                                        </span>
+                                                        <input id="editPackageItem{{ $menu->getKey() }}" type="number" name="items[{{ $menu->getKey() }}]" class="js-edit-package-qty" data-menu-id="{{ $menu->getKey() }}" value="0" min="0" max="99" aria-label="Jumlah {{ $menu->nama_menu }}">
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        @endforeach
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label for="editPackagePrice">Harga Paket</label>
+                                        <input id="editPackagePrice" type="number" name="price" class="js-edit-package-price" min="0" max="500000" step="1000" required>
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label for="editPackageStatus">Status</label>
+                                        <select id="editPackageStatus" name="status" class="js-edit-package-status" required>
+                                            <option value="tersedia">Aktif</option>
+                                            <option value="habis">Nonaktif</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="modal-actions">
+                                        <button type="button" class="ghost-btn js-close-modal">Batal</button>
+                                        <button type="submit" class="submit-btn">Simpan Perubahan</button>
                                     </div>
                                 </form>
                             </div>

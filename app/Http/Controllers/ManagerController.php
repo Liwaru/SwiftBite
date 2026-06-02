@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\DataChange;
 use App\Models\MenuItem;
 use App\Models\Order;
+use App\Models\Package;
 use App\Models\User;
 use App\Support\ActivityRecorder;
 use Illuminate\Http\RedirectResponse;
@@ -21,9 +22,9 @@ use Illuminate\View\View;
 
 class ManagerController extends Controller
 {
-    private array $backupTables = ['users', 'tables', 'categories', 'menus', 'orders', 'order_details'];
+    private array $backupTables = ['users', 'tables', 'categories', 'menus', 'packages', 'package_items', 'orders', 'order_details'];
 
-    private array $resetTables = ['order_details', 'orders', 'menus', 'categories', 'tables'];
+    private array $resetTables = ['order_details', 'orders', 'package_items', 'packages', 'menus', 'categories', 'tables'];
 
     public function dashboard(): View
     {
@@ -113,11 +114,20 @@ class ManagerController extends Controller
                 ->filter(fn (MenuItem $menu) => $menu->category === 'Minuman')
                 ->values();
 
+            $data['packageItems'] = Package::with(['items.menuItem.categoryModel'])
+                ->orderBy('nama_paket')
+                ->get();
+
+            $data['availablePackageMenuItems'] = $menuItems
+                ->filter(fn (MenuItem $menu) => in_array($menu->category, ['Makanan', 'Minuman'], true))
+                ->values();
+
             $data['menuSummary'] = [
                 'total_menu' => MenuItem::count(),
                 'makanan' => MenuItem::whereHas('categoryModel', fn ($query) => $query->where('nama_kategori', 'Makanan'))->count(),
                 'minuman' => MenuItem::whereHas('categoryModel', fn ($query) => $query->where('nama_kategori', 'Minuman'))->count(),
-                'aktif' => MenuItem::where('status', 'tersedia')->count(),
+                'paket' => Package::count(),
+                'aktif' => MenuItem::where('status', 'tersedia')->count() + Package::where('status', 'tersedia')->count(),
             ];
         }
 
@@ -460,6 +470,161 @@ class ManagerController extends Controller
             ->with('success', 'Stok produk berhasil diperbarui.');
     }
 
+    public function storePackage(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:40'],
+            'price' => ['required', 'integer', 'min:0', 'max:500000'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'items' => ['required', 'array'],
+            'items.*' => ['nullable', 'integer', 'min:0', 'max:99'],
+        ]);
+
+        $selectedItems = collect($validated['items'])
+            ->map(fn ($quantity) => (int) $quantity)
+            ->filter(fn ($quantity) => $quantity > 0);
+
+        if ($selectedItems->isEmpty()) {
+            return back()
+                ->withErrors(['items' => 'Pilih minimal 1 makanan atau minuman untuk isi paket.'])
+                ->withInput();
+        }
+
+        $validMenuCount = MenuItem::whereIn('id_menu', $selectedItems->keys())->count();
+
+        if ($validMenuCount !== $selectedItems->count()) {
+            return back()
+                ->withErrors(['items' => 'Beberapa menu paket tidak valid.'])
+                ->withInput();
+        }
+
+        $photoPath = null;
+
+        if ($request->hasFile('photo')) {
+            $photo = $request->file('photo');
+            $directory = public_path('uploads/packages');
+            File::ensureDirectoryExists($directory);
+
+            $filename = Str::slug($validated['name']) . '-' . Str::random(8) . '.' . $photo->extension();
+            $photo->move($directory, $filename);
+            $photoPath = 'uploads/packages/' . $filename;
+        }
+
+        $package = DB::transaction(function () use ($validated, $selectedItems, $photoPath) {
+            $package = Package::create([
+                'nama_paket' => $validated['name'],
+                'foto' => $photoPath,
+                'harga' => $validated['price'],
+                'status' => 'tersedia',
+            ]);
+
+            foreach ($selectedItems as $menuId => $quantity) {
+                $package->items()->create([
+                    'id_menu' => (int) $menuId,
+                    'qty' => $quantity,
+                ]);
+            }
+
+            return $package->load('items.menuItem');
+        });
+
+        ActivityRecorder::dataChange('Tambah', 'Paket', $package->nama_paket, null, $this->packageSnapshot($package), $package);
+
+        return redirect()
+            ->route('manager.page', 'menus')
+            ->with('success', 'Paket promo berhasil ditambahkan.');
+    }
+
+    public function updatePackage(Request $request, Package $package): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:40'],
+            'price' => ['required', 'integer', 'min:0', 'max:500000'],
+            'status' => ['required', Rule::in(['tersedia', 'habis'])],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'items' => ['required', 'array'],
+            'items.*' => ['nullable', 'integer', 'min:0', 'max:99'],
+        ]);
+
+        $selectedItems = collect($validated['items'])
+            ->map(fn ($quantity) => (int) $quantity)
+            ->filter(fn ($quantity) => $quantity > 0);
+
+        if ($selectedItems->isEmpty()) {
+            return back()
+                ->withErrors(['items' => 'Pilih minimal 1 makanan atau minuman untuk isi paket.'])
+                ->withInput();
+        }
+
+        $validMenuCount = MenuItem::whereIn('id_menu', $selectedItems->keys())->count();
+
+        if ($validMenuCount !== $selectedItems->count()) {
+            return back()
+                ->withErrors(['items' => 'Beberapa menu paket tidak valid.'])
+                ->withInput();
+        }
+
+        $package->load('items.menuItem');
+        $before = $this->packageSnapshot($package);
+        $photoPath = $package->foto;
+
+        if ($request->hasFile('photo')) {
+            $photo = $request->file('photo');
+            $directory = public_path('uploads/packages');
+            File::ensureDirectoryExists($directory);
+
+            if ($package->foto) {
+                File::delete(public_path($package->foto));
+            }
+
+            $filename = Str::slug($validated['name']) . '-' . Str::random(8) . '.' . $photo->extension();
+            $photo->move($directory, $filename);
+            $photoPath = 'uploads/packages/' . $filename;
+        }
+
+        DB::transaction(function () use ($package, $validated, $selectedItems, $photoPath) {
+            $package->update([
+                'nama_paket' => $validated['name'],
+                'foto' => $photoPath,
+                'harga' => $validated['price'],
+                'status' => $validated['status'],
+            ]);
+
+            $package->items()->delete();
+
+            foreach ($selectedItems as $menuId => $quantity) {
+                $package->items()->create([
+                    'id_menu' => (int) $menuId,
+                    'qty' => $quantity,
+                ]);
+            }
+        });
+
+        $package->load('items.menuItem');
+        ActivityRecorder::dataChange('Edit', 'Paket', $package->nama_paket, $before, $this->packageSnapshot($package), $package);
+
+        return redirect()
+            ->route('manager.page', 'menus')
+            ->with('success', 'Paket promo berhasil diperbarui.');
+    }
+
+    public function destroyPackage(Package $package): RedirectResponse
+    {
+        $package->load('items.menuItem');
+
+        ActivityRecorder::dataChange('Hapus', 'Paket', $package->nama_paket, $this->packageSnapshot($package), null, $package);
+
+        if ($package->foto) {
+            File::delete(public_path($package->foto));
+        }
+
+        $package->delete();
+
+        return redirect()
+            ->route('manager.page', 'menus')
+            ->with('success', 'Paket promo berhasil dihapus.');
+    }
+
     public function destroyMenus(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -494,6 +659,8 @@ class ManagerController extends Controller
             $this->restoreUserChange($change);
         } elseif ($change->data_type === 'Meja') {
             $this->restoreTableChange($change);
+        } elseif ($change->data_type === 'Paket') {
+            $this->restorePackageChange($change);
         } else {
             return back()->withErrors(['restore' => 'Jenis data belum mendukung pemulihan.']);
         }
@@ -622,6 +789,25 @@ class ManagerController extends Controller
         ];
     }
 
+    private function packageSnapshot(Package $package): array
+    {
+        return [
+            'id_paket' => $package->id_paket,
+            'nama_paket' => $package->nama_paket,
+            'foto' => $package->foto,
+            'harga' => $package->harga,
+            'status' => $package->status,
+            'items' => $package->items
+                ->map(fn ($item) => [
+                    'id_menu' => $item->id_menu,
+                    'nama_menu' => $item->menuItem?->nama_menu,
+                    'qty' => $item->qty,
+                ])
+                ->values()
+                ->all(),
+        ];
+    }
+
     private function tableSnapshot(DiningTable $table): array
     {
         return [
@@ -743,5 +929,45 @@ class ManagerController extends Controller
                 'status' => $snapshot['status'] ?? 'aktif',
             ],
         );
+    }
+
+    private function restorePackageChange(DataChange $change): void
+    {
+        if ($change->action === 'Tambah' && $change->target_id) {
+            Package::whereKey($change->target_id)->delete();
+
+            return;
+        }
+
+        $snapshot = $change->before_data;
+
+        if (! is_array($snapshot)) {
+            return;
+        }
+
+        DB::transaction(function () use ($snapshot) {
+            $package = Package::updateOrCreate(
+                ['id_paket' => $snapshot['id_paket']],
+                [
+                    'nama_paket' => $snapshot['nama_paket'],
+                    'foto' => $snapshot['foto'] ?? null,
+                    'harga' => $snapshot['harga'],
+                    'status' => $snapshot['status'] ?? 'tersedia',
+                ],
+            );
+
+            $package->items()->delete();
+
+            foreach (($snapshot['items'] ?? []) as $item) {
+                if (! isset($item['id_menu'], $item['qty'])) {
+                    continue;
+                }
+
+                $package->items()->create([
+                    'id_menu' => $item['id_menu'],
+                    'qty' => $item['qty'],
+                ]);
+            }
+        });
     }
 }

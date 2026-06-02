@@ -36,6 +36,9 @@ Route::middleware(['simple.auth', 'user.level:3'])->group(function () {
     Route::post('/manager/menus', [ManagerController::class, 'storeMenu'])->name('manager.menus.store');
     Route::patch('/manager/menus/{menu}', [ManagerController::class, 'updateMenu'])->name('manager.menus.update');
     Route::delete('/manager/menus', [ManagerController::class, 'destroyMenus'])->name('manager.menus.destroy');
+    Route::post('/manager/packages', [ManagerController::class, 'storePackage'])->name('manager.packages.store');
+    Route::patch('/manager/packages/{package}', [ManagerController::class, 'updatePackage'])->name('manager.packages.update');
+    Route::delete('/manager/packages/{package}', [ManagerController::class, 'destroyPackage'])->name('manager.packages.destroy');
     Route::patch('/manager/stock/{menu}', [ManagerController::class, 'updateStock'])->name('manager.stock.update');
     Route::post('/manager/database/backup', [ManagerController::class, 'backupDatabase'])->name('manager.database.backup');
     Route::post('/manager/database/import', [ManagerController::class, 'importDatabase'])->name('manager.database.import');

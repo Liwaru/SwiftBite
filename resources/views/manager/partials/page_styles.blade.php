@@ -152,7 +152,7 @@
         .row-action { padding: 9px 11px; font-size: 13px; }
         .menu-thumb {
             width: 100%;
-            aspect-ratio: 16 / 10;
+            aspect-ratio: 4 / 3;
             display: grid;
             place-items: center;
             border-radius: 8px;
@@ -168,8 +168,10 @@
         .menu-thumb img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            object-position: center center;
             display: block;
+            background: #fffdfa;
         }
         .stock-badge {
             display: inline-flex;
@@ -362,12 +364,33 @@
         .menu-card-price { color: var(--brown); font-size: 15px; font-weight: 900; }
         .menu-card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .menu-card-actions .row-action { width: 100%; }
+        .package-card {
+            grid-template-rows: auto 1fr auto;
+        }
+        .package-lines {
+            display: grid;
+            gap: 4px;
+            color: #7a5a46;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.35;
+        }
+        .package-delete-form {
+            display: grid;
+        }
+        .package-delete-form .row-action {
+            width: 100%;
+        }
         .menu-card .menu-thumb {
             background:
                 linear-gradient(135deg, rgba(154, 98, 57, .16), rgba(39, 20, 13, .05)),
                 #f4e3cd;
             border-color: #ead4ba;
             color: var(--brown);
+        }
+        .menu-card[data-menu-name="Donut Glazed"] .menu-thumb img {
+            object-fit: cover;
+            object-position: center bottom;
         }
         .menu-card .status-badge {
             background: #e6ffd9;
@@ -746,6 +769,9 @@
             max-height: calc(100vh - 40px);
             overflow-y: auto;
         }
+        .modal-dialog.package-create-dialog {
+            width: min(620px, 100%);
+        }
         .modal-header {
             display: flex;
             align-items: flex-start;
@@ -831,6 +857,63 @@
             color: #2b1c15;
             padding: 12px 13px;
             font: inherit;
+        }
+        .package-picker {
+            display: grid;
+            gap: 10px;
+            max-height: 260px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid rgba(255, 246, 232, .22);
+            border-radius: 8px;
+            background: rgba(255, 246, 232, .08);
+        }
+        .package-picker-group {
+            display: grid;
+            gap: 8px;
+        }
+        .package-picker-title {
+            color: rgba(255, 248, 237, .88);
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .package-picker-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 76px;
+            gap: 10px;
+            align-items: center;
+            padding: 9px;
+            border: 1px solid rgba(255, 246, 232, .18);
+            border-radius: 8px;
+            background: rgba(255, 253, 250, .08);
+        }
+        .package-picker-row span {
+            display: grid;
+            gap: 3px;
+            min-width: 0;
+        }
+        .package-picker-row strong {
+            color: #fff8ed;
+            overflow-wrap: anywhere;
+        }
+        .package-picker-row em {
+            color: rgba(255, 248, 237, .68);
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 800;
+        }
+        .package-picker-row input {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #d9b48b;
+            border-radius: 8px;
+            background: #fffdfa;
+            color: #2b1c15;
+            padding: 10px 8px;
+            font: inherit;
+            font-weight: 900;
+            text-align: center;
         }
         .modal-actions {
             display: flex;

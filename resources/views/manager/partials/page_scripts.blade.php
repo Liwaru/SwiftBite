@@ -160,6 +160,49 @@
                 }
             }
 
+            function prepareEditPackageModal(trigger) {
+                if (trigger.dataset.modal !== 'edit-package') {
+                    return;
+                }
+
+                const form = document.querySelector('.js-package-edit-form');
+                const nameInput = document.querySelector('.js-edit-package-name');
+                const priceInput = document.querySelector('.js-edit-package-price');
+                const statusInput = document.querySelector('.js-edit-package-status');
+                const fileInput = document.querySelector('.js-edit-package-photo');
+                let items = {};
+
+                try {
+                    items = JSON.parse(trigger.dataset.items || '{}') || {};
+                } catch (error) {
+                    items = {};
+                }
+
+                if (form) {
+                    form.action = trigger.dataset.action || '#';
+                }
+
+                if (nameInput) {
+                    nameInput.value = trigger.dataset.name || '';
+                }
+
+                if (priceInput) {
+                    priceInput.value = trigger.dataset.price || '';
+                }
+
+                if (statusInput) {
+                    statusInput.value = trigger.dataset.status || 'tersedia';
+                }
+
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+
+                document.querySelectorAll('.js-edit-package-qty').forEach((input) => {
+                    input.value = items[input.dataset.menuId] || 0;
+                });
+            }
+
             function prepareEditTableModal(trigger) {
                 if (trigger.dataset.modal !== 'edit-table') {
                     return;
@@ -657,6 +700,7 @@
                 trigger.addEventListener('click', () => {
                     prepareCreateMenuModal(trigger);
                     prepareEditMenuModal(trigger);
+                    prepareEditPackageModal(trigger);
                     prepareStockMenuModal(trigger);
                     prepareEditTableModal(trigger);
                     prepareTableQrModal(trigger);
@@ -958,8 +1002,14 @@
             @endif
 
             @if ($section === 'menus' && $errors->any())
-                prepareCreateMenuModal({ dataset: { modal: 'create-menu', category: @json(old('category', 'Makanan')) } });
-                openModal('create-menu');
+                @if (old('modal_id') === 'create-package')
+                    openModal('create-package');
+                @elseif (old('modal_id') === 'edit-package')
+                    openModal('edit-package');
+                @else
+                    prepareCreateMenuModal({ dataset: { modal: 'create-menu', category: @json(old('category', 'Makanan')) } });
+                    openModal('create-menu');
+                @endif
             @endif
 
             @if ($section === 'stock' && $errors->any())
