@@ -5,6 +5,120 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Laporan Produk</title>
     @include('owner.partials.report_styles')
+    <style>
+        .product-filter-form {
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: end;
+        }
+
+        .product-filter-controls {
+            display: grid;
+            grid-template-columns: minmax(145px, .72fr) minmax(180px, 1fr) minmax(180px, 1fr) minmax(118px, auto);
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .product-filter-controls .filter-btn {
+            width: 100%;
+            min-width: 118px;
+            min-height: 46px;
+            height: 46px;
+            box-sizing: border-box;
+            padding: 0 12px;
+        }
+
+        .product-export-menu {
+            position: relative;
+            min-width: 132px;
+        }
+
+        .product-export-toggle {
+            width: 100%;
+            min-height: 46px;
+            height: 46px;
+            border: 1px solid rgba(255, 246, 232, .58);
+            border-radius: 8px;
+            background: transparent;
+            color: #fff8ed;
+            padding: 0 14px;
+            font: inherit;
+            font-weight: 900;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .product-export-toggle:hover,
+        .product-export-menu.open .product-export-toggle {
+            background: #fff6e8;
+            color: var(--brown-dark);
+        }
+
+        .product-export-dropdown {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 8px);
+            z-index: 20;
+            width: 170px;
+            display: none;
+            gap: 5px;
+            padding: 8px;
+            border: 1px solid #e1ad73;
+            border-radius: 8px;
+            background: #fff6e8;
+            box-shadow: 0 18px 34px rgba(39, 20, 13, .24);
+        }
+
+        .product-export-menu.open .product-export-dropdown {
+            display: grid;
+        }
+
+        .product-export-dropdown .export-btn {
+            width: 100%;
+            min-height: 40px;
+            justify-content: flex-start;
+            border: 0;
+            background: transparent;
+            color: var(--brown-dark);
+            padding: 9px 10px;
+        }
+
+        .product-export-dropdown .export-btn:hover {
+            background: #f4e3cd;
+        }
+
+        .product-export-dropdown button.export-btn {
+            font: inherit;
+            font-weight: 900;
+        }
+
+        @media (max-width: 1180px) {
+            .product-filter-form {
+                grid-template-columns: 1fr;
+            }
+
+            .product-export-menu {
+                justify-self: end;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .product-filter-form,
+            .product-filter-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .product-export-menu {
+                justify-self: stretch;
+            }
+
+            .product-export-dropdown {
+                left: 0;
+                right: 0;
+                width: auto;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="app-shell">
@@ -18,26 +132,34 @@
                 </section>
 
                 <section class="panel filter-panel">
-                    <form method="GET" action="{{ route('owner.products') }}" class="filter-form">
-                        <div class="filter-field">
-                            <label for="period">Periode</label>
-                            <select id="period" name="period">
-                                @foreach ($periodOptions as $value => $label)
-                                    <option value="{{ $value }}" @selected($period === $value)>{{ $label }}</option>
-                                @endforeach
-                            </select>
+                    <form method="GET" action="{{ route('owner.products') }}" class="filter-form product-filter-form">
+                        <div class="product-filter-controls">
+                            <div class="filter-field">
+                                <label for="period">Periode</label>
+                                <select id="period" name="period">
+                                    @foreach ($periodOptions as $value => $label)
+                                        <option value="{{ $value }}" @selected($period === $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="filter-field">
+                                <label for="startDate">Tanggal Mulai</label>
+                                <input id="startDate" type="date" name="start_date" value="{{ request('start_date', $startDate->toDateString()) }}">
+                            </div>
+                            <div class="filter-field">
+                                <label for="endDate">Tanggal Akhir</label>
+                                <input id="endDate" type="date" name="end_date" value="{{ request('end_date', $endDate->toDateString()) }}">
+                            </div>
+                            <button type="submit" class="filter-btn">Terapkan</button>
                         </div>
-                        <div class="filter-field">
-                            <label for="startDate">Tanggal Mulai</label>
-                            <input id="startDate" type="date" name="start_date" value="{{ request('start_date', $startDate->toDateString()) }}">
+                        <div class="product-export-menu" id="productExportMenu">
+                            <button type="button" class="product-export-toggle" id="productExportToggle" aria-expanded="false" aria-controls="productExportDropdown">Export ▾</button>
+                            <div class="product-export-dropdown" id="productExportDropdown">
+                                <a class="export-btn" href="{{ route('owner.products', array_merge(request()->except('export'), ['export' => 'excel'])) }}">Export Excel</a>
+                                <a class="export-btn" href="{{ route('owner.products', array_merge(request()->except('export'), ['export' => 'pdf'])) }}">Export PDF</a>
+                                <button type="button" class="export-btn" onclick="window.print()">Print</button>
+                            </div>
                         </div>
-                        <div class="filter-field">
-                            <label for="endDate">Tanggal Akhir</label>
-                            <input id="endDate" type="date" name="end_date" value="{{ request('end_date', $endDate->toDateString()) }}">
-                        </div>
-                        <button type="submit" class="filter-btn">Terapkan</button>
-                        <a class="export-btn" href="{{ route('owner.products', array_merge(request()->except('export'), ['export' => 'pdf'])) }}">Export PDF</a>
-                        <a class="export-btn" href="{{ route('owner.products', array_merge(request()->except('export'), ['export' => 'excel'])) }}">Export Excel</a>
                     </form>
                 </section>
 
@@ -160,5 +282,37 @@
             </main>
         </div>
     </div>
+    <script>
+        (function () {
+            const menu = document.getElementById('productExportMenu');
+            const toggle = document.getElementById('productExportToggle');
+
+            if (!menu || !toggle) {
+                return;
+            }
+
+            function closeMenu() {
+                menu.classList.remove('open');
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+
+            toggle.addEventListener('click', function () {
+                const isOpen = menu.classList.toggle('open');
+                toggle.setAttribute('aria-expanded', String(isOpen));
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!menu.contains(event.target)) {
+                    closeMenu();
+                }
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    closeMenu();
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

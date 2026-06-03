@@ -21,8 +21,10 @@
         h2 { font-size: 22px; margin-bottom: 14px; }
         h3 { font-size: 17px; margin-bottom: 6px; }
         .muted { color: #7a5a46; line-height: 1.5; }
-        .topbar { display: flex; justify-content: space-between; gap: 16px; align-items: end; margin-bottom: 22px; }
+        .topbar { min-width: 0; display: flex; justify-content: space-between; gap: 16px; align-items: end; margin-bottom: 22px; }
         .panel {
+            min-width: 0;
+            max-width: 100%;
             background:
                 linear-gradient(135deg, rgba(154, 98, 57, .94), rgba(90, 50, 31, .98) 52%, rgba(39, 20, 13, .98));
             border: 1px solid rgba(255, 246, 232, .22);
@@ -30,11 +32,12 @@
             box-shadow: 0 12px 30px rgba(39, 20, 13, .18);
             color: var(--cream);
             padding: 18px;
+            overflow-wrap: anywhere;
         }
         .panel .muted { color: rgba(255, 246, 232, .76); }
         .section-head { display: flex; justify-content: space-between; gap: 14px; align-items: center; margin-bottom: 16px; }
         .section-head h2 { margin-bottom: 0; }
-        .filter-form { display: grid; grid-template-columns: minmax(240px, 1.4fr) repeat(3, minmax(140px, .7fr)) auto; gap: 10px; align-items: center; margin-bottom: 16px; }
+        .filter-form { min-width: 0; display: grid; grid-template-columns: minmax(240px, 1.4fr) repeat(3, minmax(140px, .7fr)) auto; gap: 10px; align-items: center; margin-bottom: 16px; }
         .search-input, .filter-select, .date-input {
             width: 100%;
             box-sizing: border-box;
@@ -53,7 +56,7 @@
         .badge { display: inline-flex; width: fit-content; padding: 4px 8px; border-radius: 999px; background: rgba(255, 246, 232, .16); color: var(--cream); font-size: 12px; font-weight: 900; }
         .badge.payment { background: #edf5e8; color: #355b28; }
         .badge.demo { background: var(--cream); color: var(--sidebar-brown-dark); }
-        .history-table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid rgba(255, 246, 232, .2); border-radius: 8px; background: rgba(255, 246, 232, .08); scrollbar-width: thin; -ms-overflow-style: auto; }
+        .history-table-wrap { width: 100%; max-width: 100%; overflow-x: auto; border: 1px solid rgba(255, 246, 232, .2); border-radius: 8px; background: rgba(255, 246, 232, .08); scrollbar-width: thin; -ms-overflow-style: auto; }
         .history-table-wrap::-webkit-scrollbar { display: block; width: 8px; height: 8px; }
         .history-table-wrap::-webkit-scrollbar-thumb { background: rgba(255, 246, 232, .34); border-radius: 999px; }
         .history-table { width: 100%; min-width: min(820px, 100vw); border-collapse: collapse; }

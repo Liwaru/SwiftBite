@@ -26,11 +26,89 @@
     }
 
     .app-shell {
+        width: 100%;
+        min-width: 0;
         min-height: 100vh;
+        overflow-x: hidden;
         background:
             linear-gradient(135deg, rgba(53, 32, 22, .82), rgba(111, 69, 43, .9)),
             repeating-linear-gradient(45deg, rgba(255, 246, 232, .08) 0 1px, transparent 1px 14px),
             #6f452b;
+    }
+
+    .mobile-appbar,
+    .mobile-sidebar-backdrop {
+        display: none;
+    }
+
+    .mobile-appbar {
+        position: fixed;
+        inset: 0 0 auto 0;
+        z-index: 1100;
+        height: 72px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 12px 16px;
+        background:
+            radial-gradient(circle at 12% 10%, rgba(255, 246, 232, .14), transparent 30%),
+            linear-gradient(135deg, var(--sidebar-red-light), var(--sidebar-red-dark));
+        color: #fff8ed;
+        box-shadow: 0 12px 30px rgba(24, 13, 7, .22);
+    }
+
+    .mobile-appbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        color: inherit;
+        text-decoration: none;
+        font-weight: 900;
+    }
+
+    .mobile-appbar-logo {
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+        border-radius: 9px;
+        background: rgba(255, 246, 232, .2);
+        color: #fff8ed;
+        font-size: 14px;
+        font-weight: 900;
+    }
+
+    .mobile-appbar-title {
+        overflow: hidden;
+        font-size: 20px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .mobile-menu-toggle {
+        flex: 0 0 42px;
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 12px;
+        background: rgba(255, 246, 232, .18);
+        color: #fff8ed;
+        cursor: pointer;
+    }
+
+    .mobile-sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1050;
+        background: rgba(24, 13, 7, .48);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .22s ease;
     }
 
     .sidebar {
@@ -238,21 +316,42 @@
     }
 
     .sidebar-subnav {
-        display: grid;
+        display: none;
         gap: 8px;
-        max-height: 0;
-        overflow: hidden;
+        max-height: none;
+        overflow: visible;
         padding-left: 12px;
-        opacity: 0;
-        transform: translateY(-12px) scaleY(.94);
-        transform-origin: top;
-        transition: max-height .36s cubic-bezier(.2, .8, .2, 1), opacity .28s ease, transform .32s cubic-bezier(.2, .8, .2, 1);
+        opacity: 1;
+        transform: none;
+        transition: none;
     }
 
     .sidebar-group[open] .sidebar-subnav {
-        max-height: 360px;
+        display: grid;
+    }
+
+    .app-shell:not(.sidebar-collapsed) .sidebar-group[open] .sidebar-subnav {
+        display: grid;
+        max-height: none;
+        overflow: visible;
         opacity: 1;
-        transform: translateY(0) scaleY(1);
+        transform: none;
+    }
+
+    .app-shell:not(.sidebar-collapsed) .sidebar-subnav .sidebar-icon {
+        display: grid;
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .app-shell:not(.sidebar-collapsed) .sidebar-subnav .sidebar-label {
+        display: block;
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .app-shell.sidebar-collapsed .sidebar-subnav {
+        display: none !important;
     }
 
     .sidebar-subnav .sidebar-link {
@@ -450,10 +549,69 @@
 
     .content-with-sidebar {
         margin-left: 260px;
+        width: calc(100% - 260px);
         min-width: 0;
         min-height: 100vh;
+        overflow-x: hidden;
         background: #ffffff;
         transition: margin-left .28s ease;
+    }
+
+    .content-with-sidebar > main {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .content-with-sidebar > main > * {
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .content-with-sidebar .panel,
+    .content-with-sidebar .hero-card,
+    .content-with-sidebar .stat-card,
+    .content-with-sidebar .summary-card,
+    .content-with-sidebar .filter-card,
+    .content-with-sidebar .table-card,
+    .content-with-sidebar .stats,
+    .content-with-sidebar .report-grid,
+    .content-with-sidebar .dashboard-grid,
+    .content-with-sidebar .summary-grid,
+    .content-with-sidebar .report-column,
+    .content-with-sidebar .page-shell,
+    .content-with-sidebar .table-wrap,
+    .content-with-sidebar .history-table-wrap,
+    .content-with-sidebar .summary-panel {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .content-with-sidebar .stats,
+    .content-with-sidebar .report-grid,
+    .content-with-sidebar .dashboard-grid,
+    .content-with-sidebar .summary-grid {
+        min-width: 0;
+    }
+
+    .content-with-sidebar .panel,
+    .content-with-sidebar .stat-card,
+    .content-with-sidebar .summary-card,
+    .content-with-sidebar .filter-card,
+    .content-with-sidebar .table-card {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .content-with-sidebar .table-wrap table,
+    .content-with-sidebar .history-table,
+    .content-with-sidebar .summary-table {
+        width: 100%;
+        min-width: max(100%, 680px);
     }
 
     .app-shell.sidebar-collapsed .sidebar {
@@ -464,6 +622,7 @@
 
     .app-shell.sidebar-collapsed .content-with-sidebar {
         margin-left: 88px;
+        width: calc(100% - 88px);
     }
 
     .app-shell.sidebar-collapsed .content-with-sidebar > main {
@@ -520,11 +679,32 @@
         transition: none;
     }
 
-    @media (max-width: 760px) {
+    @media (max-width: 860px) {
+        .mobile-appbar {
+            display: flex;
+        }
+
+        .mobile-sidebar-backdrop {
+            display: block;
+        }
+
+        .app-shell.sidebar-mobile-open .mobile-sidebar-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
         .sidebar {
-            position: static;
-            width: 100%;
-            min-height: auto;
+            z-index: 1200;
+            width: min(82vw, 290px);
+            max-width: 290px;
+            padding: 24px 18px 26px;
+            transform: translateX(-105%);
+            transition: transform .26s ease, box-shadow .26s ease;
+        }
+
+        .app-shell.sidebar-mobile-open .sidebar {
+            transform: translateX(0);
+            box-shadow: 18px 0 44px rgba(24, 13, 7, .36);
         }
 
         .sidebar-toggle {
@@ -534,6 +714,14 @@
         .content-with-sidebar,
         .app-shell.sidebar-collapsed .content-with-sidebar {
             margin-left: 0;
+            width: 100%;
+            padding-top: 72px;
+        }
+
+        .content-with-sidebar .table-wrap table,
+        .content-with-sidebar .history-table,
+        .content-with-sidebar .summary-table {
+            min-width: 680px;
         }
 
         .app-shell.sidebar-collapsed .content-with-sidebar > main {
@@ -541,7 +729,45 @@
         }
 
         .app-shell.sidebar-collapsed .sidebar {
-            width: 100%;
+            width: min(82vw, 290px);
+            padding-inline: 18px;
+        }
+
+        .app-shell.sidebar-collapsed .sidebar-brand {
+            display: flex;
+            place-items: initial;
+        }
+
+        .app-shell.sidebar-collapsed .sidebar-brand-link,
+        .app-shell.sidebar-collapsed .sidebar-logo,
+        .app-shell.sidebar-collapsed .sidebar-brand-text,
+        .app-shell.sidebar-collapsed .sidebar-footer,
+        .app-shell.sidebar-collapsed .sidebar-label {
+            display: flex;
+        }
+
+        .app-shell.sidebar-collapsed .sidebar-brand-text,
+        .app-shell.sidebar-collapsed .sidebar-footer,
+        .app-shell.sidebar-collapsed .sidebar-label {
+            display: block;
+        }
+
+        .app-shell.sidebar-collapsed .sidebar-link,
+        .app-shell.sidebar-collapsed .sidebar-group-toggle {
+            justify-content: flex-start;
+            padding: 13px 14px;
+        }
+
+        .app-shell.sidebar-collapsed .sidebar-caret {
+            display: inline;
+        }
+
+        .app-shell.sidebar-collapsed .sidebar-subnav {
+            display: grid !important;
+        }
+
+        .app-shell:not(.sidebar-mobile-open) .sidebar {
+            box-shadow: none;
         }
     }
 </style>
@@ -552,7 +778,7 @@
 
         if (
             appShell
-            && window.innerWidth > 760
+            && window.innerWidth > 860
             && localStorage.getItem('swiftbite.sidebarCollapsed') === 'true'
         ) {
             appShell.classList.add('sidebar-collapsed', 'sidebar-state-loading');
@@ -581,7 +807,22 @@
     };
 @endphp
 
-<aside class="sidebar">
+<header class="mobile-appbar">
+    <a class="mobile-appbar-brand" href="{{ $dashboardRoute }}" aria-label="Buka dashboard">
+        <span class="mobile-appbar-logo">SB</span>
+        <span class="mobile-appbar-title">SwiftBite</span>
+    </a>
+    <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Buka navigasi" aria-expanded="false" aria-controls="sidebarNavigation">
+        <span class="hamburger-icon" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+        </span>
+    </button>
+</header>
+<div class="mobile-sidebar-backdrop" id="mobileSidebarBackdrop" aria-hidden="true"></div>
+
+<aside class="sidebar" id="sidebarNavigation">
     <div class="sidebar-brand">
         <a class="sidebar-brand-link" href="{{ $dashboardRoute }}" aria-label="Buka dashboard">
             <span class="sidebar-logo">SB</span>
@@ -853,10 +1094,14 @@
 <script>
     (function () {
         const sidebarStorageKey = 'swiftbite.sidebarCollapsed';
+        const mobileBreakpoint = 860;
 
         function initSidebarToggle() {
             const toggleButton = document.getElementById('sidebarToggle');
-            const appShell = toggleButton ? toggleButton.closest('.app-shell') : null;
+            const mobileToggleButton = document.getElementById('mobileMenuToggle');
+            const mobileBackdrop = document.getElementById('mobileSidebarBackdrop');
+            const sidebar = document.getElementById('sidebarNavigation');
+            const appShell = (sidebar || toggleButton || mobileToggleButton)?.closest('.app-shell');
             const account = document.getElementById('sidebarAccount');
             const accountToggle = document.getElementById('accountMenuToggle');
 
@@ -867,6 +1112,68 @@
 
                 account.classList.remove('open');
                 accountToggle.setAttribute('aria-expanded', 'false');
+            }
+
+            function openActiveGroups() {
+                document.querySelectorAll('.sidebar-group').forEach(function (group) {
+                    if (group.querySelector('.sidebar-subnav .sidebar-link.active')) {
+                        group.open = true;
+                    }
+                });
+            }
+
+            function isMobile() {
+                return window.innerWidth <= mobileBreakpoint;
+            }
+
+            function closeMobileSidebar() {
+                if (!appShell || !mobileToggleButton) {
+                    return;
+                }
+
+                appShell.classList.remove('sidebar-mobile-open');
+                mobileToggleButton.setAttribute('aria-expanded', 'false');
+                document.body.style.overflow = '';
+                closeAccountMenu();
+            }
+
+            function openMobileSidebar() {
+                if (!appShell || !mobileToggleButton) {
+                    return;
+                }
+
+                appShell.classList.remove('sidebar-collapsed');
+                appShell.classList.add('sidebar-mobile-open');
+                mobileToggleButton.setAttribute('aria-expanded', 'true');
+                document.body.style.overflow = 'hidden';
+                closeAccountMenu();
+                openActiveGroups();
+            }
+
+            function syncSidebarMode() {
+                if (!appShell) {
+                    return;
+                }
+
+                if (isMobile()) {
+                    appShell.classList.remove('sidebar-collapsed', 'sidebar-state-loading');
+                    toggleButton?.setAttribute('aria-expanded', 'true');
+                    return;
+                }
+
+                closeMobileSidebar();
+
+                if (localStorage.getItem(sidebarStorageKey) === 'true') {
+                    appShell.classList.add('sidebar-collapsed');
+                    toggleButton?.setAttribute('aria-expanded', 'false');
+                } else {
+                    appShell.classList.remove('sidebar-collapsed');
+                    toggleButton?.setAttribute('aria-expanded', 'true');
+                }
+
+                requestAnimationFrame(function () {
+                    appShell.classList.remove('sidebar-state-loading');
+                });
             }
 
             if (account && accountToggle) {
@@ -888,26 +1195,42 @@
                 });
             }
 
-            if (!appShell || !toggleButton || window.innerWidth <= 760) {
+            if (!appShell) {
                 return;
             }
 
-            if (localStorage.getItem(sidebarStorageKey) === 'true') {
-                appShell.classList.add('sidebar-collapsed');
-                toggleButton.setAttribute('aria-expanded', 'false');
-            }
+            openActiveGroups();
+            syncSidebarMode();
 
-            requestAnimationFrame(function () {
-                appShell.classList.remove('sidebar-state-loading');
+            mobileToggleButton?.addEventListener('click', function () {
+                if (appShell.classList.contains('sidebar-mobile-open')) {
+                    closeMobileSidebar();
+                } else {
+                    openMobileSidebar();
+                }
             });
 
-            toggleButton.addEventListener('click', function () {
+            mobileBackdrop?.addEventListener('click', closeMobileSidebar);
+
+            toggleButton?.addEventListener('click', function () {
+                if (isMobile()) {
+                    return;
+                }
+
                 appShell.classList.toggle('sidebar-collapsed');
                 const expanded = !appShell.classList.contains('sidebar-collapsed');
                 toggleButton.setAttribute('aria-expanded', String(expanded));
                 localStorage.setItem(sidebarStorageKey, String(!expanded));
                 closeAccountMenu();
             });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    closeMobileSidebar();
+                }
+            });
+
+            window.addEventListener('resize', syncSidebarMode);
         }
 
         if (document.readyState === 'loading') {

@@ -14,6 +14,7 @@
         h2 { font-size: 22px; margin-bottom: 14px; }
         .muted { color: #7a5a46; line-height: 1.5; }
         .hero-card {
+            min-width: 0;
             display: flex;
             align-items: flex-end;
             justify-content: space-between;
@@ -28,8 +29,9 @@
         .eyebrow { margin-bottom: 8px; color: rgba(255, 248, 237, .76); font-size: 12px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
         .hero-title { margin: 0; font-size: clamp(32px, 4vw, 46px); line-height: 1.05; }
         .hero-subtitle { max-width: 720px; margin-top: 10px; color: rgba(255, 248, 237, .82); line-height: 1.55; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 18px; }
+        .stats { min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 18px; }
         .stat-card, .panel {
+            min-width: 0;
             background: linear-gradient(135deg, rgba(154, 98, 57, .94), rgba(90, 50, 31, .98) 52%, rgba(39, 20, 13, .98));
             border: 1px solid rgba(255, 246, 232, .22);
             border-radius: 8px;
@@ -40,8 +42,8 @@
         .stat-card span, .panel .muted { color: rgba(255, 246, 232, .76); }
         .stat-card span { font-size: 13px; font-weight: 800; }
         .stat-card strong { font-size: 28px; line-height: 1.1; overflow-wrap: anywhere; }
-        .dashboard-row { display: block; }
-        .panel { padding: 18px; overflow-x: auto; scrollbar-width: thin; -ms-overflow-style: auto; }
+        .dashboard-row { display: block; min-width: 0; }
+        .panel { max-width: 100%; padding: 18px; overflow-x: auto; overflow-wrap: anywhere; scrollbar-width: thin; -ms-overflow-style: auto; }
         .panel::-webkit-scrollbar { display: block; width: 8px; height: 8px; }
         .panel::-webkit-scrollbar-thumb { background: rgba(255, 246, 232, .34); border-radius: 999px; }
         .summary-total { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 14px; padding: 12px 14px; border-radius: 8px; background: rgba(255, 246, 232, .1); font-weight: 900; }

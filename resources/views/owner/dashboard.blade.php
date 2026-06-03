@@ -10,22 +10,22 @@
         .app-shell .content-with-sidebar { background: #ffffff !important; }
         main { width: 100%; min-width: 0; box-sizing: border-box; padding: clamp(22px, 2.4vw, 34px) clamp(16px, 2.3vw, 30px) 56px; }
         h1, h2, p { margin: 0; }
-        .hero-card, .stat-card, .panel { border-radius: 8px; box-shadow: 0 16px 38px rgba(39, 20, 13, .13); }
+        .hero-card, .stat-card, .panel { min-width: 0; border-radius: 8px; box-shadow: 0 16px 38px rgba(39, 20, 13, .13); }
         .hero-card { margin-bottom: 16px; padding: 22px; background: linear-gradient(135deg, var(--brown-light), var(--brown-dark)); color: #fff8ed; }
         .eyebrow { margin-bottom: 8px; color: rgba(255, 248, 237, .76); font-size: 12px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
         .hero-title { font-size: clamp(32px, 4vw, 46px); line-height: 1.05; }
         .hero-subtitle { max-width: 760px; margin-top: 10px; color: rgba(255, 248, 237, .82); line-height: 1.55; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 18px; }
+        .stats { min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 18px; }
         .stat-card, .panel { background: linear-gradient(135deg, rgba(154, 98, 57, .94), rgba(90, 50, 31, .98) 52%, rgba(39, 20, 13, .98)); border: 1px solid rgba(255, 246, 232, .22); color: var(--cream); }
         .stat-card { display: grid; gap: 7px; padding: 16px; }
         .stat-card span, .muted { color: rgba(255, 246, 232, .76); }
         .stat-card span { font-size: 13px; font-weight: 800; }
         .stat-card strong { font-size: 28px; line-height: 1.1; overflow-wrap: anywhere; }
-        .report-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(min(320px, 100%), .85fr); gap: 16px; align-items: start; }
-        .report-column { display: grid; gap: 16px; }
-        .panel { padding: 18px; }
+        .report-grid { min-width: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(min(320px, 100%), .85fr); gap: 16px; align-items: start; }
+        .report-column { min-width: 0; display: grid; gap: 16px; }
+        .panel { max-width: 100%; padding: 18px; }
         .panel h2 { margin-bottom: 14px; font-size: 22px; }
-        .panel { min-width: 0; overflow-x: auto; scrollbar-width: thin; -ms-overflow-style: auto; }
+        .panel { min-width: 0; overflow-x: auto; overflow-wrap: anywhere; scrollbar-width: thin; -ms-overflow-style: auto; }
         .panel::-webkit-scrollbar { display: block; width: 8px; height: 8px; }
         .panel::-webkit-scrollbar-thumb { background: rgba(255, 246, 232, .34); border-radius: 999px; }
         .summary-table { width: 100%; min-width: min(520px, 100vw); border-collapse: collapse; overflow: hidden; border-radius: 8px; }
