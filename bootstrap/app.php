@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'simple.auth' => \App\Http\Middleware\EnsureSimpleLogin::class,
             'user.level' => \App\Http\Middleware\EnsureUserLevel::class,
+            'feature.access' => \App\Http\Middleware\EnsureFeatureAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

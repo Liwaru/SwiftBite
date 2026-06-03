@@ -26,6 +26,7 @@
     }
 
     .app-shell {
+        --swiftbite-sidebar-width: 260px;
         width: 100%;
         min-width: 0;
         min-height: 100vh;
@@ -34,6 +35,10 @@
             linear-gradient(135deg, rgba(53, 32, 22, .82), rgba(111, 69, 43, .9)),
             repeating-linear-gradient(45deg, rgba(255, 246, 232, .08) 0 1px, transparent 1px 14px),
             #6f452b;
+    }
+
+    .app-shell.sidebar-collapsed {
+        --swiftbite-sidebar-width: 88px;
     }
 
     .mobile-appbar,
@@ -115,7 +120,7 @@
         position: fixed;
         inset: 0 auto 0 0;
         z-index: 1000;
-        width: 260px;
+        width: var(--swiftbite-sidebar-width);
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
@@ -548,13 +553,17 @@
     }
 
     .content-with-sidebar {
-        margin-left: 260px;
-        width: calc(100% - 260px);
+        margin-left: var(--swiftbite-sidebar-width);
+        width: auto;
         min-width: 0;
         min-height: 100vh;
         overflow-x: hidden;
         background: #ffffff;
         transition: margin-left .28s ease;
+    }
+
+    .app-shell > .content-with-sidebar {
+        margin-left: var(--swiftbite-sidebar-width);
     }
 
     .content-with-sidebar > main {
@@ -615,14 +624,18 @@
     }
 
     .app-shell.sidebar-collapsed .sidebar {
-        width: 88px;
+        width: var(--swiftbite-sidebar-width);
         padding-inline: 14px;
         box-shadow: 10px 0 24px rgba(24, 13, 7, .2);
     }
 
     .app-shell.sidebar-collapsed .content-with-sidebar {
-        margin-left: 88px;
-        width: calc(100% - 88px);
+        margin-left: var(--swiftbite-sidebar-width);
+        width: auto;
+    }
+
+    .app-shell.sidebar-collapsed > .content-with-sidebar {
+        margin-left: var(--swiftbite-sidebar-width);
     }
 
     .app-shell.sidebar-collapsed .content-with-sidebar > main {
@@ -680,6 +693,11 @@
     }
 
     @media (max-width: 860px) {
+        .app-shell,
+        .app-shell.sidebar-collapsed {
+            --swiftbite-sidebar-width: min(82vw, 290px);
+        }
+
         .mobile-appbar {
             display: flex;
         }

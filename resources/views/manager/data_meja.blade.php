@@ -89,7 +89,7 @@
                                             <div class="table-card-head">
                                                 <div class="table-card-title">{{ $table->nama_meja }}</div>
                                                 <div class="table-more-wrap">
-                                                    <button type="button" class="table-more-btn js-table-more" aria-label="Menu {{ $table->nama_meja }}">â‹®</button>
+                                                    <button type="button" class="table-more-btn js-table-more" aria-label="Menu {{ $table->nama_meja }}">...</button>
                                                     <div class="table-more-menu">
                                                         <form method="POST" action="{{ route('manager.tables.destroy', $table) }}" class="js-delete-table-form" data-table-name="{{ $table->nama_meja }}">
                                                             @csrf

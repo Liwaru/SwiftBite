@@ -178,6 +178,8 @@
             object-position: center center;
             display: block;
             background: #fffdfa;
+            user-select: none;
+            -webkit-user-drag: none;
         }
         .stock-badge {
             display: inline-flex;

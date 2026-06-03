@@ -19,7 +19,6 @@
                             <h1 class="hero-title">Data Bahan</h1>
                             <p class="hero-subtitle">Kelola stok bahan baku bakery agar chef dan owner bisa memantau kondisi bahan dengan jelas.</p>
                         </div>
-                        <button type="button" class="action-btn hero-action js-open-modal" data-modal="create-ingredient">Tambah Bahan</button>
                     </section>
 
                     <section class="summary-grid">
@@ -51,7 +50,6 @@
                                 <div class="table-title">Manajemen Bahan</div>
                                 <div class="table-subtitle">Pantau stok, batas minimum, dan penggunaan bahan hari ini.</div>
                             </div>
-                            <button type="button" class="action-btn primary js-open-modal" data-modal="create-ingredient">Tambah Bahan</button>
                         </div>
 
                         @if (session('success') || $errors->any())

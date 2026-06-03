@@ -102,7 +102,7 @@
                                                     <article class="menu-card">
                                                         <div class="menu-thumb">
                                                             @if ($menu->foto)
-                                                                <img src="{{ asset($menu->foto) }}" alt="{{ $menu->nama_menu }}">
+                                                                <img src="{{ asset($menu->foto) }}" alt="{{ $menu->nama_menu }}" draggable="false">
                                                             @else
                                                                 {{ $initial }}
                                                             @endif

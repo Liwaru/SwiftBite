@@ -104,7 +104,7 @@
                                                 <article class="menu-card package-card" data-menu-name="{{ $package->nama_paket }}">
                                                     <div class="menu-thumb">
                                                         @if ($package->foto)
-                                                            <img src="{{ asset($package->foto) }}" alt="{{ $package->nama_paket }}">
+                                                            <img src="{{ asset($package->foto) }}" alt="{{ $package->nama_paket }}" draggable="false">
                                                         @else
                                                             {{ $initial }}
                                                         @endif
@@ -201,7 +201,7 @@
                                                         <input type="checkbox" class="menu-select-control js-menu-select" name="menu_ids[]" value="{{ $menu->getKey() }}" aria-label="Pilih {{ $menu->nama_menu }}">
                                                         <div class="menu-thumb">
                                                             @if ($menu->foto)
-                                                                <img src="{{ asset($menu->foto) }}" alt="{{ $menu->nama_menu }}">
+                                                                <img src="{{ asset($menu->foto) }}" alt="{{ $menu->nama_menu }}" draggable="false">
                                                             @else
                                                                 {{ $initial }}
                                                             @endif

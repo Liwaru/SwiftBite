@@ -16,6 +16,7 @@
             display: grid;
             grid-template-columns: minmax(145px, .72fr) minmax(180px, 1fr) minmax(180px, 1fr) minmax(118px, auto);
             gap: 10px;
+            align-items: end;
             min-width: 0;
         }
 
@@ -24,6 +25,7 @@
             min-width: 118px;
             min-height: 46px;
             height: 46px;
+            align-self: end;
             box-sizing: border-box;
             padding: 0 12px;
         }
@@ -31,6 +33,7 @@
         .product-export-menu {
             position: relative;
             min-width: 132px;
+            align-self: end;
         }
 
         .product-export-toggle {
@@ -92,6 +95,10 @@
             font-weight: 900;
         }
 
+        .category-panel {
+            margin-bottom: 16px;
+        }
+
         @media (max-width: 1180px) {
             .product-filter-form {
                 grid-template-columns: 1fr;
@@ -144,16 +151,16 @@
                             </div>
                             <div class="filter-field">
                                 <label for="startDate">Tanggal Mulai</label>
-                                <input id="startDate" type="date" name="start_date" value="{{ request('start_date', $startDate->toDateString()) }}">
+                                <input id="startDate" type="date" name="start_date" value="{{ $startDate->toDateString() }}">
                             </div>
                             <div class="filter-field">
                                 <label for="endDate">Tanggal Akhir</label>
-                                <input id="endDate" type="date" name="end_date" value="{{ request('end_date', $endDate->toDateString()) }}">
+                                <input id="endDate" type="date" name="end_date" value="{{ $endDate->toDateString() }}">
                             </div>
                             <button type="submit" class="filter-btn">Terapkan</button>
                         </div>
                         <div class="product-export-menu" id="productExportMenu">
-                            <button type="button" class="product-export-toggle" id="productExportToggle" aria-expanded="false" aria-controls="productExportDropdown">Export ▾</button>
+                            <button type="button" class="product-export-toggle" id="productExportToggle" aria-expanded="false" aria-controls="productExportDropdown">Export v</button>
                             <div class="product-export-dropdown" id="productExportDropdown">
                                 <a class="export-btn" href="{{ route('owner.products', array_merge(request()->except('export'), ['export' => 'excel'])) }}">Export Excel</a>
                                 <a class="export-btn" href="{{ route('owner.products', array_merge(request()->except('export'), ['export' => 'pdf'])) }}">Export PDF</a>
@@ -168,6 +175,27 @@
                     <article class="stat-card"><span>Total Menu Aktif</span><strong>{{ number_format($summary['total_active_menu']) }}</strong></article>
                     <article class="stat-card"><span>Produk Terlaris</span><strong>{{ $summary['best_product'] }}</strong></article>
                     <article class="stat-card"><span>Produk Terendah</span><strong>{{ $summary['lowest_product'] }}</strong></article>
+                </section>
+
+                <section class="report-grid single category-panel">
+                    <div class="panel">
+                        <h2>Distribusi Kategori</h2>
+                        @if ($categoryDistribution->isEmpty())
+                            <p class="empty-state">Belum ada data kategori.</p>
+                        @else
+                            <div class="list-stack">
+                                @foreach ($categoryDistribution as $category)
+                                    <div class="row">
+                                        <div>
+                                            <strong>{{ $category['category'] }}</strong>
+                                            <div class="bar-track"><div class="bar-fill" style="width: {{ max(4, $category['percentage']) }}%;"></div></div>
+                                        </div>
+                                        <strong>{{ number_format($category['total_sold']) }} Terjual</strong>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
                 </section>
 
                 <section class="report-grid">
@@ -207,46 +235,12 @@
                     </div>
                 </section>
 
-                <section class="report-grid" style="margin-top: 16px;">
-                    <div class="panel">
-                        <h2>Pendapatan per Produk</h2>
-                        @if ($revenueByProduct->isEmpty())
-                            <p class="empty-state">Belum ada pendapatan produk pada periode ini.</p>
-                        @else
-                            <div class="list-stack">
-                                @foreach ($revenueByProduct as $product)
-                                    <div class="row">
-                                        <span>{{ $product->nama_menu }}</span>
-                                        <strong>Rp{{ number_format($product->total_revenue, 0, ',', '.') }}</strong>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-
-                    <div class="panel">
-                        <h2>Distribusi Kategori</h2>
-                        @if ($categoryDistribution->isEmpty())
-                            <p class="empty-state">Belum ada data kategori.</p>
-                        @else
-                            <div class="list-stack">
-                                @foreach ($categoryDistribution as $category)
-                                    <div class="row">
-                                        <div>
-                                            <strong>{{ $category['category'] }}</strong>
-                                            <div class="bar-track"><div class="bar-fill" style="width: {{ max(4, $category['percentage']) }}%;"></div></div>
-                                        </div>
-                                        <strong>{{ number_format($category['total_sold']) }} Terjual</strong>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-                </section>
-
                 <section class="report-grid single" style="margin-top: 16px;">
                     <div class="panel">
-                        <h2>Detail Produk</h2>
+                        <div class="panel-head">
+                            <h2>Detail Produk</h2>
+                            <div class="period-note">{{ $periodOptions[$period] ?? 'Periode' }}: {{ $startDate->format('d/m/Y') }} - {{ $endDate->format('d/m/Y') }}</div>
+                        </div>
                         @if ($productRows->isEmpty())
                             <p class="empty-state">Belum ada produk yang terdaftar.</p>
                         @else
@@ -257,8 +251,8 @@
                                             <th>Nama Produk</th>
                                             <th>Kategori</th>
                                             <th>Harga</th>
-                                            <th>Jumlah Terjual</th>
-                                            <th>Pendapatan</th>
+                                            <th>Terjual {{ $periodOptions[$period] ?? '' }}</th>
+                                            <th>Pendapatan {{ $periodOptions[$period] ?? '' }}</th>
                                             <th>Status</th>
                                         </tr>
                                     </thead>
