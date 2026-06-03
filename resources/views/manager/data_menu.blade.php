@@ -112,6 +112,9 @@
 
                                                     <div class="menu-card-body">
                                                         <div class="menu-card-name">{{ $package->nama_paket }}</div>
+                                                        @if ($package->deskripsi)
+                                                            <div class="menu-card-description">{{ $package->deskripsi }}</div>
+                                                        @endif
                                                         <div class="package-lines">
                                                             @foreach ($package->items as $packageItem)
                                                                 <div>{{ $packageItem->qty }} {{ $packageItem->menuItem?->nama_menu ?? 'Menu' }}</div>
@@ -128,6 +131,7 @@
                                                             data-modal="edit-package"
                                                             data-action="{{ route('manager.packages.update', $package) }}"
                                                             data-name="{{ $package->nama_paket }}"
+                                                            data-description="{{ $package->deskripsi }}"
                                                             data-price="{{ (int) $package->harga }}"
                                                             data-status="{{ $package->status }}"
                                                             data-photo="{{ $package->foto ? asset($package->foto) : '' }}"
@@ -216,6 +220,7 @@
                                                                 data-modal="edit-menu"
                                                                 data-action="{{ route('manager.menus.update', $menu) }}"
                                                                 data-name="{{ $menu->nama_menu }}"
+                                                                data-description="{{ $menu->deskripsi }}"
                                                                 data-price="{{ (int) $menu->harga }}"
                                                                 data-status="{{ $menu->status }}"
                                                                 data-photo="{{ $menu->foto ? asset($menu->foto) : '' }}"
@@ -272,6 +277,11 @@
                                     </div>
 
                                     <div class="field-group">
+                                        <label for="createMenuDescription">Deskripsi</label>
+                                        <textarea id="createMenuDescription" name="description" maxlength="300" rows="3" placeholder="Opsional, maksimal 300 karakter">{{ old('description') }}</textarea>
+                                    </div>
+
+                                    <div class="field-group">
                                         <label for="createMenuPrice">Harga</label>
                                         <input id="createMenuPrice" type="number" name="price" value="{{ old('price') }}" min="0" max="50000" step="1000" placeholder="Maksimal 50000" required>
                                     </div>
@@ -306,6 +316,11 @@
                                     <div class="field-group">
                                         <label for="createPackageName">Nama Paket</label>
                                         <input id="createPackageName" type="text" name="name" value="{{ old('name') }}" maxlength="40" placeholder="Contoh: Paket Hemat Pagi" required>
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label for="createPackageDescription">Deskripsi Paket</label>
+                                        <textarea id="createPackageDescription" name="description" maxlength="300" rows="3" placeholder="Opsional, maksimal 300 karakter">{{ old('description') }}</textarea>
                                     </div>
 
                                     <div class="package-builder js-package-builder">
@@ -374,6 +389,11 @@
                                     <div class="field-group">
                                         <label for="editPackageName">Nama Paket</label>
                                         <input id="editPackageName" type="text" name="name" class="js-edit-package-name" maxlength="40" required>
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label for="editPackageDescription">Deskripsi Paket</label>
+                                        <textarea id="editPackageDescription" name="description" class="js-edit-package-description" maxlength="300" rows="3" placeholder="Opsional, maksimal 300 karakter"></textarea>
                                     </div>
 
                                     <div class="package-builder js-package-builder">
@@ -467,6 +487,11 @@
                                     <div class="field-group">
                                         <label for="editMenuName">Nama Menu</label>
                                         <input id="editMenuName" type="text" name="name" maxlength="20" placeholder="Maksimal 20 karakter" required>
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label for="editMenuDescription">Deskripsi</label>
+                                        <textarea id="editMenuDescription" name="description" maxlength="300" rows="3" placeholder="Opsional, maksimal 300 karakter"></textarea>
                                     </div>
 
                                     <div class="field-group">

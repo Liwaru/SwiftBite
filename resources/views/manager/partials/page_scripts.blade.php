@@ -83,6 +83,7 @@
 
                 const form = document.querySelector('.js-menu-edit-form');
                 const nameInput = document.getElementById('editMenuName');
+                const descriptionInput = document.getElementById('editMenuDescription');
                 const priceInput = document.getElementById('editMenuPrice');
                 const statusInput = document.getElementById('editMenuStatus');
                 const fileInput = document.querySelector('.js-edit-crop-input');
@@ -93,6 +94,10 @@
 
                 if (nameInput) {
                     nameInput.value = trigger.dataset.name || '';
+                }
+
+                if (descriptionInput) {
+                    descriptionInput.value = trigger.dataset.description || '';
                 }
 
                 if (priceInput) {
@@ -167,6 +172,7 @@
 
                 const form = document.querySelector('.js-package-edit-form');
                 const nameInput = document.querySelector('.js-edit-package-name');
+                const descriptionInput = document.querySelector('.js-edit-package-description');
                 const priceInput = document.querySelector('.js-edit-package-price');
                 const statusInput = document.querySelector('.js-edit-package-status');
                 const fileInput = document.querySelector('.js-edit-package-photo');
@@ -184,6 +190,10 @@
 
                 if (nameInput) {
                     nameInput.value = trigger.dataset.name || '';
+                }
+
+                if (descriptionInput) {
+                    descriptionInput.value = trigger.dataset.description || '';
                 }
 
                 if (priceInput) {

@@ -15,7 +15,7 @@
         }
         body { margin: 0; background: #ffffff; color: #2b1c15; }
         .app-shell .content-with-sidebar { background: #ffffff !important; }
-        main { width: 100%; max-width: none; box-sizing: border-box; padding: 34px 30px 56px; }
+        main { width: 100%; max-width: none; min-width: 0; box-sizing: border-box; padding: clamp(22px, 2.4vw, 34px) clamp(16px, 2.3vw, 30px) 56px; }
         h1, h2, h3, p { margin: 0; }
         h1 { font-size: clamp(30px, 4vw, 44px); }
         h2 { font-size: 22px; margin-bottom: 14px; }
@@ -34,7 +34,7 @@
         .panel .muted { color: rgba(255, 246, 232, .76); }
         .section-head { display: flex; justify-content: space-between; gap: 14px; align-items: center; margin-bottom: 16px; }
         .section-head h2 { margin-bottom: 0; }
-        .filter-form { display: grid; grid-template-columns: minmax(260px, 1.4fr) minmax(150px, .7fr) minmax(170px, .8fr) minmax(150px, .7fr) auto; gap: 10px; align-items: center; margin-bottom: 16px; }
+        .filter-form { display: grid; grid-template-columns: minmax(240px, 1.4fr) repeat(3, minmax(140px, .7fr)) auto; gap: 10px; align-items: center; margin-bottom: 16px; }
         .search-input, .filter-select, .date-input {
             width: 100%;
             box-sizing: border-box;
@@ -53,15 +53,17 @@
         .badge { display: inline-flex; width: fit-content; padding: 4px 8px; border-radius: 999px; background: rgba(255, 246, 232, .16); color: var(--cream); font-size: 12px; font-weight: 900; }
         .badge.payment { background: #edf5e8; color: #355b28; }
         .badge.demo { background: var(--cream); color: var(--sidebar-brown-dark); }
-        .history-table-wrap { overflow-x: auto; border: 1px solid rgba(255, 246, 232, .2); border-radius: 8px; background: rgba(255, 246, 232, .08); }
-        .history-table { width: 100%; min-width: 820px; border-collapse: collapse; }
+        .history-table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid rgba(255, 246, 232, .2); border-radius: 8px; background: rgba(255, 246, 232, .08); scrollbar-width: thin; -ms-overflow-style: auto; }
+        .history-table-wrap::-webkit-scrollbar { display: block; width: 8px; height: 8px; }
+        .history-table-wrap::-webkit-scrollbar-thumb { background: rgba(255, 246, 232, .34); border-radius: 999px; }
+        .history-table { width: 100%; min-width: min(820px, 100vw); border-collapse: collapse; }
         .history-table th, .history-table td { padding: 13px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid rgba(255, 246, 232, .16); }
         .history-table th { background: rgba(255, 246, 232, .14); color: rgba(255, 246, 232, .82); font-size: 12px; letter-spacing: 0; text-transform: uppercase; }
         .history-table tr:last-child td { border-bottom: 0; }
         .history-table tbody tr { background: rgba(255, 246, 232, .04); }
         .history-table tbody tr:nth-child(even) { background: rgba(255, 246, 232, .08); }
         .history-table strong { color: var(--cream); }
-        .items { display: grid; gap: 4px; min-width: 220px; }
+        .items { display: grid; gap: 4px; min-width: min(220px, 60vw); }
         .row { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
         .price { font-weight: 900; white-space: nowrap; }
         .empty-row { padding: 18px; text-align: center; }
@@ -72,7 +74,7 @@
         .page-link { border: 1px solid rgba(255, 246, 232, .26); color: var(--cream); text-decoration: none; background: rgba(255, 246, 232, .1); }
         .page-current { background: var(--cream); color: var(--sidebar-brown-dark); }
         .page-disabled { border: 1px solid rgba(255, 246, 232, .12); color: rgba(255, 246, 232, .45); }
-        @media (max-width: 1180px) { .filter-form { grid-template-columns: minmax(240px, 1fr) repeat(3, minmax(140px, .6fr)); } .filter-actions { grid-column: 1 / -1; justify-content: flex-end; } }
+        @media (max-width: 1180px) { .filter-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filter-actions { grid-column: 1 / -1; justify-content: flex-end; } }
         @media (max-width: 760px) { main { padding: 24px 16px 44px; } .topbar, .section-head { align-items: flex-start; flex-direction: column; } .row { align-items: flex-start; flex-direction: column; } .filter-form, .custom-range { grid-template-columns: 1fr; } .filter-actions { justify-content: stretch; } .filter-actions button, .filter-actions .button { flex: 1; } .pagination { align-items: flex-start; flex-direction: column; } }
     </style>
 </head>

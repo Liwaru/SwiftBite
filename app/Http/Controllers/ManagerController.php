@@ -365,6 +365,7 @@ class ManagerController extends Controller
         $validated = $request->validate([
             'category' => ['required', Rule::in(['Makanan', 'Minuman'])],
             'name' => ['required', 'string', 'max:20'],
+            'description' => ['nullable', 'string', 'max:300'],
             'price' => ['required', 'integer', 'min:0', 'max:50000'],
             'image_data' => ['nullable', 'string'],
         ]);
@@ -393,7 +394,7 @@ class ManagerController extends Controller
         $menu = MenuItem::create([
             'id_kategori' => $category->id_kategori,
             'nama_menu' => $validated['name'],
-            'deskripsi' => null,
+            'deskripsi' => $validated['description'] ?? null,
             'harga' => $validated['price'],
             'foto' => $photoPath,
             'stok' => 0,
@@ -411,6 +412,7 @@ class ManagerController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:20'],
+            'description' => ['nullable', 'string', 'max:300'],
             'price' => ['required', 'integer', 'min:0', 'max:50000'],
             'status' => ['required', Rule::in(['tersedia', 'habis'])],
             'image_data' => ['nullable', 'string'],
@@ -440,6 +442,7 @@ class ManagerController extends Controller
 
         $menu->update([
             'nama_menu' => $validated['name'],
+            'deskripsi' => $validated['description'] ?? null,
             'harga' => $validated['price'],
             'status' => $validated['status'],
             'foto' => $photoPath,
@@ -559,6 +562,7 @@ class ManagerController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:40'],
+            'description' => ['nullable', 'string', 'max:300'],
             'price' => ['required', 'integer', 'min:0', 'max:500000'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
             'items' => ['required', 'array'],
@@ -598,6 +602,7 @@ class ManagerController extends Controller
         $package = DB::transaction(function () use ($validated, $selectedItems, $photoPath) {
             $package = Package::create([
                 'nama_paket' => $validated['name'],
+                'deskripsi' => $validated['description'] ?? null,
                 'foto' => $photoPath,
                 'harga' => $validated['price'],
                 'status' => 'tersedia',
@@ -624,6 +629,7 @@ class ManagerController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:40'],
+            'description' => ['nullable', 'string', 'max:300'],
             'price' => ['required', 'integer', 'min:0', 'max:500000'],
             'status' => ['required', Rule::in(['tersedia', 'habis'])],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
@@ -670,6 +676,7 @@ class ManagerController extends Controller
         DB::transaction(function () use ($package, $validated, $selectedItems, $photoPath) {
             $package->update([
                 'nama_paket' => $validated['name'],
+                'deskripsi' => $validated['description'] ?? null,
                 'foto' => $photoPath,
                 'harga' => $validated['price'],
                 'status' => $validated['status'],
@@ -881,6 +888,7 @@ class ManagerController extends Controller
         return [
             'id_paket' => $package->id_paket,
             'nama_paket' => $package->nama_paket,
+            'deskripsi' => $package->deskripsi,
             'foto' => $package->foto,
             'harga' => $package->harga,
             'status' => $package->status,
@@ -1048,6 +1056,7 @@ class ManagerController extends Controller
                 ['id_paket' => $snapshot['id_paket']],
                 [
                     'nama_paket' => $snapshot['nama_paket'],
+                    'deskripsi' => $snapshot['deskripsi'] ?? null,
                     'foto' => $snapshot['foto'] ?? null,
                     'harga' => $snapshot['harga'],
                     'status' => $snapshot['status'] ?? 'tersedia',

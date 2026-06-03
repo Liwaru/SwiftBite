@@ -7,25 +7,25 @@
     :root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; --brown-dark: #27140d; --brown: #5a321f; --brown-light: #9a6239; --cream: #fff6e8; }
     body { margin: 0; background: #ffffff; color: #2b1c15; }
     .app-shell .content-with-sidebar { background: #ffffff !important; }
-    main { width: 100%; box-sizing: border-box; padding: 34px 30px 56px; }
+    main { width: 100%; min-width: 0; box-sizing: border-box; padding: clamp(22px, 2.4vw, 34px) clamp(16px, 2.3vw, 30px) 56px; }
     h1, h2, p { margin: 0; }
     .hero-card, .stat-card, .panel { border-radius: 8px; box-shadow: 0 16px 38px rgba(39, 20, 13, .13); }
     .hero-card { margin-bottom: 16px; padding: 22px; background: linear-gradient(135deg, var(--brown-light), var(--brown-dark)); color: #fff8ed; }
     .eyebrow { margin-bottom: 8px; color: rgba(255, 248, 237, .76); font-size: 12px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
     .hero-title { font-size: clamp(32px, 4vw, 46px); line-height: 1.05; }
     .hero-subtitle { max-width: 760px; margin-top: 10px; color: rgba(255, 248, 237, .82); line-height: 1.55; }
-    .stats { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 18px; }
     .stat-card, .panel { background: linear-gradient(135deg, rgba(154, 98, 57, .94), rgba(90, 50, 31, .98) 52%, rgba(39, 20, 13, .98)); border: 1px solid rgba(255, 246, 232, .22); color: var(--cream); }
     .stat-card { display: grid; gap: 7px; padding: 16px; }
     .stat-card span, .muted { color: rgba(255, 246, 232, .76); }
     .stat-card span { font-size: 13px; font-weight: 800; }
     .stat-card strong { font-size: 28px; line-height: 1.1; overflow-wrap: anywhere; }
-    .report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+    .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 16px; align-items: start; }
     .report-grid.single { grid-template-columns: 1fr; }
     .panel { padding: 18px; }
     .panel h2 { margin-bottom: 14px; font-size: 22px; }
     .filter-panel { margin-bottom: 18px; }
-    .filter-form { display: grid; grid-template-columns: 180px 1fr 1fr auto auto; gap: 10px; align-items: end; }
+    .filter-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; align-items: end; }
     .filter-field { display: grid; gap: 6px; }
     .filter-field label { color: rgba(255, 246, 232, .78); font-size: 12px; font-weight: 900; text-transform: uppercase; }
     .filter-field input, .filter-field select {
@@ -171,8 +171,11 @@
         background: #fff6e8;
     }
     .legend-dot.expense { background: #f2bd84; }
-    .summary-table { width: 100%; border-collapse: collapse; min-width: 680px; }
-    .table-wrap { overflow-x: auto; border: 1px solid rgba(255, 246, 232, .18); border-radius: 8px; }
+    .summary-table { width: 100%; border-collapse: collapse; min-width: min(680px, 100vw); }
+    .summary-table td { overflow-wrap: anywhere; }
+    .table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid rgba(255, 246, 232, .18); border-radius: 8px; scrollbar-width: thin; -ms-overflow-style: auto; }
+    .table-wrap::-webkit-scrollbar { display: block; width: 8px; height: 8px; }
+    .table-wrap::-webkit-scrollbar-thumb { background: rgba(255, 246, 232, .34); border-radius: 999px; }
     .summary-table th, .summary-table td { padding: 13px 14px; border-top: 1px solid rgba(255, 246, 232, .16); text-align: left; }
     .summary-table th { background: rgba(255, 246, 232, .1); color: rgba(255, 246, 232, .78); font-size: 12px; font-weight: 900; text-transform: uppercase; }
     .summary-table td:last-child { text-align: right; font-weight: 900; }
@@ -203,7 +206,7 @@
     .page-disabled { opacity: .45; }
     .empty-state { color: rgba(255, 246, 232, .76); font-weight: 800; line-height: 1.5; }
     @media (max-width: 1120px) { .filter-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 980px) { .stats, .report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 980px) { .report-grid { grid-template-columns: 1fr; } }
     @media print {
         html,
         body {

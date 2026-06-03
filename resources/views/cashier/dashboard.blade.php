@@ -15,7 +15,7 @@
         }
         body { margin: 0; background: #ffffff; color: #2b1c15; }
         .app-shell .content-with-sidebar { background: #ffffff !important; }
-        main { width: 100%; max-width: none; box-sizing: border-box; padding: 34px 30px 56px; }
+        main { width: 100%; max-width: none; min-width: 0; box-sizing: border-box; padding: clamp(22px, 2.4vw, 34px) clamp(16px, 2.3vw, 30px) 56px; }
         h1, h2, h3, p { margin: 0; }
         h1 { font-size: clamp(30px, 4vw, 44px); }
         h2 { font-size: 22px; margin-bottom: 14px; }
@@ -36,7 +36,7 @@
         .eyebrow { margin-bottom: 8px; color: rgba(255, 248, 237, .76); font-size: 12px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
         .hero-title { margin: 0; font-size: clamp(32px, 4vw, 46px); line-height: 1.05; }
         .hero-subtitle { max-width: 720px; margin-top: 10px; color: rgba(255, 248, 237, .82); line-height: 1.55; }
-        .stats { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 14px; margin-bottom: 18px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 18px; }
         .stat-card, .panel {
             background:
                 linear-gradient(135deg, rgba(154, 98, 57, .94), rgba(90, 50, 31, .98) 52%, rgba(39, 20, 13, .98));
@@ -47,14 +47,16 @@
         }
         .stat-card { padding: 15px; display: grid; gap: 6px; }
         .stat-card span { color: rgba(255, 246, 232, .76); font-size: 13px; font-weight: 800; }
-        .stat-card strong { font-size: 24px; line-height: 1.1; }
-        .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(320px, .8fr); gap: 16px; align-items: start; }
+        .stat-card strong { font-size: 24px; line-height: 1.1; overflow-wrap: anywhere; }
+        .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(min(320px, 100%), .8fr); gap: 16px; align-items: start; }
         .panel { padding: 18px; }
-        .summary-table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 8px; }
+        .summary-table { width: 100%; min-width: min(520px, 100vw); border-collapse: collapse; overflow: hidden; border-radius: 8px; }
         .summary-table th, .summary-table td { padding: 13px 14px; border-top: 1px solid rgba(255, 246, 232, .16); text-align: left; }
         .summary-table th { background: rgba(255, 246, 232, .1); color: rgba(255, 246, 232, .78); font-size: 12px; font-weight: 900; text-transform: uppercase; }
         .summary-table td:last-child { text-align: right; font-weight: 900; }
-        .summary-panel { margin-bottom: 16px; }
+        .summary-panel { margin-bottom: 16px; overflow-x: auto; scrollbar-width: thin; -ms-overflow-style: auto; }
+        .summary-panel::-webkit-scrollbar { display: block; width: 8px; height: 8px; }
+        .summary-panel::-webkit-scrollbar-thumb { background: rgba(255, 246, 232, .34); border-radius: 999px; }
         .notice { padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; background: #edf5e8; color: #355b28; border: 1px solid #c5ddb7; font-weight: 800; }
         .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
         .panel .muted { color: rgba(255, 246, 232, .76); }
@@ -102,7 +104,7 @@
         .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .toast { position: fixed; right: 24px; bottom: 24px; z-index: 40; transform: translateY(18px); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; background: #352016; color: #fff8ed; border: 1px solid #8b6040; border-radius: 8px; padding: 12px 14px; font-weight: 900; box-shadow: 0 16px 38px rgba(39, 20, 13, .24); }
         .toast.show { transform: translateY(0); opacity: 1; }
-        @media (max-width: 1050px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dashboard-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 1050px) { .dashboard-grid { grid-template-columns: 1fr; } }
         @media (max-width: 760px) { main { padding: 24px 16px 44px; } .hero-card { align-items: flex-start; flex-direction: column; } .stats { grid-template-columns: 1fr; } form.status, .quick-actions, .detail-grid { grid-template-columns: 1fr; } .row { flex-direction: column; } .pagination { align-items: flex-start; flex-direction: column; } }
     </style>
 </head>

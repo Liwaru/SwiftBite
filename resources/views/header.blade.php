@@ -6,6 +6,12 @@
         --page-cream: #fff6e8;
     }
 
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
     html,
     body,
     * {
@@ -444,8 +450,8 @@
 
     .content-with-sidebar {
         margin-left: 260px;
+        min-width: 0;
         min-height: 100vh;
-        box-sizing: border-box;
         background: #ffffff;
         transition: margin-left .28s ease;
     }
@@ -462,8 +468,7 @@
 
     .app-shell.sidebar-collapsed .content-with-sidebar > main {
         width: 100%;
-        max-width: 1180px;
-        margin-inline: auto;
+        max-width: none;
     }
 
     .app-shell.sidebar-collapsed .sidebar-brand {

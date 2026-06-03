@@ -179,10 +179,13 @@
             font-weight: 800;
             line-height: 1.5;
         }
-        @media (max-width: 760px) {
+        @media (max-width: 980px) {
             .sales-visual {
                 grid-template-columns: 1fr;
             }
+        }
+
+        @media (max-width: 760px) {
             .sales-summary-row {
                 grid-template-columns: 1fr;
                 gap: 7px;

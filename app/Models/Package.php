@@ -13,6 +13,7 @@ class Package extends Model
 
     protected $fillable = [
         'nama_paket',
+        'deskripsi',
         'foto',
         'harga',
         'status',
@@ -26,6 +27,11 @@ class Package extends Model
     public function getNameAttribute(): string
     {
         return $this->nama_paket;
+    }
+
+    public function getDescriptionAttribute(): ?string
+    {
+        return $this->deskripsi;
     }
 
     public function getPriceAttribute(): float
