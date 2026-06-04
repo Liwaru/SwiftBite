@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    @include('partials.favicon')
     <meta charset="utf-8">
     <title>Export PDF Laporan Penjualan</title>
     <style>

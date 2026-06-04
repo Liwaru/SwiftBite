@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    @include('partials.favicon')
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Pesanan #{{ $order->id }}</title>
@@ -61,6 +62,14 @@
                     </div>
                 </div>
             @endif
+
+            <div>
+                <h2>Barcode Pesanan</h2>
+                <p class="muted">Tunjukkan QR ini ke kasir untuk membuka satu pesanan dari scan.</p>
+                <div style="margin-top: 12px">
+                    {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(180)->margin(1)->generate(route('customer.orders.show', [$table->qr_token, $order])) !!}
+                </div>
+            </div>
 
             <a href="{{ route('customer.menu', $table->qr_token) }}">Tambah pesanan lagi</a>
         </section>

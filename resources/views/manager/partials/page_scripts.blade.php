@@ -1,4 +1,4 @@
-﻿    <script>
+    <script>
         (function () {
             const modalTriggers = document.querySelectorAll('.js-open-modal');
             const closeButtons = document.querySelectorAll('.js-close-modal');
@@ -493,6 +493,7 @@
                     <!doctype html>
                     <html lang="id">
                     <head>
+    @include('partials.favicon')
                         <meta charset="utf-8">
                         <title>QR ${safeName}</title>
                         <style>

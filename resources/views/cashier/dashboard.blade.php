@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    @include('partials.favicon')
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard Kasir</title>
@@ -104,6 +105,9 @@
         .menu-row { display: flex; justify-content: space-between; gap: 10px; align-items: center; border-top: 1px solid rgba(255, 246, 232, .18); padding-top: 8px; }
         .menu-row:first-child { border-top: 0; padding-top: 0; }
         .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .scan-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-bottom: 14px; }
+        .scan-result { margin-bottom: 16px; }
+        .scan-result h3 { margin-bottom: 10px; color: var(--cream); }
         .toast { position: fixed; right: 24px; bottom: 24px; z-index: 40; transform: translateY(18px); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; background: #352016; color: #fff8ed; border: 1px solid #8b6040; border-radius: 8px; padding: 12px 14px; font-weight: 900; box-shadow: 0 16px 38px rgba(39, 20, 13, .24); }
         .toast.show { transform: translateY(0); opacity: 1; }
         @media (max-width: 1050px) { .dashboard-grid { grid-template-columns: 1fr; } }
@@ -118,6 +122,9 @@
             <main>
                 @if (session('success'))
                     <div class="notice">{{ session('success') }}</div>
+                @endif
+                @if ($errors->has('scan_code'))
+                    <div class="notice">{{ $errors->first('scan_code') }}</div>
                 @endif
 
                 @if (($mode ?? 'dashboard') === 'dashboard')
@@ -177,6 +184,21 @@
                                 <span id="liveText">Realtime aktif</span>
                             </span>
                         </div>
+
+                        <form class="scan-form" method="post" action="{{ route('cashier.orders.scan') }}">
+                            @csrf
+                            <input type="search" name="scan_code" placeholder="Scan barcode / masukkan kode pesanan" autocomplete="off" aria-label="Scan barcode pesanan" autofocus>
+                            <button type="submit">Scan</button>
+                        </form>
+
+                        @if (! empty($scannedOrder))
+                            <div class="scan-result">
+                                <h3>Hasil Scan</h3>
+                                <div class="order-list">
+                                    @include('cashier.partials.order-list', ['orders' => collect([$scannedOrder]), 'status' => $scannedOrder->status])
+                                </div>
+                            </div>
+                        @endif
 
                         <div class="tabs">
                             @foreach (['aktif' => 'Aktif', 'menunggu' => 'Menunggu', 'diproses' => 'Diproses', 'selesai' => 'Selesai'] as $value => $label)

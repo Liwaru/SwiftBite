@@ -28,6 +28,13 @@ class CashierController extends Controller
             ->withQueryString();
         $stats = $this->todayStats();
         $mode = 'orders';
+        $scannedOrder = null;
+
+        if ($request->filled('scan_order')) {
+            $scannedOrder = Order::with(['diningTable', 'items.menuItem'])
+                ->whereKey((int) $request->query('scan_order'))
+                ->first();
+        }
 
         $menuItems = MenuItem::with('categoryModel')
             ->where('status', 'tersedia')
@@ -36,7 +43,30 @@ class CashierController extends Controller
             ->limit(8)
             ->get();
 
-        return view('cashier.dashboard', compact('orders', 'stats', 'status', 'menuItems', 'mode'));
+        return view('cashier.dashboard', compact('orders', 'stats', 'status', 'menuItems', 'mode', 'scannedOrder'));
+    }
+
+    public function scanOrder(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'scan_code' => ['required', 'string', 'max:255'],
+        ]);
+
+        $code = trim($validated['scan_code']);
+        $order = $this->findScannedOrder($code);
+
+        if (! $order) {
+            return redirect()
+                ->route('cashier.orders')
+                ->withErrors(['scan_code' => 'Barcode atau kode pesanan tidak ditemukan.']);
+        }
+
+        return redirect()
+            ->route('cashier.orders', [
+                'status' => in_array($order->status, ['menunggu', 'diproses', 'selesai'], true) ? $order->status : 'aktif',
+                'scan_order' => $order->id_order,
+            ])
+            ->with('success', 'Pesanan #' . $order->kode_pesanan . ' berhasil dibuka dari scan.');
     }
 
     public function liveOrders(Request $request)
@@ -164,6 +194,22 @@ class CashierController extends Controller
             ->when($status === 'aktif', fn ($query) => $query->whereIn('status', ['menunggu', 'diproses']))
             ->when($status !== 'aktif', fn ($query) => $query->where('status', $status))
             ->latest();
+    }
+
+    private function findScannedOrder(string $code): ?Order
+    {
+        $orderId = null;
+
+        if (preg_match('#/orders/(\d+)#', $code, $matches)) {
+            $orderId = (int) $matches[1];
+        } elseif (ctype_digit($code)) {
+            $orderId = (int) $code;
+        }
+
+        return Order::query()
+            ->when($orderId, fn ($query) => $query->whereKey($orderId))
+            ->when(! $orderId, fn ($query) => $query->where('kode_pesanan', $code))
+            ->first();
     }
 
     private function todayStats(): array
