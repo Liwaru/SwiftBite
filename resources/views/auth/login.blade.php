@@ -72,9 +72,17 @@
             display: grid;
             place-items: center;
             border-radius: 8px;
-            background: rgba(255, 246, 232, .14);
+            overflow: hidden;
+            background: var(--cream);
             border: 1px solid rgba(255, 246, 232, .28);
-            font-weight: 900;
+        }
+
+        .mark img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: inherit;
+            object-fit: cover;
         }
 
         .brand-copy {
@@ -291,7 +299,9 @@
 <body>
     <main class="shell">
         <section class="brand-panel" aria-label="SwiftBite">
-            <div class="mark">SB</div>
+            <div class="mark">
+                <img src="{{ asset('images/Swiftbite.png') }}" alt="SwiftBite">
+            </div>
             <div class="brand-copy">
                 <h1>SwiftBite</h1>
                 <p>Platform kasir dan pemesanan digital restoran.</p>

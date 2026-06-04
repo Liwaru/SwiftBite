@@ -50,7 +50,7 @@
         position: fixed;
         inset: 0 0 auto 0;
         z-index: 1100;
-        height: 72px;
+        height: 78px;
         align-items: center;
         justify-content: space-between;
         gap: 14px;
@@ -73,16 +73,25 @@
     }
 
     .mobile-appbar-logo {
-        flex: 0 0 40px;
-        width: 40px;
-        height: 40px;
+        flex: 0 0 48px;
+        width: 48px;
+        height: 48px;
         display: grid;
         place-items: center;
         border-radius: 9px;
-        background: rgba(255, 246, 232, .2);
+        background: var(--page-cream);
         color: #fff8ed;
         font-size: 14px;
         font-weight: 900;
+    }
+
+    .mobile-appbar-logo img,
+    .sidebar-logo img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        border-radius: inherit;
+        object-fit: cover;
     }
 
     .mobile-appbar-title {
@@ -160,13 +169,13 @@
     }
 
     .sidebar-logo {
-        flex: 0 0 42px;
-        width: 42px;
-        height: 42px;
+        flex: 0 0 48px;
+        width: 48px;
+        height: 48px;
         display: grid;
         place-items: center;
         border-radius: 9px;
-        background: rgba(255, 246, 232, .2);
+        background: var(--page-cream);
         color: #fff8ed;
         font-size: 15px;
         font-weight: 900;
@@ -827,7 +836,9 @@
 
 <header class="mobile-appbar">
     <a class="mobile-appbar-brand" href="{{ $dashboardRoute }}" aria-label="Buka dashboard">
-        <span class="mobile-appbar-logo">SB</span>
+        <span class="mobile-appbar-logo">
+            <img src="{{ asset('images/Swiftbite.png') }}" alt="SwiftBite">
+        </span>
         <span class="mobile-appbar-title">SwiftBite</span>
     </a>
     <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Buka navigasi" aria-expanded="false" aria-controls="sidebarNavigation">
@@ -843,7 +854,9 @@
 <aside class="sidebar" id="sidebarNavigation">
     <div class="sidebar-brand">
         <a class="sidebar-brand-link" href="{{ $dashboardRoute }}" aria-label="Buka dashboard">
-            <span class="sidebar-logo">SB</span>
+            <span class="sidebar-logo">
+                <img src="{{ asset('images/Swiftbite.png') }}" alt="SwiftBite">
+            </span>
             <div class="sidebar-brand-text">
                 <strong>SwiftBite</strong>
             </div>
@@ -882,37 +895,6 @@
                     </svg>
                 </span>
                 <span class="sidebar-label">Pesanan Antar</span>
-            </a>
-        @endif
-
-        @if ($authLevel === 2)
-            <a class="sidebar-link {{ request()->routeIs('chef.dashboard') ? 'active' : '' }}" href="{{ route('chef.dashboard') }}" title="Dashboard Chef">
-                <span class="sidebar-icon">
-                    <svg viewBox="0 0 24 24" fill="none">
-                        <path d="M6 12h12" />
-                        <path d="M7 5h10l1 7H6l1-7Z" />
-                        <path d="M8 12v8h8v-8" />
-                    </svg>
-                </span>
-                <span class="sidebar-label">Dashboard Chef</span>
-            </a>
-            <a class="sidebar-link {{ request()->routeIs('chef.orders') ? 'active' : '' }}" href="{{ route('chef.orders') }}" title="Pesanan Diproses">
-                <span class="sidebar-icon">
-                    <svg viewBox="0 0 24 24" fill="none">
-                        <path d="M5 4h14v16H5V4Z" />
-                        <path d="M8 8h8M8 12h8M8 16h5" />
-                    </svg>
-                </span>
-                <span class="sidebar-label">Pesanan Diproses</span>
-            </a>
-            <a class="sidebar-link {{ request()->routeIs('chef.ingredients') ? 'active' : '' }}" href="{{ route('chef.ingredients') }}" title="Data Bahan">
-                <span class="sidebar-icon">
-                    <svg viewBox="0 0 24 24" fill="none">
-                        <path d="M6 4h12l-1 16H7L6 4Z" />
-                        <path d="M9 8h6M9 12h6M9 16h4" />
-                    </svg>
-                </span>
-                <span class="sidebar-label">Data Bahan</span>
             </a>
         @endif
 

@@ -32,7 +32,8 @@
             box-shadow: 0 8px 26px rgba(39, 20, 13, .18);
         }
         .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
-        .logo { width: 38px; height: 38px; display: grid; place-content: center; border-radius: 8px; background: rgba(255, 246, 232, .18); font-size: 13px; font-weight: 900; line-height: 0; text-align: center; }
+        .logo { width: 48px; height: 48px; display: grid; place-content: center; border-radius: 8px; background: var(--cream); overflow: hidden; }
+        .logo img { width: 100%; height: 100%; display: block; border-radius: inherit; object-fit: cover; }
         .brand strong, .brand span { display: block; white-space: nowrap; }
         .brand span { color: rgba(255, 246, 232, .75); font-size: 12px; font-weight: 800; }
         .account { display: flex; align-items: center; gap: 8px; }
@@ -105,7 +106,9 @@
     <div class="waiter-shell">
         <header class="topbar">
             <div class="brand">
-                <span class="logo">SB</span>
+                <span class="logo">
+                    <img src="{{ asset('images/Swiftbite.png') }}" alt="SwiftBite">
+                </span>
                 <div>
                     <strong>SwiftBite</strong>
                     <span>Waiter</span>
