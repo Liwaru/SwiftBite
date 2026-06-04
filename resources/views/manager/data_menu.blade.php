@@ -30,6 +30,23 @@
                                 $renderMenuSection('Makanan', 'Daftar menu makanan dan bakery yang tersedia.', $foodMenuItems),
                                 $renderMenuSection('Minuman', 'Daftar minuman yang tersedia.', $drinkMenuItems),
                             ];
+
+                            $packageSections = [
+                                [
+                                    'title' => 'Promo',
+                                    'description' => 'Kelola promo bundling yang tampil sebelum paket dan menu reguler.',
+                                    'items' => $promoPackageItems,
+                                    'add_label' => '+ Tambah Promo',
+                                    'empty' => 'Belum ada promo.',
+                                ],
+                                [
+                                    'title' => 'Paket',
+                                    'description' => 'Kelola paket bundling makanan dan minuman.',
+                                    'items' => $regularPackageItems,
+                                    'add_label' => '+ Tambah Paket',
+                                    'empty' => 'Belum ada paket.',
+                                ],
+                            ];
                         @endphp
 
                         <section class="summary-grid">
@@ -72,85 +89,90 @@
                         @endif
 
                         <div class="menu-sections">
-                            <section class="section-card">
-                                <div class="section-head">
-                                    <div>
-                                        <div class="section-title-row">
-                                            <div class="section-title">Paket Promo</div>
-                                            <div class="section-meta">{{ $packageItems->count() }} Paket</div>
+                            @foreach ($packageSections as $packageSection)
+                                <section class="section-card">
+                                    <div class="section-head">
+                                        <div>
+                                            <div class="section-title-row">
+                                                <div class="section-title">{{ $packageSection['title'] }}</div>
+                                                <div class="section-meta">{{ $packageSection['items']->count() }} {{ $packageSection['title'] }}</div>
+                                            </div>
+                                            <div class="section-subtitle">{{ $packageSection['description'] }}</div>
                                         </div>
-                                        <div class="section-subtitle">Kelola paket bundling makanan dan minuman.</div>
+                                        <div class="section-actions">
+                                            <button type="button" class="section-add-btn js-open-modal" data-modal="create-package">
+                                                {{ $packageSection['add_label'] }}
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="section-actions">
-                                        <button type="button" class="section-add-btn js-open-modal" data-modal="create-package">
-                                            + Tambah Paket
-                                        </button>
-                                    </div>
-                                </div>
 
-                                @if ($packageItems->isEmpty())
-                                    <div class="empty-state">Belum ada paket promo.</div>
-                                @else
-                                    <div class="menu-carousel">
-                                        <button type="button" class="menu-carousel-btn js-menu-scroll" data-direction="-1" aria-label="Geser paket promo ke kiri">&lsaquo;</button>
+                                    @if ($packageSection['items']->isEmpty())
+                                        <div class="empty-state">{{ $packageSection['empty'] }}</div>
+                                    @else
+                                        <div class="menu-carousel">
+                                            <button type="button" class="menu-carousel-btn js-menu-scroll" data-direction="-1" aria-label="Geser {{ strtolower($packageSection['title']) }} ke kiri">&lsaquo;</button>
 
-                                        <div class="menu-rail">
-                                            @foreach ($packageItems as $package)
-                                                @php
-                                                    $initial = strtoupper(substr($package->nama_paket, 0, 1));
-                                                    $packageStatusLabel = $package->status === 'tersedia' ? 'Aktif' : 'Nonaktif';
-                                                @endphp
+                                            <div class="menu-rail">
+                                                @foreach ($packageSection['items'] as $package)
+                                                    @php
+                                                        $packageStatusLabel = $package->status === 'tersedia' ? 'Aktif' : 'Nonaktif';
+                                                    @endphp
 
-                                                <article class="menu-card package-card" data-menu-name="{{ $package->nama_paket }}">
-                                                    <div class="menu-thumb">
-                                                        @if ($package->foto)
-                                                            <img src="{{ asset($package->foto) }}" alt="{{ $package->nama_paket }}" draggable="false">
-                                                        @else
-                                                            {{ $initial }}
-                                                        @endif
-                                                    </div>
-
-                                                    <div class="menu-card-body">
-                                                        <div class="menu-card-name">{{ $package->nama_paket }}</div>
-                                                        @if ($package->deskripsi)
-                                                            <div class="menu-card-description">{{ $package->deskripsi }}</div>
-                                                        @endif
-                                                        <div class="package-lines">
-                                                            @foreach ($package->items as $packageItem)
-                                                                <div>{{ $packageItem->qty }} {{ $packageItem->menuItem?->nama_menu ?? 'Menu' }}</div>
-                                                            @endforeach
+                                                    <article class="menu-card package-card" data-menu-name="{{ $package->nama_paket }}">
+                                                        <div class="menu-thumb">
+                                                            @if ($package->foto)
+                                                                <img src="{{ asset($package->foto) }}" alt="{{ $package->nama_paket }}" draggable="false">
+                                                            @else
+                                                                <span class="package-thumb-fallback">{{ $package->nama_paket }}</span>
+                                                            @endif
                                                         </div>
-                                                        <div class="menu-card-price">Rp{{ number_format($package->harga, 0, ',', '.') }}</div>
-                                                        <div><span class="status-badge">{{ $packageStatusLabel }}</span></div>
-                                                    </div>
 
-                                                    <div class="menu-card-actions">
-                                                        <button
-                                                            type="button"
-                                                            class="row-action js-open-modal js-edit-package"
-                                                            data-modal="edit-package"
-                                                            data-action="{{ route('manager.packages.update', $package) }}"
-                                                            data-name="{{ $package->nama_paket }}"
-                                                            data-description="{{ $package->deskripsi }}"
-                                                            data-price="{{ (int) $package->harga }}"
-                                                            data-status="{{ $package->status }}"
-                                                            data-photo="{{ $package->foto ? asset($package->foto) : '' }}"
-                                                            data-items='@json($package->items->mapWithKeys(fn ($item) => [$item->id_menu => $item->qty]))'
-                                                        >Edit</button>
-                                                        <form method="POST" action="{{ route('manager.packages.destroy', $package) }}" class="package-delete-form" onsubmit="return confirm('Hapus paket promo ini?')">
-                                                            @csrf
-                                                            @method('delete')
-                                                            <button type="submit" class="row-action">Hapus</button>
-                                                        </form>
-                                                    </div>
-                                                </article>
-                                            @endforeach
+                                                        <div class="menu-card-body">
+                                                            <div class="menu-card-name">{{ $package->nama_paket }}</div>
+                                                            @if ($package->deskripsi)
+                                                                <div class="menu-card-description">{{ $package->deskripsi }}</div>
+                                                            @endif
+                                                            <div class="package-lines">
+                                                                @foreach ($package->items as $packageItem)
+                                                                    <div>{{ $packageItem->qty }} {{ $packageItem->menuItem?->nama_menu ?? 'Menu' }} tetap</div>
+                                                                @endforeach
+                                                                @foreach ($package->choices as $choice)
+                                                                    <div>{{ $choice->qty }} {{ strtolower($choice->category) }} bebas dipilih customer</div>
+                                                                @endforeach
+                                                            </div>
+                                                            <div class="menu-card-price">Rp{{ number_format($package->harga, 0, ',', '.') }}</div>
+                                                            <div><span class="status-badge">{{ $packageStatusLabel }}</span></div>
+                                                        </div>
+
+                                                        <div class="menu-card-actions">
+                                                            <button
+                                                                type="button"
+                                                                class="row-action js-open-modal js-edit-package"
+                                                                data-modal="edit-package"
+                                                                data-action="{{ route('manager.packages.update', $package) }}"
+                                                                data-name="{{ $package->nama_paket }}"
+                                                                data-description="{{ $package->deskripsi }}"
+                                                                data-price="{{ (int) $package->harga }}"
+                                                                data-status="{{ $package->status }}"
+                                                                data-photo="{{ $package->foto ? asset($package->foto) : '' }}"
+                                                                data-items='@json($package->items->mapWithKeys(fn ($item) => [$item->id_menu => $item->qty]))'
+                                                                data-choices='@json($package->choices->mapWithKeys(fn ($choice) => [$choice->category => $choice->qty]))'
+                                                            >Edit</button>
+                                                            <form method="POST" action="{{ route('manager.packages.destroy', $package) }}" class="package-delete-form" onsubmit="return confirm('Hapus paket ini?')">
+                                                                @csrf
+                                                                @method('delete')
+                                                                <button type="submit" class="row-action">Hapus</button>
+                                                            </form>
+                                                        </div>
+                                                    </article>
+                                                @endforeach
+                                            </div>
+
+                                            <button type="button" class="menu-carousel-btn js-menu-scroll" data-direction="1" aria-label="Geser {{ strtolower($packageSection['title']) }} ke kanan">&rsaquo;</button>
                                         </div>
-
-                                        <button type="button" class="menu-carousel-btn js-menu-scroll" data-direction="1" aria-label="Geser paket promo ke kanan">&rsaquo;</button>
-                                    </div>
-                                @endif
-                            </section>
+                                    @endif
+                                </section>
+                            @endforeach
 
                             @foreach ($menuSections as $menuSection)
                                 <section class="section-card">
@@ -325,7 +347,7 @@
 
                                     <div class="package-builder js-package-builder">
                                         <div class="package-selected-head">
-                                            <span>Menu Dipilih</span>
+                                            <span>Isi Tetap Dari Manager</span>
                                             <span class="package-selected-count js-package-selected-count">0 Menu</span>
                                         </div>
                                         <div class="package-selected-list js-package-selected-list">
@@ -350,6 +372,22 @@
                                                 @endforeach
                                             </div>
                                         @endforeach
+                                        </div>
+                                    </div>
+
+                                    <div class="package-choice-box">
+                                        <div class="package-selected-head">
+                                            <span>Pilihan Bebas Yang Diizinkan Manager</span>
+                                        </div>
+                                        <div class="package-choice-grid">
+                                            <label>
+                                                Minuman bebas
+                                                <input type="number" name="choice_categories[Minuman]" value="{{ old('choice_categories.Minuman', 0) }}" min="0" max="20">
+                                            </label>
+                                            <label>
+                                                Makanan bebas
+                                                <input type="number" name="choice_categories[Makanan]" value="{{ old('choice_categories.Makanan', 0) }}" min="0" max="20">
+                                            </label>
                                         </div>
                                     </div>
 
@@ -398,7 +436,7 @@
 
                                     <div class="package-builder js-package-builder">
                                         <div class="package-selected-head">
-                                            <span>Menu Dipilih</span>
+                                            <span>Isi Tetap Dari Manager</span>
                                             <span class="package-selected-count js-package-selected-count">0 Menu</span>
                                         </div>
                                         <div class="package-selected-list js-package-selected-list">
@@ -423,6 +461,22 @@
                                                 @endforeach
                                             </div>
                                         @endforeach
+                                        </div>
+                                    </div>
+
+                                    <div class="package-choice-box">
+                                        <div class="package-selected-head">
+                                            <span>Pilihan Bebas Yang Diizinkan Manager</span>
+                                        </div>
+                                        <div class="package-choice-grid">
+                                            <label>
+                                                Minuman bebas
+                                                <input type="number" name="choice_categories[Minuman]" class="js-edit-package-choice" data-category="Minuman" value="0" min="0" max="20">
+                                            </label>
+                                            <label>
+                                                Makanan bebas
+                                                <input type="number" name="choice_categories[Makanan]" class="js-edit-package-choice" data-category="Makanan" value="0" min="0" max="20">
+                                            </label>
                                         </div>
                                     </div>
 

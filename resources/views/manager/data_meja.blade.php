@@ -105,6 +105,12 @@
                                             <div class="table-link">{{ $tablePath }}</div>
                                             <div><span class="status-badge table-status {{ $tableActive ? '' : 'inactive' }}">{{ $tableActive ? 'Aktif' : 'Nonaktif' }}</span></div>
                                             <div class="table-card-actions">
+                                                <a
+                                                    class="row-action table-open-menu"
+                                                    href="{{ $tableUrl }}"
+                                                    target="_blank"
+                                                    rel="noopener"
+                                                >Buka Menu</a>
                                                 <button
                                                     type="button"
                                                     class="row-action js-open-modal js-table-qr"
@@ -204,6 +210,7 @@
                                     <div class="qr-url js-table-qr-url">-</div>
                                     <div class="modal-actions qr-modal-actions">
                                         <button type="button" class="ghost-btn js-close-modal">Tutup</button>
+                                        <a class="submit-btn js-open-table-menu" href="#" target="_blank" rel="noopener">Buka Menu</a>
                                         <button type="button" class="submit-btn js-download-table-qr">Download PNG</button>
                                         <button type="button" class="submit-btn js-print-table-qr">Cetak QR</button>
                                     </div>

@@ -14,6 +14,9 @@ class OrderItem extends Model
     protected $fillable = [
         'id_order',
         'id_menu',
+        'id_paket',
+        'package_name',
+        'package_component_type',
         'qty',
         'harga',
         'subtotal',
@@ -36,7 +39,15 @@ class OrderItem extends Model
 
     public function getMenuNameAttribute(): string
     {
-        return $this->menuItem?->nama_menu ?? 'Menu';
+        $name = $this->menuItem?->nama_menu ?? 'Menu';
+
+        if (! empty($this->attributes['package_name'])) {
+            $type = ($this->attributes['package_component_type'] ?? '') === 'choice' ? 'pilihan' : 'isi';
+
+            return $this->attributes['package_name'] . ' - ' . $name . ' (' . $type . ')';
+        }
+
+        return $name;
     }
 
     public function getPriceAttribute(): float

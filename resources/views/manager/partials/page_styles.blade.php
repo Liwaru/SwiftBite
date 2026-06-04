@@ -382,6 +382,17 @@
         .package-card {
             grid-template-rows: auto 1fr auto;
         }
+        .package-thumb-fallback {
+            display: block;
+            max-width: 100%;
+            padding: 0 8px;
+            color: var(--brown-dark);
+            font-size: 14px;
+            font-weight: 900;
+            line-height: 1.2;
+            text-align: center;
+            overflow-wrap: anywhere;
+        }
         .package-lines {
             display: grid;
             gap: 4px;
@@ -618,6 +629,13 @@
             grid-template-columns: 1fr 1fr;
             gap: 8px;
         }
+        .table-open-menu {
+            grid-column: 1 / -1;
+            background: #e6ffd9;
+            border-color: #7fbe73;
+            color: #1f5b1d;
+            text-decoration: none;
+        }
         .table-status {
             background: #e6ffd9;
             color: #1f5b1d;
@@ -649,7 +667,7 @@
         }
         .qr-modal-actions {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
         }
         .menu-detail-thumb {
             width: 96px;
@@ -878,6 +896,34 @@
         .package-builder {
             display: grid;
             gap: 10px;
+        }
+        .package-choice-box {
+            display: grid;
+            gap: 10px;
+        }
+        .package-choice-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .package-choice-grid label {
+            display: grid;
+            gap: 6px;
+            color: rgba(255, 248, 237, .88);
+            font-size: 13px;
+            font-weight: 900;
+        }
+        .package-choice-grid input {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #d9b48b;
+            border-radius: 8px;
+            background: #fffdfa;
+            color: #2b1c15;
+            padding: 10px 8px;
+            font: inherit;
+            font-weight: 900;
+            text-align: center;
         }
         .package-selected-head {
             display: flex;

@@ -24,6 +24,11 @@ class Package extends Model
         return $this->hasMany(PackageItem::class, 'id_paket', 'id_paket');
     }
 
+    public function choices(): HasMany
+    {
+        return $this->hasMany(PackageChoice::class, 'id_paket', 'id_paket');
+    }
+
     public function getNameAttribute(): string
     {
         return $this->nama_paket;

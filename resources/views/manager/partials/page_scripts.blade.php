@@ -177,11 +177,18 @@
                 const statusInput = document.querySelector('.js-edit-package-status');
                 const fileInput = document.querySelector('.js-edit-package-photo');
                 let items = {};
+                let choices = {};
 
                 try {
                     items = JSON.parse(trigger.dataset.items || '{}') || {};
                 } catch (error) {
                     items = {};
+                }
+
+                try {
+                    choices = JSON.parse(trigger.dataset.choices || '{}') || {};
+                } catch (error) {
+                    choices = {};
                 }
 
                 if (form) {
@@ -210,6 +217,10 @@
 
                 document.querySelectorAll('.js-edit-package-qty').forEach((input) => {
                     input.value = items[input.dataset.menuId] || 0;
+                });
+
+                document.querySelectorAll('.js-edit-package-choice').forEach((input) => {
+                    input.value = choices[input.dataset.category] || 0;
                 });
 
                 if (form) {
@@ -377,6 +388,7 @@
                 const subtitle = document.querySelector('.js-table-qr-subtitle');
                 const preview = document.querySelector('.js-table-qr-preview');
                 const urlText = document.querySelector('.js-table-qr-url');
+                const openMenuLink = document.querySelector('.js-open-table-menu');
                 const card = trigger.closest('.table-card-item');
                 const qrBox = card ? card.querySelector('.qr-box') : null;
                 const name = trigger.dataset.name || 'Meja';
@@ -400,6 +412,9 @@
                     urlText.textContent = url;
                 }
 
+                if (openMenuLink) {
+                    openMenuLink.href = url;
+                }
             }
 
             function tableQrFileName() {

@@ -135,9 +135,17 @@ class ManagerController extends Controller
                 ->filter(fn (MenuItem $menu) => $menu->category === 'Minuman')
                 ->values();
 
-            $data['packageItems'] = Package::with(['items.menuItem.categoryModel'])
+            $packageItems = Package::with(['items.menuItem.categoryModel', 'choices'])
                 ->orderBy('nama_paket')
                 ->get();
+
+            $data['promoPackageItems'] = $packageItems
+                ->filter(fn (Package $package) => Str::contains(Str::lower($package->nama_paket), 'promo'))
+                ->values();
+
+            $data['regularPackageItems'] = $packageItems
+                ->reject(fn (Package $package) => Str::contains(Str::lower($package->nama_paket), 'promo'))
+                ->values();
 
             $data['availablePackageMenuItems'] = $menuItems
                 ->filter(fn (MenuItem $menu) => in_array($menu->category, ['Makanan', 'Minuman'], true))
@@ -565,17 +573,20 @@ class ManagerController extends Controller
             'description' => ['nullable', 'string', 'max:300'],
             'price' => ['required', 'integer', 'min:0', 'max:500000'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
-            'items' => ['required', 'array'],
+            'items' => ['nullable', 'array'],
             'items.*' => ['nullable', 'integer', 'min:0', 'max:99'],
+            'choice_categories' => ['nullable', 'array'],
+            'choice_categories.*' => ['nullable', 'integer', 'min:0', 'max:20'],
         ]);
 
-        $selectedItems = collect($validated['items'])
+        $selectedItems = collect($validated['items'] ?? [])
             ->map(fn ($quantity) => (int) $quantity)
             ->filter(fn ($quantity) => $quantity > 0);
+        $selectedChoices = $this->selectedPackageChoices($validated['choice_categories'] ?? []);
 
-        if ($selectedItems->isEmpty()) {
+        if ($selectedItems->isEmpty() && $selectedChoices->isEmpty()) {
             return back()
-                ->withErrors(['items' => 'Pilih minimal 1 makanan atau minuman untuk isi paket.'])
+                ->withErrors(['items' => 'Pilih minimal 1 isi paket atau pilihan bebas.'])
                 ->withInput();
         }
 
@@ -599,7 +610,7 @@ class ManagerController extends Controller
             $photoPath = 'uploads/packages/' . $filename;
         }
 
-        $package = DB::transaction(function () use ($validated, $selectedItems, $photoPath) {
+        $package = DB::transaction(function () use ($validated, $selectedItems, $selectedChoices, $photoPath) {
             $package = Package::create([
                 'nama_paket' => $validated['name'],
                 'deskripsi' => $validated['description'] ?? null,
@@ -615,7 +626,14 @@ class ManagerController extends Controller
                 ]);
             }
 
-            return $package->load('items.menuItem');
+            foreach ($selectedChoices as $category => $quantity) {
+                $package->choices()->create([
+                    'category' => $category,
+                    'qty' => $quantity,
+                ]);
+            }
+
+            return $package->load(['items.menuItem', 'choices']);
         });
 
         ActivityRecorder::dataChange('Tambah', 'Paket', $package->nama_paket, null, $this->packageSnapshot($package), $package);
@@ -633,17 +651,20 @@ class ManagerController extends Controller
             'price' => ['required', 'integer', 'min:0', 'max:500000'],
             'status' => ['required', Rule::in(['tersedia', 'habis'])],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
-            'items' => ['required', 'array'],
+            'items' => ['nullable', 'array'],
             'items.*' => ['nullable', 'integer', 'min:0', 'max:99'],
+            'choice_categories' => ['nullable', 'array'],
+            'choice_categories.*' => ['nullable', 'integer', 'min:0', 'max:20'],
         ]);
 
-        $selectedItems = collect($validated['items'])
+        $selectedItems = collect($validated['items'] ?? [])
             ->map(fn ($quantity) => (int) $quantity)
             ->filter(fn ($quantity) => $quantity > 0);
+        $selectedChoices = $this->selectedPackageChoices($validated['choice_categories'] ?? []);
 
-        if ($selectedItems->isEmpty()) {
+        if ($selectedItems->isEmpty() && $selectedChoices->isEmpty()) {
             return back()
-                ->withErrors(['items' => 'Pilih minimal 1 makanan atau minuman untuk isi paket.'])
+                ->withErrors(['items' => 'Pilih minimal 1 isi paket atau pilihan bebas.'])
                 ->withInput();
         }
 
@@ -655,7 +676,7 @@ class ManagerController extends Controller
                 ->withInput();
         }
 
-        $package->load('items.menuItem');
+        $package->load(['items.menuItem', 'choices']);
         $before = $this->packageSnapshot($package);
         $photoPath = $package->foto;
 
@@ -673,7 +694,7 @@ class ManagerController extends Controller
             $photoPath = 'uploads/packages/' . $filename;
         }
 
-        DB::transaction(function () use ($package, $validated, $selectedItems, $photoPath) {
+        DB::transaction(function () use ($package, $validated, $selectedItems, $selectedChoices, $photoPath) {
             $package->update([
                 'nama_paket' => $validated['name'],
                 'deskripsi' => $validated['description'] ?? null,
@@ -683,6 +704,7 @@ class ManagerController extends Controller
             ]);
 
             $package->items()->delete();
+            $package->choices()->delete();
 
             foreach ($selectedItems as $menuId => $quantity) {
                 $package->items()->create([
@@ -690,9 +712,16 @@ class ManagerController extends Controller
                     'qty' => $quantity,
                 ]);
             }
+
+            foreach ($selectedChoices as $category => $quantity) {
+                $package->choices()->create([
+                    'category' => $category,
+                    'qty' => $quantity,
+                ]);
+            }
         });
 
-        $package->load('items.menuItem');
+        $package->load(['items.menuItem', 'choices']);
         ActivityRecorder::dataChange('Edit', 'Paket', $package->nama_paket, $before, $this->packageSnapshot($package), $package);
 
         return redirect()
@@ -702,7 +731,7 @@ class ManagerController extends Controller
 
     public function destroyPackage(Package $package): RedirectResponse
     {
-        $package->load('items.menuItem');
+        $package->load(['items.menuItem', 'choices']);
 
         ActivityRecorder::dataChange('Hapus', 'Paket', $package->nama_paket, $this->packageSnapshot($package), null, $package);
 
@@ -900,6 +929,13 @@ class ManagerController extends Controller
                 ])
                 ->values()
                 ->all(),
+            'choices' => $package->choices
+                ->map(fn ($choice) => [
+                    'category' => $choice->category,
+                    'qty' => $choice->qty,
+                ])
+                ->values()
+                ->all(),
         ];
     }
 
@@ -1064,6 +1100,7 @@ class ManagerController extends Controller
             );
 
             $package->items()->delete();
+            $package->choices()->delete();
 
             foreach (($snapshot['items'] ?? []) as $item) {
                 if (! isset($item['id_menu'], $item['qty'])) {
@@ -1075,7 +1112,25 @@ class ManagerController extends Controller
                     'qty' => $item['qty'],
                 ]);
             }
+
+            foreach (($snapshot['choices'] ?? []) as $choice) {
+                if (! isset($choice['category'], $choice['qty']) || (int) $choice['qty'] <= 0) {
+                    continue;
+                }
+
+                $package->choices()->create([
+                    'category' => $choice['category'],
+                    'qty' => (int) $choice['qty'],
+                ]);
+            }
         });
+    }
+
+    private function selectedPackageChoices(array $choices): \Illuminate\Support\Collection
+    {
+        return collect($choices)
+            ->mapWithKeys(fn ($quantity, $category) => [Str::title((string) $category) => (int) $quantity])
+            ->filter(fn ($quantity, $category) => $quantity > 0 && in_array($category, ['Makanan', 'Minuman'], true));
     }
 
     private function restoreIngredientChange(DataChange $change): void
