@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DiningTable;
 use App\Models\MenuItem;
 use App\Models\Order;
 use App\Support\ActivityRecorder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CashierController extends Controller
@@ -40,7 +44,6 @@ class CashierController extends Controller
             ->where('status', 'tersedia')
             ->where('stok', '>', 0)
             ->orderBy('nama_menu')
-            ->limit(8)
             ->get();
 
         return view('cashier.dashboard', compact('orders', 'stats', 'status', 'menuItems', 'mode', 'scannedOrder'));
@@ -67,6 +70,117 @@ class CashierController extends Controller
                 'scan_order' => $order->id_order,
             ])
             ->with('success', 'Pesanan #' . $order->kode_pesanan . ' berhasil dibuka dari scan.');
+    }
+
+    public function scanMenuBarcode(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'barcode' => ['required', 'string', 'max:80'],
+        ]);
+
+        $menu = MenuItem::with('categoryModel')
+            ->where('barcode', trim($validated['barcode']))
+            ->where('status', 'tersedia')
+            ->first();
+
+        if (! $menu) {
+            return response()->json([
+                'found' => false,
+                'message' => 'Barcode tidak ditemukan.',
+            ], 404);
+        }
+
+        if ((int) $menu->stok <= 0) {
+            return response()->json([
+                'found' => false,
+                'message' => $menu->nama_menu . ' sedang stok habis.',
+            ], 422);
+        }
+
+        return response()->json([
+            'found' => true,
+            'menu' => [
+                'id' => $menu->getKey(),
+                'name' => $menu->nama_menu,
+                'category' => $menu->category,
+                'price' => (int) $menu->harga,
+                'stock' => (int) $menu->stok,
+                'barcode' => $menu->barcode,
+            ],
+        ]);
+    }
+
+    public function storeDirectOrder(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'payment_method' => ['required', 'in:cash,qris'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*' => ['integer', 'min:1', 'max:999'],
+        ]);
+
+        $menuIds = collect($validated['items'])->keys()->map(fn ($id) => (int) $id)->all();
+        $menus = MenuItem::whereIn('id_menu', $menuIds)->get()->keyBy('id_menu');
+
+        if ($menus->count() !== count($menuIds)) {
+            return back()->withErrors(['direct_order' => 'Ada menu yang tidak ditemukan.'])->withInput();
+        }
+
+        try {
+            $order = DB::transaction(function () use ($validated, $menus) {
+                $total = 0;
+                $lines = [];
+
+                foreach ($validated['items'] as $menuId => $qty) {
+                    $menu = $menus[(int) $menuId];
+                    $qty = (int) $qty;
+
+                    if ((int) $menu->stok < $qty) {
+                        throw new \RuntimeException('Stok ' . $menu->nama_menu . ' tidak cukup.');
+                    }
+
+                    $subtotal = (int) $menu->harga * $qty;
+                    $total += $subtotal;
+                    $lines[] = compact('menu', 'qty', 'subtotal');
+                }
+
+                $table = DiningTable::firstOrCreate(
+                    ['nama_meja' => 'Kasir Langsung'],
+                    ['token' => Str::random(32), 'status' => 'aktif'],
+                );
+
+                $order = Order::create([
+                    'id_meja' => $table->id_meja,
+                    'kode_pesanan' => 'POS-' . now()->format('YmdHis') . '-' . Str::upper(Str::random(4)),
+                    'total_harga' => $total,
+                    'status' => 'selesai',
+                    'metode_pembayaran' => $validated['payment_method'],
+                ]);
+
+                foreach ($lines as $line) {
+                    $menu = $line['menu'];
+                    $qty = $line['qty'];
+
+                    $order->items()->create([
+                        'id_menu' => $menu->id_menu,
+                        'qty' => $qty,
+                        'harga' => (int) $menu->harga,
+                        'subtotal' => $line['subtotal'],
+                    ]);
+
+                    $menu->decrement('stok', $qty);
+                }
+
+                return $order;
+            });
+        } catch (\RuntimeException $exception) {
+            return back()->withErrors(['direct_order' => $exception->getMessage()])->withInput();
+        }
+
+        ActivityRecorder::activity('Cashier', 'Membuat pesanan kasir langsung #' . $order->kode_pesanan);
+
+        return redirect()
+            ->route('cashier.orders', ['status' => 'selesai', 'scan_order' => $order->id_order])
+            ->with('success', 'Pesanan kasir langsung #' . $order->kode_pesanan . ' berhasil dibuat.');
     }
 
     public function liveOrders(Request $request)

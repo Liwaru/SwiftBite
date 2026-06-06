@@ -44,7 +44,7 @@
                 isDragging: false,
             };
 
-            function prepareCreateMenuModal(trigger) {
+            function prepareCreateMenuModal(trigger, keepSubmittedMode = false) {
                 if (trigger.dataset.modal !== 'create-menu') {
                     return;
                 }
@@ -54,6 +54,7 @@
                 const subtitle = document.getElementById('modalCreateMenuSubtitle');
                 const categoryInput = document.getElementById('createMenuCategory');
                 const nameInput = document.getElementById('createMenuName');
+                const barcodeInput = document.getElementById('createMenuBarcode');
 
                 document.querySelectorAll('.js-menu-category-label').forEach((label) => {
                     label.textContent = category;
@@ -74,6 +75,33 @@
                 if (nameInput) {
                     nameInput.placeholder = category === 'Minuman' ? 'Contoh: Air Putih, maks. 20 karakter' : 'Contoh: Croissant, maks. 20 karakter';
                 }
+
+                setCreateMenuInputMode(keepSubmittedMode && barcodeInput?.value.trim() ? 'barcode' : 'manual', !keepSubmittedMode);
+            }
+
+            function setCreateMenuInputMode(mode, clearBarcode = false) {
+                const barcodeField = document.querySelector('.js-create-barcode-field');
+                const barcodeInput = document.getElementById('createMenuBarcode');
+
+                document.querySelectorAll('[data-create-menu-mode]').forEach((button) => {
+                    button.classList.toggle('active', button.dataset.createMenuMode === mode);
+                });
+
+                if (barcodeField) {
+                    barcodeField.hidden = mode !== 'barcode';
+                }
+
+                if (!barcodeInput) {
+                    return;
+                }
+
+                if (mode === 'manual' && clearBarcode) {
+                    barcodeInput.value = '';
+                }
+
+                if (mode === 'barcode') {
+                    setTimeout(() => barcodeInput.focus(), 60);
+                }
             }
 
             function prepareEditMenuModal(trigger) {
@@ -86,6 +114,7 @@
                 const descriptionInput = document.getElementById('editMenuDescription');
                 const priceInput = document.getElementById('editMenuPrice');
                 const statusInput = document.getElementById('editMenuStatus');
+                const barcodeInput = document.getElementById('editMenuBarcode');
                 const fileInput = document.querySelector('.js-edit-crop-input');
 
                 if (form) {
@@ -108,6 +137,10 @@
                     statusInput.value = trigger.dataset.status || 'tersedia';
                 }
 
+                if (barcodeInput) {
+                    barcodeInput.value = trigger.dataset.barcode || '';
+                }
+
                 if (fileInput) {
                     fileInput.value = '';
                 }
@@ -121,19 +154,21 @@
                 }
 
                 const form = document.querySelector('.js-stock-form');
+                const manualForm = document.querySelector('.js-stock-manual-form');
                 const title = document.getElementById('modalStockMenuTitle');
                 const subtitle = document.querySelector('.js-stock-menu-subtitle');
                 const productName = document.querySelector('.js-stock-product-name');
                 const currentStock = document.querySelector('.js-stock-current');
+                const photoImage = document.querySelector('.js-stock-modal-image');
+                const photoInitial = document.querySelector('.js-stock-modal-initial');
+                const barcodeInput = document.getElementById('stockBarcodeInput');
+                const scanStatus = document.querySelector('.js-stock-scan-status');
+                const scanHistory = document.querySelector('.js-stock-scan-history');
                 const amountInput = document.getElementById('stockAmountInput');
                 const addInput = document.getElementById('stockChangeAdd');
                 const noteInput = document.getElementById('stockNote');
                 const name = trigger.dataset.name || 'Produk';
                 const stock = trigger.dataset.stock || '0';
-
-                if (form) {
-                    form.action = trigger.dataset.action || '#';
-                }
 
                 if (title) {
                     title.textContent = 'Kelola Stok';
@@ -151,9 +186,29 @@
                     currentStock.textContent = stock;
                 }
 
+                if (form) {
+                    form.dataset.stockMenuId = trigger.dataset.menuId || '';
+                }
+
+                if (manualForm) {
+                    manualForm.action = trigger.dataset.action || '#';
+                }
+
+                if (photoImage && photoInitial) {
+                    if (trigger.dataset.photo) {
+                        photoImage.src = trigger.dataset.photo;
+                        photoImage.hidden = false;
+                        photoInitial.hidden = true;
+                    } else {
+                        photoImage.removeAttribute('src');
+                        photoImage.hidden = true;
+                        photoInitial.hidden = false;
+                        photoInitial.textContent = trigger.dataset.initial || name.charAt(0).toUpperCase();
+                    }
+                }
+
                 if (amountInput) {
                     amountInput.value = '';
-                    amountInput.max = '999';
                 }
 
                 if (addInput) {
@@ -163,6 +218,144 @@
                 if (noteInput) {
                     noteInput.value = '';
                 }
+
+                if (barcodeInput) {
+                    barcodeInput.value = '';
+                }
+
+                if (scanStatus) {
+                    scanStatus.querySelector('strong').textContent = 'Belum ada barcode discan.';
+                    scanStatus.classList.remove('is-success', 'is-error');
+                }
+
+                if (scanHistory) {
+                    scanHistory.innerHTML = '<tr class="stock-scan-empty"><td colspan="3">Belum ada scan.</td></tr>';
+                }
+
+                setStockInputMode('manual');
+            }
+
+            function setStockInputMode(mode) {
+                document.querySelectorAll('[data-stock-mode]').forEach((button) => {
+                    button.classList.toggle('active', button.dataset.stockMode === mode);
+                });
+
+                document.querySelectorAll('[data-stock-panel]').forEach((panel) => {
+                    panel.hidden = panel.dataset.stockPanel !== mode;
+                });
+
+                if (mode === 'barcode') {
+                    setTimeout(() => document.getElementById('stockBarcodeInput')?.focus(), 60);
+                }
+            }
+
+            function initStockBarcodeScanner() {
+                const form = document.querySelector('.js-stock-form');
+                const barcodeInput = document.getElementById('stockBarcodeInput');
+                const currentStock = document.querySelector('.js-stock-current');
+                const productName = document.querySelector('.js-stock-product-name');
+                const scanStatus = document.querySelector('.js-stock-scan-status');
+                const scanHistory = document.querySelector('.js-stock-scan-history');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '';
+                const scanUrl = @json(route('manager.stock.scan'));
+
+                if (!form || !barcodeInput || !scanStatus || !scanHistory) {
+                    return;
+                }
+
+                const setStatus = (message, type) => {
+                    scanStatus.querySelector('strong').textContent = message;
+                    scanStatus.classList.remove('is-success', 'is-error');
+
+                    if (type) {
+                        scanStatus.classList.add(type);
+                    }
+                };
+
+                const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;',
+                }[char]));
+
+                const updateStockCard = (menu) => {
+                    document.querySelectorAll('[data-stock-value="' + menu.id + '"]').forEach((element) => {
+                        element.textContent = new Intl.NumberFormat('id-ID').format(menu.stock);
+                    });
+
+                    document.querySelectorAll('[data-stock-status="' + menu.id + '"]').forEach((element) => {
+                        element.textContent = menu.status_label;
+                        element.classList.remove('safe', 'low', 'empty');
+                        element.classList.add(menu.status_class);
+                    });
+
+                    document.querySelectorAll('.js-stock-menu[data-menu-id="' + menu.id + '"]').forEach((button) => {
+                        button.dataset.stock = menu.stock;
+                    });
+                };
+
+                const addHistory = (menu) => {
+                    scanHistory.querySelector('.stock-scan-empty')?.remove();
+
+                    const row = document.createElement('tr');
+                    row.className = 'stock-scan-row';
+                    row.innerHTML = '<td>' + escapeHtml(menu.name) + '</td><td>+1</td><td>' + menu.stock + ' pcs</td>';
+                    scanHistory.prepend(row);
+                };
+
+                barcodeInput.addEventListener('keydown', async (event) => {
+                    if (event.key !== 'Enter') {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    const barcode = barcodeInput.value.trim();
+
+                    if (!barcode) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(scanUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            body: JSON.stringify({ barcode }),
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok || !data.ok) {
+                            throw new Error(data.message || 'Barcode tidak ditemukan di data menu/produk.');
+                        }
+
+                        const menu = data.menu;
+                        setStatus(data.message, 'is-success');
+
+                        if (currentStock) {
+                            currentStock.textContent = menu.stock;
+                        }
+
+                        if (productName) {
+                            productName.textContent = menu.name;
+                        }
+
+                        updateStockCard(menu);
+                        addHistory(menu);
+                        barcodeInput.value = '';
+                        barcodeInput.focus();
+                    } catch (error) {
+                        setStatus(error.message, 'is-error');
+                        barcodeInput.select();
+                    }
+                });
             }
 
             function prepareEditPackageModal(trigger) {
@@ -175,6 +368,9 @@
                 const descriptionInput = document.querySelector('.js-edit-package-description');
                 const priceInput = document.querySelector('.js-edit-package-price');
                 const statusInput = document.querySelector('.js-edit-package-status');
+                const permanentInput = document.querySelector('.js-edit-package-permanent');
+                const startsAtInput = document.querySelector('.js-edit-package-starts-at');
+                const endsAtInput = document.querySelector('.js-edit-package-ends-at');
                 const fileInput = document.querySelector('.js-edit-package-photo');
                 let items = {};
                 let choices = {};
@@ -209,6 +405,19 @@
 
                 if (statusInput) {
                     statusInput.value = trigger.dataset.status || 'tersedia';
+                }
+
+                if (startsAtInput) {
+                    startsAtInput.value = trigger.dataset.startsAt || '';
+                }
+
+                if (endsAtInput) {
+                    endsAtInput.value = trigger.dataset.endsAt || '';
+                }
+
+                if (permanentInput) {
+                    permanentInput.checked = !trigger.dataset.startsAt && !trigger.dataset.endsAt;
+                    syncPackagePeriod(permanentInput.closest('form'));
                 }
 
                 if (fileInput) {
@@ -354,6 +563,44 @@
                     });
 
                     syncPackageBuilder(builder);
+                });
+            }
+
+            function syncPackagePeriod(form) {
+                if (!form) {
+                    return;
+                }
+
+                const permanentInput = form.querySelector('.js-package-permanent');
+                const period = form.querySelector('.js-package-period');
+
+                if (!permanentInput || !period) {
+                    return;
+                }
+
+                period.hidden = permanentInput.checked;
+                period.querySelectorAll('input[type="date"]').forEach((input) => {
+                    input.disabled = permanentInput.checked;
+
+                    if (permanentInput.checked) {
+                        input.value = '';
+                    }
+                });
+            }
+
+            function initPackagePeriods() {
+                document.querySelectorAll('.package-form').forEach((form) => {
+                    const permanentInput = form.querySelector('.js-package-permanent');
+
+                    if (!permanentInput) {
+                        return;
+                    }
+
+                    syncPackagePeriod(form);
+
+                    permanentInput.addEventListener('change', () => {
+                        syncPackagePeriod(form);
+                    });
                 });
             }
 
@@ -867,6 +1114,28 @@
                 });
             });
 
+            document.querySelectorAll('[data-create-menu-mode]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    setCreateMenuInputMode(button.dataset.createMenuMode || 'manual', true);
+                });
+            });
+
+            document.querySelectorAll('[data-stock-mode]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    setStockInputMode(button.dataset.stockMode || 'manual');
+                });
+            });
+
+            initStockBarcodeScanner();
+
+            document.getElementById('createMenuBarcode')?.addEventListener('keydown', (event) => {
+                if (event.key !== 'Enter') {
+                    return;
+                }
+
+                event.preventDefault();
+            });
+
             document.querySelector('.js-download-table-qr')?.addEventListener('click', downloadTableQrPng);
             document.querySelector('.js-print-table-qr')?.addEventListener('click', printTableQr);
 
@@ -1146,6 +1415,7 @@
             initMenuCropper();
             initEditMenuCropper();
             initPackageBuilders();
+            initPackagePeriods();
 
             document.addEventListener('keydown', (event) => {
                 if (event.key === 'Escape') {
@@ -1167,7 +1437,7 @@
                 @elseif (old('modal_id') === 'edit-package')
                     openModal('edit-package');
                 @else
-                    prepareCreateMenuModal({ dataset: { modal: 'create-menu', category: @json(old('category', 'Makanan')) } });
+                    prepareCreateMenuModal({ dataset: { modal: 'create-menu', category: @json(old('category', 'Makanan')) } }, true);
                     openModal('create-menu');
                 @endif
             @endif

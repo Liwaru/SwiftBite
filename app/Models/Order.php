@@ -16,8 +16,18 @@ class Order extends Model
         'total_harga',
         'status',
         'metode_pembayaran',
+        'payment_status',
+        'midtrans_order_id',
+        'qris_url',
+        'payment_expires_at',
+        'payment_payload',
         'customer_name',
         'notes',
+    ];
+
+    protected $casts = [
+        'payment_expires_at' => 'datetime',
+        'payment_payload' => 'array',
     ];
 
     public function diningTable(): BelongsTo

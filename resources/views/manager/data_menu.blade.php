@@ -116,7 +116,16 @@
                                             <div class="menu-rail">
                                                 @foreach ($packageSection['items'] as $package)
                                                     @php
+                                                        $todayDate = today();
                                                         $packageStatusLabel = $package->status === 'tersedia' ? 'Aktif' : 'Nonaktif';
+                                                        if ($package->status === 'tersedia' && $package->ends_at && $package->ends_at->lt($todayDate)) {
+                                                            $packageStatusLabel = 'Berakhir';
+                                                        } elseif ($package->status === 'tersedia' && $package->starts_at && $package->starts_at->gt($todayDate)) {
+                                                            $packageStatusLabel = 'Terjadwal';
+                                                        }
+                                                        $packagePeriodLabel = $package->starts_at || $package->ends_at
+                                                            ? ($package->starts_at?->format('d M Y') ?? 'Awal') . ' - ' . ($package->ends_at?->format('d M Y') ?? 'Tanpa akhir')
+                                                            : 'Tampil selalu';
                                                     @endphp
 
                                                     <article class="menu-card package-card" data-menu-name="{{ $package->nama_paket }}">
@@ -141,6 +150,7 @@
                                                                     <div>{{ $choice->qty }} {{ strtolower($choice->category) }} bebas dipilih customer</div>
                                                                 @endforeach
                                                             </div>
+                                                            <div class="menu-card-description">Periode: {{ $packagePeriodLabel }}</div>
                                                             <div class="menu-card-price">Rp{{ number_format($package->harga, 0, ',', '.') }}</div>
                                                             <div><span class="status-badge">{{ $packageStatusLabel }}</span></div>
                                                         </div>
@@ -155,6 +165,8 @@
                                                                 data-description="{{ $package->deskripsi }}"
                                                                 data-price="{{ (int) $package->harga }}"
                                                                 data-status="{{ $package->status }}"
+                                                                data-starts-at="{{ $package->starts_at?->toDateString() }}"
+                                                                data-ends-at="{{ $package->ends_at?->toDateString() }}"
                                                                 data-photo="{{ $package->foto ? asset($package->foto) : '' }}"
                                                                 data-items='@json($package->items->mapWithKeys(fn ($item) => [$item->id_menu => $item->qty]))'
                                                                 data-choices='@json($package->choices->mapWithKeys(fn ($choice) => [$choice->category => $choice->qty]))'
@@ -233,6 +245,7 @@
                                                         <div class="menu-card-body">
                                                             <div class="menu-card-name">{{ $menu->nama_menu }}</div>
                                                             <div class="menu-card-price">Rp{{ number_format($menu->harga, 0, ',', '.') }}</div>
+                                                            <div class="menu-card-stock">Stok {{ $menu->stok }}</div>
                                                             <div><span class="status-badge">{{ $statusLabel }}</span></div>
                                                         </div>
 
@@ -243,6 +256,7 @@
                                                                 data-modal="edit-menu"
                                                                 data-action="{{ route('manager.menus.update', $menu) }}"
                                                                 data-name="{{ $menu->nama_menu }}"
+                                                                data-barcode="{{ $menu->barcode }}"
                                                                 data-description="{{ $menu->deskripsi }}"
                                                                 data-price="{{ (int) $menu->harga }}"
                                                                 data-status="{{ $menu->status }}"
@@ -292,6 +306,19 @@
                                             <label for="createMenuZoom">Zoom Gambar</label>
                                             <input id="createMenuZoom" type="range" class="js-crop-zoom" min="1" max="2.5" step="0.01" value="1" disabled>
                                         </div>
+                                    </div>
+
+                                    @php
+                                        $createInputMode = old('barcode') ? 'barcode' : 'manual';
+                                    @endphp
+                                    <div class="menu-input-mode">
+                                        <button type="button" class="menu-input-mode-btn {{ $createInputMode === 'manual' ? 'active' : '' }}" data-create-menu-mode="manual">Manual</button>
+                                        <button type="button" class="menu-input-mode-btn {{ $createInputMode === 'barcode' ? 'active' : '' }}" data-create-menu-mode="barcode">Lewat Barcode</button>
+                                    </div>
+
+                                    <div class="field-group js-create-barcode-field" @if ($createInputMode !== 'barcode') hidden @endif>
+                                        <label for="createMenuBarcode">Barcode</label>
+                                        <input id="createMenuBarcode" type="text" name="barcode" value="{{ old('barcode') }}" maxlength="80" inputmode="numeric" autocomplete="off" placeholder="Scan barcode produk">
                                     </div>
 
                                     <div class="field-group">
@@ -397,6 +424,25 @@
                                         <input id="createPackagePrice" type="number" name="price" value="{{ old('price') }}" min="0" max="500000" step="1000" placeholder="Contoh: 25000" required>
                                     </div>
 
+                                    <div class="field-group package-permanent-row">
+                                        <input type="hidden" name="is_permanent" value="0">
+                                        <label class="package-toggle-line">
+                                            <input type="checkbox" name="is_permanent" value="1" class="js-package-permanent" @checked(old('is_permanent', '1'))>
+                                            Tampilkan selalu
+                                        </label>
+                                    </div>
+
+                                    <div class="package-choice-grid js-package-period" hidden>
+                                        <label>
+                                            Tanggal Mulai
+                                            <input type="date" name="starts_at" value="{{ old('starts_at') }}">
+                                        </label>
+                                        <label>
+                                            Tanggal Berakhir
+                                            <input type="date" name="ends_at" value="{{ old('ends_at') }}">
+                                        </label>
+                                    </div>
+
                                     <div class="modal-actions">
                                         <button type="button" class="ghost-btn js-close-modal">Batal</button>
                                         <button type="submit" class="submit-btn">Simpan Paket</button>
@@ -486,6 +532,25 @@
                                         <input id="editPackagePrice" type="number" name="price" class="js-edit-package-price" min="0" max="500000" step="1000" required>
                                     </div>
 
+                                    <div class="field-group package-permanent-row">
+                                        <input type="hidden" name="is_permanent" value="0">
+                                        <label class="package-toggle-line">
+                                            <input type="checkbox" name="is_permanent" value="1" class="js-package-permanent js-edit-package-permanent">
+                                            Tampilkan selalu
+                                        </label>
+                                    </div>
+
+                                    <div class="package-choice-grid js-package-period" hidden>
+                                        <label>
+                                            Tanggal Mulai
+                                            <input type="date" name="starts_at" class="js-edit-package-starts-at">
+                                        </label>
+                                        <label>
+                                            Tanggal Berakhir
+                                            <input type="date" name="ends_at" class="js-edit-package-ends-at">
+                                        </label>
+                                    </div>
+
                                     <div class="field-group">
                                         <label for="editPackageStatus">Status</label>
                                         <select id="editPackageStatus" name="status" class="js-edit-package-status" required>
@@ -542,6 +607,11 @@
                                     <div class="field-group">
                                         <label for="editMenuName">Nama Menu</label>
                                         <input id="editMenuName" type="text" name="name" maxlength="20" placeholder="Maksimal 20 karakter" required>
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label for="editMenuBarcode">Barcode</label>
+                                        <input id="editMenuBarcode" type="text" name="barcode" maxlength="80" inputmode="numeric" class="js-edit-menu-barcode" placeholder="Opsional">
                                     </div>
 
                                     <div class="field-group">
@@ -636,6 +706,10 @@
                                         <div class="detail-row">
                                             <div class="detail-label">Kategori</div>
                                             <div class="detail-value">{{ $menu->category }}</div>
+                                        </div>
+                                        <div class="detail-row">
+                                            <div class="detail-label">Barcode</div>
+                                            <div class="detail-value">{{ $menu->barcode ?: '-' }}</div>
                                         </div>
                                         <div class="detail-row">
                                             <div class="detail-label">Harga</div>

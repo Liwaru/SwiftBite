@@ -101,9 +101,33 @@
         .page-current { background: var(--cream); color: var(--sidebar-brown-dark); }
         .page-disabled { border: 1px solid rgba(255, 246, 232, .12); color: rgba(255, 246, 232, .45); }
         .pos-panel { display: grid; gap: 14px; }
+        .pos-mode-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .pos-mode-tab { background: rgba(255, 246, 232, .16); color: var(--cream); border: 1px solid rgba(255, 246, 232, .26); }
+        .pos-mode-tab.active { background: var(--cream); color: var(--sidebar-brown-dark); border-color: var(--cream); }
+        .pos-mode-panel { display: none; }
+        .pos-mode-panel.active { display: block; }
+        .barcode-order-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+        .scan-feedback { min-height: 20px; color: rgba(255, 246, 232, .76); font-size: 13px; font-weight: 900; }
+        .scan-feedback.success { color: #dffbd8; }
+        .scan-feedback.error { color: #ffd8cf; }
         .menu-preview { display: grid; gap: 8px; }
         .menu-row { display: flex; justify-content: space-between; gap: 10px; align-items: center; border-top: 1px solid rgba(255, 246, 232, .18); padding-top: 8px; }
         .menu-row:first-child { border-top: 0; padding-top: 0; }
+        .menu-row.is-hidden { display: none; }
+        .cart-table { display: grid; gap: 8px; border-top: 1px solid rgba(255, 246, 232, .18); padding-top: 12px; }
+        .cart-head, .cart-line { display: grid; grid-template-columns: minmax(0, 1fr) 72px 96px; gap: 8px; align-items: center; }
+        .cart-head { color: rgba(255, 246, 232, .72); font-size: 12px; font-weight: 900; text-transform: uppercase; }
+        .cart-lines { display: grid; gap: 8px; }
+        .cart-line { color: var(--cream); font-weight: 900; }
+        .cart-line small { display: block; color: rgba(255, 246, 232, .68); font-weight: 800; }
+        .cart-qty { display: grid; grid-template-columns: 26px 1fr 26px; gap: 4px; align-items: center; }
+        .cart-qty button { padding: 5px 0; }
+        .cart-qty span { text-align: center; }
+        .payment-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .payment-choice label { display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgba(255, 246, 232, .24); border-radius: 7px; padding: 10px; font-weight: 900; }
+        .payment-choice input { width: auto; }
+        .direct-order-form { display: grid; gap: 12px; }
+        .direct-total { display: flex; align-items: center; justify-content: space-between; color: var(--cream); font-weight: 900; }
         .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .scan-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-bottom: 14px; }
         .scan-result { margin-bottom: 16px; }
@@ -125,6 +149,9 @@
                 @endif
                 @if ($errors->has('scan_code'))
                     <div class="notice">{{ $errors->first('scan_code') }}</div>
+                @endif
+                @if ($errors->has('direct_order'))
+                    <div class="notice">{{ $errors->first('direct_order') }}</div>
                 @endif
 
                 @if (($mode ?? 'dashboard') === 'dashboard')
@@ -217,27 +244,74 @@
                             <p class="muted">Untuk customer walk-in yang beli roti langsung di kasir.</p>
                         </div>
 
-                        <input type="search" placeholder="Cari menu bakery" aria-label="Cari menu bakery">
+                        <div class="pos-mode-tabs" role="tablist" aria-label="Mode tambah menu kasir">
+                            <button class="pos-mode-tab active" type="button" data-pos-mode="manual">Manual</button>
+                            <button class="pos-mode-tab" type="button" data-pos-mode="scan">Scan Barcode</button>
+                        </div>
 
-                        <div class="menu-preview">
+                        <div class="pos-mode-panel active" data-pos-panel="manual">
+                            <input type="search" id="manualMenuSearch" placeholder="Cari menu bakery" aria-label="Cari menu bakery">
+                        </div>
+
+                        <div class="pos-mode-panel" data-pos-panel="scan">
+                            <form class="barcode-order-form" id="barcodeOrderForm">
+                                <input type="search" id="barcodeOrderInput" placeholder="Scan barcode produk" autocomplete="off" inputmode="numeric" aria-label="Scan barcode produk">
+                                <button type="submit">Scan</button>
+                            </form>
+                            <p class="scan-feedback" id="barcodeOrderFeedback">Arahkan scanner ke barcode produk.</p>
+                        </div>
+
+                        <div class="menu-preview" id="manualMenuList">
                             @forelse ($menuItems as $item)
-                                <div class="menu-row">
+                                <div class="menu-row" data-menu-name="{{ strtolower($item->name) }}">
                                     <div>
                                         <strong>{{ $item->name }}</strong>
-                                        <p class="muted">{{ $item->category }}</p>
+                                        <p class="muted">{{ $item->category }} · Stok {{ $item->stok }}</p>
                                     </div>
-                                    <span class="price">Rp{{ number_format($item->price, 0, ',', '.') }}</span>
+                                    <button
+                                        type="button"
+                                        class="secondary js-add-direct-item"
+                                        data-menu-id="{{ $item->getKey() }}"
+                                        data-menu-name="{{ $item->name }}"
+                                        data-menu-category="{{ $item->category }}"
+                                        data-menu-price="{{ (int) $item->price }}"
+                                        data-menu-stock="{{ (int) $item->stok }}"
+                                    >Tambah</button>
                                 </div>
                             @empty
                                 <p class="muted">Menu belum tersedia. Tambahkan menu dari dashboard management.</p>
                             @endforelse
                         </div>
 
-                        <div class="quick-actions">
-                            <button class="secondary" type="button">Tunai</button>
-                            <button class="secondary" type="button">QRIS</button>
-                        </div>
-                        <button type="button">Buat Pesanan Manual</button>
+                        <form method="post" action="{{ route('cashier.orders.direct-store') }}" id="directOrderForm" class="direct-order-form">
+                            @csrf
+                            <div class="cart-table">
+                                <div class="cart-head">
+                                    <span>Menu</span>
+                                    <span>Qty</span>
+                                    <span>Harga</span>
+                                </div>
+                                <div class="cart-lines" id="directCartLines">
+                                    <p class="muted cart-empty">Belum ada menu dipilih.</p>
+                                </div>
+                            </div>
+                            <div id="directOrderInputs"></div>
+                            <div class="payment-choice">
+                                <label>
+                                    <input type="radio" name="payment_method" value="cash" checked>
+                                    Tunai
+                                </label>
+                                <label>
+                                    <input type="radio" name="payment_method" value="qris">
+                                    QRIS
+                                </label>
+                            </div>
+                            <div class="direct-total">
+                                <span>Total</span>
+                                <strong id="directOrderTotal">Rp0</strong>
+                            </div>
+                            <button type="submit" id="directOrderSubmit" disabled>Buat Pesanan</button>
+                        </form>
                     </aside>
                 </section>
                 @endif
@@ -260,9 +334,242 @@
                 const toast = document.getElementById('liveToast');
                 const formatter = new Intl.NumberFormat('id-ID');
                 const liveUrl = @json($liveOrdersUrl);
+                const barcodeLookupUrl = @json(route('cashier.orders.menu-barcode'));
+                const csrfToken = @json(csrf_token());
+                const directCartLines = document.getElementById('directCartLines');
+                const directOrderInputs = document.getElementById('directOrderInputs');
+                const directOrderTotal = document.getElementById('directOrderTotal');
+                const directOrderSubmit = document.getElementById('directOrderSubmit');
+                const barcodeForm = document.getElementById('barcodeOrderForm');
+                const barcodeInput = document.getElementById('barcodeOrderInput');
+                const barcodeFeedback = document.getElementById('barcodeOrderFeedback');
+                const manualMenuSearch = document.getElementById('manualMenuSearch');
+                const cart = new Map();
                 let latestOrderId = getLatestOrderId();
                 let firstSync = true;
                 let toastTimer = null;
+
+            function money(value) {
+                return 'Rp' + formatter.format(value || 0);
+            }
+
+            function escapeHtml(value) {
+                return String(value || '').replace(/[&<>"']/g, function (char) {
+                    return {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#039;'
+                    }[char];
+                });
+            }
+
+            function setScanFeedback(message, type) {
+                if (!barcodeFeedback) {
+                    return;
+                }
+
+                barcodeFeedback.textContent = message;
+                barcodeFeedback.classList.remove('success', 'error');
+
+                if (type) {
+                    barcodeFeedback.classList.add(type);
+                }
+            }
+
+            function addDirectItem(menu, source) {
+                const id = String(menu.id);
+                const existing = cart.get(id);
+                const stock = Number(menu.stock || 0);
+
+                if (existing) {
+                    if (existing.qty >= existing.stock) {
+                        setScanFeedback('Stok ' + existing.name + ' hanya ' + existing.stock + '.', 'error');
+                        return;
+                    }
+
+                    existing.qty += 1;
+                    cart.set(id, existing);
+                    showToast('+1 ' + existing.name + ' ditambahkan');
+
+                    if (source === 'scan') {
+                        setScanFeedback('Scan berhasil: ' + existing.name + ' | Qty ' + existing.qty, 'success');
+                    }
+                } else {
+                    cart.set(id, {
+                        id: id,
+                        name: menu.name,
+                        category: menu.category || 'Menu',
+                        price: Number(menu.price || 0),
+                        stock: stock,
+                        qty: 1
+                    });
+                    showToast(menu.name + ' ditambahkan');
+
+                    if (source === 'scan') {
+                        setScanFeedback('Scan berhasil: ' + menu.name + ' | Qty 1', 'success');
+                    }
+                }
+
+                renderDirectCart();
+            }
+
+            function changeDirectQty(id, delta) {
+                const item = cart.get(String(id));
+
+                if (!item) {
+                    return;
+                }
+
+                item.qty += delta;
+
+                if (item.qty <= 0) {
+                    cart.delete(String(id));
+                } else if (item.qty > item.stock) {
+                    item.qty = item.stock;
+                    setScanFeedback('Stok ' + item.name + ' hanya ' + item.stock + '.', 'error');
+                } else {
+                    cart.set(String(id), item);
+                }
+
+                renderDirectCart();
+            }
+
+            function renderDirectCart() {
+                if (!directCartLines || !directOrderInputs || !directOrderTotal || !directOrderSubmit) {
+                    return;
+                }
+
+                directCartLines.innerHTML = '';
+                directOrderInputs.innerHTML = '';
+
+                if (cart.size === 0) {
+                    directCartLines.innerHTML = '<p class="muted cart-empty">Belum ada menu dipilih.</p>';
+                    directOrderTotal.textContent = 'Rp0';
+                    directOrderSubmit.disabled = true;
+                    return;
+                }
+
+                let total = 0;
+
+                cart.forEach(function (item) {
+                    total += item.price * item.qty;
+
+                    const row = document.createElement('div');
+                    row.className = 'cart-line';
+                    row.innerHTML =
+                        '<span>' + escapeHtml(item.name) + '<small>' + escapeHtml(item.category) + '</small></span>' +
+                        '<span class="cart-qty">' +
+                            '<button type="button" data-cart-minus="' + item.id + '">-</button>' +
+                            '<span>' + item.qty + '</span>' +
+                            '<button type="button" data-cart-plus="' + item.id + '">+</button>' +
+                        '</span>' +
+                        '<span>' + money(item.price * item.qty) + '</span>';
+                    directCartLines.appendChild(row);
+
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'items[' + item.id + ']';
+                    input.value = item.qty;
+                    directOrderInputs.appendChild(input);
+                });
+
+                directOrderTotal.textContent = money(total);
+                directOrderSubmit.disabled = false;
+            }
+
+            async function lookupBarcode(code) {
+                const response = await fetch(barcodeLookupUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ barcode: code })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.found) {
+                    throw new Error(data.message || 'Barcode tidak ditemukan.');
+                }
+
+                return data.menu;
+            }
+
+            document.querySelectorAll('.pos-mode-tab').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const mode = button.dataset.posMode;
+                    document.querySelectorAll('.pos-mode-tab').forEach(function (tab) {
+                        tab.classList.toggle('active', tab === button);
+                    });
+                    document.querySelectorAll('.pos-mode-panel').forEach(function (panel) {
+                        panel.classList.toggle('active', panel.dataset.posPanel === mode);
+                    });
+
+                    if (mode === 'scan') {
+                        setTimeout(function () {
+                            barcodeInput?.focus();
+                        }, 60);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.js-add-direct-item').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    addDirectItem({
+                        id: button.dataset.menuId,
+                        name: button.dataset.menuName,
+                        category: button.dataset.menuCategory,
+                        price: button.dataset.menuPrice,
+                        stock: button.dataset.menuStock
+                    }, 'manual');
+                });
+            });
+
+            directCartLines?.addEventListener('click', function (event) {
+                const minus = event.target.closest('[data-cart-minus]');
+                const plus = event.target.closest('[data-cart-plus]');
+
+                if (minus) {
+                    changeDirectQty(minus.dataset.cartMinus, -1);
+                }
+
+                if (plus) {
+                    changeDirectQty(plus.dataset.cartPlus, 1);
+                }
+            });
+
+            manualMenuSearch?.addEventListener('input', function () {
+                const keyword = manualMenuSearch.value.trim().toLowerCase();
+                document.querySelectorAll('#manualMenuList .menu-row').forEach(function (row) {
+                    row.classList.toggle('is-hidden', keyword !== '' && !row.dataset.menuName.includes(keyword));
+                });
+            });
+
+            barcodeForm?.addEventListener('submit', async function (event) {
+                event.preventDefault();
+
+                const code = barcodeInput.value.trim();
+
+                if (!code) {
+                    return;
+                }
+
+                try {
+                    setScanFeedback('Mencari barcode...', null);
+                    const menu = await lookupBarcode(code);
+                    addDirectItem(menu, 'scan');
+                    barcodeInput.value = '';
+                    barcodeInput.focus();
+                } catch (error) {
+                    setScanFeedback(error.message, 'error');
+                    barcodeInput.select();
+                }
+            });
 
             function getLatestOrderId() {
                 const ids = Array.from(document.querySelectorAll('[data-order-id]')).map(function (element) {

@@ -14,6 +14,7 @@ use App\Models\Package;
 use App\Models\User;
 use App\Support\ActivityRecorder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -373,8 +374,10 @@ class ManagerController extends Controller
         $validated = $request->validate([
             'category' => ['required', Rule::in(['Makanan', 'Minuman'])],
             'name' => ['required', 'string', 'max:20'],
+            'barcode' => ['nullable', 'string', 'max:80', 'regex:/^[0-9A-Za-z_.-]+$/', Rule::unique('menus', 'barcode')],
             'description' => ['nullable', 'string', 'max:300'],
             'price' => ['required', 'integer', 'min:0', 'max:50000'],
+            'stock' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'image_data' => ['nullable', 'string'],
         ]);
 
@@ -402,10 +405,11 @@ class ManagerController extends Controller
         $menu = MenuItem::create([
             'id_kategori' => $category->id_kategori,
             'nama_menu' => $validated['name'],
+            'barcode' => $validated['barcode'] ?? null,
             'deskripsi' => $validated['description'] ?? null,
             'harga' => $validated['price'],
             'foto' => $photoPath,
-            'stok' => 0,
+            'stok' => $validated['stock'] ?? 0,
             'status' => 'tersedia',
         ]);
 
@@ -420,6 +424,7 @@ class ManagerController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:20'],
+            'barcode' => ['nullable', 'string', 'max:80', 'regex:/^[0-9A-Za-z_.-]+$/', Rule::unique('menus', 'barcode')->ignore($menu->getKey(), $menu->getKeyName())],
             'description' => ['nullable', 'string', 'max:300'],
             'price' => ['required', 'integer', 'min:0', 'max:50000'],
             'status' => ['required', Rule::in(['tersedia', 'habis'])],
@@ -450,6 +455,7 @@ class ManagerController extends Controller
 
         $menu->update([
             'nama_menu' => $validated['name'],
+            'barcode' => $validated['barcode'] ?? null,
             'deskripsi' => $validated['description'] ?? null,
             'harga' => $validated['price'],
             'status' => $validated['status'],
@@ -501,6 +507,41 @@ class ManagerController extends Controller
         return redirect()
             ->route('manager.page', 'stock')
             ->with('success', 'Stok produk berhasil diperbarui.');
+    }
+
+    public function scanStockBarcode(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'barcode' => ['required', 'string', 'max:80'],
+        ]);
+
+        $menu = MenuItem::where('barcode', trim($validated['barcode']))->first();
+
+        if (! $menu) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Barcode tidak ditemukan di data menu/produk.',
+            ], 404);
+        }
+
+        $before = $this->menuSnapshot($menu);
+        $menu->increment('stok');
+        $menu->refresh();
+
+        ActivityRecorder::dataChange('Edit', 'Menu', $menu->nama_menu, $before, $this->menuSnapshot($menu), $menu);
+        ActivityRecorder::activity('Manager', 'Penambahan stok melalui scan barcode untuk ' . $menu->nama_menu . '. Stok akhir ' . $menu->stok . ' pcs');
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Scan berhasil: ' . $menu->nama_menu . ' +1 stok',
+            'menu' => [
+                'id' => $menu->getKey(),
+                'name' => $menu->nama_menu,
+                'stock' => (int) $menu->stok,
+                'status_label' => (int) $menu->stok <= 0 ? 'Habis' : ((int) $menu->stok <= 5 ? 'Menipis' : 'Aman'),
+                'status_class' => (int) $menu->stok <= 0 ? 'empty' : ((int) $menu->stok <= 5 ? 'low' : 'safe'),
+            ],
+        ]);
     }
 
     public function storeIngredient(Request $request): RedirectResponse
@@ -572,6 +613,9 @@ class ManagerController extends Controller
             'name' => ['required', 'string', 'max:40'],
             'description' => ['nullable', 'string', 'max:300'],
             'price' => ['required', 'integer', 'min:0', 'max:500000'],
+            'starts_at' => ['nullable', 'date'],
+            'ends_at' => ['nullable', 'date'],
+            'is_permanent' => ['nullable', 'boolean'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
             'items' => ['nullable', 'array'],
             'items.*' => ['nullable', 'integer', 'min:0', 'max:99'],
@@ -583,6 +627,19 @@ class ManagerController extends Controller
             ->map(fn ($quantity) => (int) $quantity)
             ->filter(fn ($quantity) => $quantity > 0);
         $selectedChoices = $this->selectedPackageChoices($validated['choice_categories'] ?? []);
+
+        if (empty($validated['is_permanent']) && ! empty($validated['starts_at']) && ! empty($validated['ends_at']) && $validated['starts_at'] > $validated['ends_at']) {
+            return back()
+                ->withErrors(['ends_at' => 'Tanggal berakhir tidak boleh lebih awal dari tanggal mulai.'])
+                ->withInput();
+        }
+
+        $period = ! empty($validated['is_permanent'])
+            ? ['starts_at' => null, 'ends_at' => null]
+            : [
+                'starts_at' => $validated['starts_at'] ?? null,
+                'ends_at' => $validated['ends_at'] ?? null,
+            ];
 
         if ($selectedItems->isEmpty() && $selectedChoices->isEmpty()) {
             return back()
@@ -610,13 +667,15 @@ class ManagerController extends Controller
             $photoPath = 'uploads/packages/' . $filename;
         }
 
-        $package = DB::transaction(function () use ($validated, $selectedItems, $selectedChoices, $photoPath) {
+        $package = DB::transaction(function () use ($validated, $selectedItems, $selectedChoices, $photoPath, $period) {
             $package = Package::create([
                 'nama_paket' => $validated['name'],
                 'deskripsi' => $validated['description'] ?? null,
                 'foto' => $photoPath,
                 'harga' => $validated['price'],
                 'status' => 'tersedia',
+                'starts_at' => $period['starts_at'],
+                'ends_at' => $period['ends_at'],
             ]);
 
             foreach ($selectedItems as $menuId => $quantity) {
@@ -650,6 +709,9 @@ class ManagerController extends Controller
             'description' => ['nullable', 'string', 'max:300'],
             'price' => ['required', 'integer', 'min:0', 'max:500000'],
             'status' => ['required', Rule::in(['tersedia', 'habis'])],
+            'starts_at' => ['nullable', 'date'],
+            'ends_at' => ['nullable', 'date'],
+            'is_permanent' => ['nullable', 'boolean'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
             'items' => ['nullable', 'array'],
             'items.*' => ['nullable', 'integer', 'min:0', 'max:99'],
@@ -661,6 +723,19 @@ class ManagerController extends Controller
             ->map(fn ($quantity) => (int) $quantity)
             ->filter(fn ($quantity) => $quantity > 0);
         $selectedChoices = $this->selectedPackageChoices($validated['choice_categories'] ?? []);
+
+        if (empty($validated['is_permanent']) && ! empty($validated['starts_at']) && ! empty($validated['ends_at']) && $validated['starts_at'] > $validated['ends_at']) {
+            return back()
+                ->withErrors(['ends_at' => 'Tanggal berakhir tidak boleh lebih awal dari tanggal mulai.'])
+                ->withInput();
+        }
+
+        $period = ! empty($validated['is_permanent'])
+            ? ['starts_at' => null, 'ends_at' => null]
+            : [
+                'starts_at' => $validated['starts_at'] ?? null,
+                'ends_at' => $validated['ends_at'] ?? null,
+            ];
 
         if ($selectedItems->isEmpty() && $selectedChoices->isEmpty()) {
             return back()
@@ -694,13 +769,15 @@ class ManagerController extends Controller
             $photoPath = 'uploads/packages/' . $filename;
         }
 
-        DB::transaction(function () use ($package, $validated, $selectedItems, $selectedChoices, $photoPath) {
+        DB::transaction(function () use ($package, $validated, $selectedItems, $selectedChoices, $photoPath, $period) {
             $package->update([
                 'nama_paket' => $validated['name'],
                 'deskripsi' => $validated['description'] ?? null,
                 'foto' => $photoPath,
                 'harga' => $validated['price'],
                 'status' => $validated['status'],
+                'starts_at' => $period['starts_at'],
+                'ends_at' => $period['ends_at'],
             ]);
 
             $package->items()->delete();
@@ -904,6 +981,7 @@ class ManagerController extends Controller
             'id_menu' => $menu->id_menu,
             'id_kategori' => $menu->id_kategori,
             'nama_menu' => $menu->nama_menu,
+            'barcode' => $menu->barcode,
             'deskripsi' => $menu->deskripsi,
             'harga' => $menu->harga,
             'foto' => $menu->foto,
@@ -921,6 +999,8 @@ class ManagerController extends Controller
             'foto' => $package->foto,
             'harga' => $package->harga,
             'status' => $package->status,
+            'starts_at' => $package->starts_at?->toDateString(),
+            'ends_at' => $package->ends_at?->toDateString(),
             'items' => $package->items
                 ->map(fn ($item) => [
                     'id_menu' => $item->id_menu,
@@ -1015,6 +1095,7 @@ class ManagerController extends Controller
             [
                 'id_kategori' => $snapshot['id_kategori'],
                 'nama_menu' => $snapshot['nama_menu'],
+                'barcode' => $snapshot['barcode'] ?? null,
                 'deskripsi' => $snapshot['deskripsi'] ?? null,
                 'harga' => $snapshot['harga'],
                 'foto' => $snapshot['foto'] ?? null,
@@ -1096,6 +1177,8 @@ class ManagerController extends Controller
                     'foto' => $snapshot['foto'] ?? null,
                     'harga' => $snapshot['harga'],
                     'status' => $snapshot['status'] ?? 'tersedia',
+                    'starts_at' => $snapshot['starts_at'] ?? null,
+                    'ends_at' => $snapshot['ends_at'] ?? null,
                 ],
             );
 

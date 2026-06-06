@@ -100,7 +100,7 @@
                                                         $initial = strtoupper(substr($menu->nama_menu, 0, 1));
                                                     @endphp
 
-                                                    <article class="menu-card">
+                                                    <article class="menu-card" data-stock-card-id="{{ $menu->getKey() }}">
                                                         <div class="menu-thumb">
                                                             @if ($menu->foto)
                                                                 <img src="{{ asset($menu->foto) }}" alt="{{ $menu->nama_menu }}" draggable="false">
@@ -113,8 +113,8 @@
                                                             <div class="menu-card-name">{{ $menu->nama_menu }}</div>
                                                             <div class="stock-current">
                                                                 <div class="stock-current-label">Stok Saat Ini</div>
-                                                                <div class="stock-current-value">{{ number_format($stock) }} pcs</div>
-                                                                <div><span class="stock-badge-status {{ $stockClass }}">{{ $stockStatus }}</span></div>
+                                                                <div class="stock-current-value"><span data-stock-value="{{ $menu->getKey() }}">{{ number_format($stock) }}</span> pcs</div>
+                                                                <div><span class="stock-badge-status {{ $stockClass }}" data-stock-status="{{ $menu->getKey() }}">{{ $stockStatus }}</span></div>
                                                             </div>
                                                         </div>
 
@@ -124,8 +124,11 @@
                                                                 class="row-action js-open-modal js-stock-menu"
                                                                 data-modal="stock-menu"
                                                                 data-action="{{ route('manager.stock.update', $menu) }}"
+                                                                data-menu-id="{{ $menu->getKey() }}"
                                                                 data-name="{{ $menu->nama_menu }}"
                                                                 data-stock="{{ $stock }}"
+                                                                data-photo="{{ $menu->foto ? asset($menu->foto) : '' }}"
+                                                                data-initial="{{ $initial }}"
                                                             >Kelola Stok</button>
                                                         </div>
                                                     </article>
@@ -140,7 +143,7 @@
                         </div>
 
                         <div class="modal-shell" id="modal-stock-menu" aria-hidden="true">
-                            <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalStockMenuTitle">
+                            <div class="modal-dialog stock-dialog" role="dialog" aria-modal="true" aria-labelledby="modalStockMenuTitle">
                                 <div class="modal-header">
                                     <div>
                                         <div class="modal-title" id="modalStockMenuTitle">Kelola Stok</div>
@@ -149,44 +152,93 @@
                                     <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
                                 </div>
 
-                                <form method="POST" action="#" class="modal-form js-stock-form">
+                                <div class="modal-form js-stock-form">
                                     @csrf
-                                    @method('patch')
 
                                     <div class="stock-modal-summary">
-                                        <div class="stock-modal-product js-stock-product-name">-</div>
-                                        <div class="stock-modal-current">Stok saat ini: <span class="js-stock-current">0</span> pcs</div>
-                                    </div>
-
-                                    <div class="field-group">
-                                        <label>Jenis Perubahan</label>
-                                        <div class="stock-change-options">
-                                            <label class="stock-change-option" for="stockChangeAdd">
-                                                <input id="stockChangeAdd" type="radio" name="change_type" value="add" checked>
-                                                <span><b>+</b><em>Tambah Stok</em></span>
-                                            </label>
-                                            <label class="stock-change-option" for="stockChangeSubtract">
-                                                <input id="stockChangeSubtract" type="radio" name="change_type" value="subtract">
-                                                <span><b>-</b><em>Kurangi Stok</em></span>
-                                            </label>
+                                        <div class="stock-modal-thumb js-stock-modal-thumb">
+                                            <img class="js-stock-modal-image" alt="Foto produk stok" hidden>
+                                            <span class="js-stock-modal-initial">-</span>
+                                        </div>
+                                        <div>
+                                            <div class="stock-modal-product js-stock-product-name">-</div>
+                                            <div class="stock-modal-current">Stok saat ini: <span class="js-stock-current">0</span> pcs</div>
                                         </div>
                                     </div>
 
-                                    <div class="field-group">
-                                        <label for="stockAmountInput">Jumlah Perubahan</label>
-                                        <input id="stockAmountInput" type="number" name="amount" min="1" max="999" step="1" placeholder="Contoh: 5" required>
+                                    <div class="menu-input-mode">
+                                        <button type="button" class="menu-input-mode-btn active" data-stock-mode="manual">Manual</button>
+                                        <button type="button" class="menu-input-mode-btn" data-stock-mode="barcode">Lewat Barcode</button>
                                     </div>
 
-                                    <div class="field-group">
-                                        <label for="stockNote">Keterangan (Opsional)</label>
-                                        <input id="stockNote" type="text" name="note" maxlength="120" placeholder="Contoh: Restock pagi, penyesuaian stok">
-                                    </div>
+                                    <form method="POST" action="#" class="stock-mode-panel js-stock-manual-form" data-stock-panel="manual">
+                                        @csrf
+                                        @method('patch')
 
-                                    <div class="modal-actions">
-                                        <button type="button" class="ghost-btn js-close-modal">Batal</button>
-                                        <button type="submit" class="submit-btn">Simpan Stok</button>
+                                        <div class="field-group">
+                                            <label>Jenis Perubahan</label>
+                                            <div class="stock-change-options">
+                                                <label class="stock-change-option" for="stockChangeAdd">
+                                                    <input id="stockChangeAdd" type="radio" name="change_type" value="add" checked>
+                                                    <span><b>+</b><em>Tambah Stok</em></span>
+                                                </label>
+                                                <label class="stock-change-option" for="stockChangeSubtract">
+                                                    <input id="stockChangeSubtract" type="radio" name="change_type" value="subtract">
+                                                    <span><b>-</b><em>Kurangi Stok</em></span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="field-group">
+                                            <label for="stockAmountInput">Jumlah Perubahan</label>
+                                            <input id="stockAmountInput" type="number" name="amount" min="1" max="999" step="1" placeholder="Contoh: 5" required>
+                                        </div>
+
+                                        <div class="field-group">
+                                            <label for="stockNote">Keterangan (Opsional)</label>
+                                            <input id="stockNote" type="text" name="note" maxlength="120" placeholder="Contoh: Restock pagi, penyesuaian stok">
+                                        </div>
+
+                                        <div class="modal-actions">
+                                            <button type="button" class="ghost-btn js-close-modal">Batal</button>
+                                            <button type="submit" class="submit-btn">Simpan Stok</button>
+                                        </div>
+                                    </form>
+
+                                    <div class="stock-mode-panel" data-stock-panel="barcode" hidden>
+                                        <div class="field-group">
+                                            <label for="stockBarcodeInput">Scan / Input Barcode</label>
+                                            <input id="stockBarcodeInput" type="text" class="js-stock-barcode-input" maxlength="80" inputmode="numeric" autocomplete="off" placeholder="Scan barcode produk">
+                                        </div>
+
+                                        <div class="stock-scan-status js-stock-scan-status">
+                                            <span>Status</span>
+                                            <strong>Belum ada barcode discan.</strong>
+                                        </div>
+
+                                        <div class="stock-scan-history">
+                                            <div class="stock-scan-history-title">Riwayat Scan</div>
+                                            <table class="stock-scan-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Produk</th>
+                                                        <th>Perubahan</th>
+                                                        <th>Stok</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="js-stock-scan-history">
+                                                    <tr class="stock-scan-empty">
+                                                        <td colspan="3">Belum ada scan.</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <div class="modal-actions">
+                                            <button type="button" class="submit-btn js-close-modal">Tutup</button>
+                                        </div>
                                     </div>
-                                </form>
+                                </div>
                             </div>
                         </div>
                     </div>

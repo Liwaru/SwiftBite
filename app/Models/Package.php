@@ -17,6 +17,13 @@ class Package extends Model
         'foto',
         'harga',
         'status',
+        'starts_at',
+        'ends_at',
+    ];
+
+    protected $casts = [
+        'starts_at' => 'date',
+        'ends_at' => 'date',
     ];
 
     public function items(): HasMany

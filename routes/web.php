@@ -51,6 +51,7 @@ Route::middleware(['simple.auth', 'user.level:4'])->group(function () {
     Route::post('/manager/ingredients', [ManagerController::class, 'storeIngredient'])->name('manager.ingredients.store');
     Route::patch('/manager/ingredients/{ingredient}', [ManagerController::class, 'updateIngredient'])->name('manager.ingredients.update');
     Route::delete('/manager/ingredients/{ingredient}', [ManagerController::class, 'destroyIngredient'])->name('manager.ingredients.destroy');
+    Route::post('/manager/stock/scan', [ManagerController::class, 'scanStockBarcode'])->name('manager.stock.scan');
     Route::patch('/manager/stock/{menu}', [ManagerController::class, 'updateStock'])->name('manager.stock.update');
     Route::post('/manager/database/backup', [ManagerController::class, 'backupDatabase'])->name('manager.database.backup');
     Route::post('/manager/database/import', [ManagerController::class, 'importDatabase'])->name('manager.database.import');
@@ -78,6 +79,8 @@ Route::middleware(['simple.auth', 'user.level:3'])->group(function () {
     Route::get('/kasir', [CashierController::class, 'dashboard'])->name('cashier.dashboard');
     Route::get('/kasir/pesanan', [CashierController::class, 'orders'])->name('cashier.orders');
     Route::post('/kasir/pesanan/scan', [CashierController::class, 'scanOrder'])->name('cashier.orders.scan');
+    Route::post('/kasir/pesanan/menu-barcode', [CashierController::class, 'scanMenuBarcode'])->name('cashier.orders.menu-barcode');
+    Route::post('/kasir/pesanan/langsung', [CashierController::class, 'storeDirectOrder'])->name('cashier.orders.direct-store');
     Route::get('/kasir/live-orders', [CashierController::class, 'liveOrders'])->name('cashier.orders.live');
     Route::get('/kasir/riwayat', [CashierController::class, 'history'])->name('cashier.history');
     Route::patch('/kasir/orders/{order}/status', [CashierController::class, 'updateOrderStatus'])->name('cashier.orders.status');
@@ -89,4 +92,10 @@ Route::middleware(['simple.auth', 'user.level:0'])->group(function () {
 
 Route::get('/menu/{token}', [CustomerMenuController::class, 'show'])->name('customer.menu');
 Route::post('/menu/{token}/orders', [CustomerMenuController::class, 'store'])->name('customer.orders.store');
+Route::get('/menu/{token}/orders/{order}/payment', [CustomerMenuController::class, 'payment'])->name('customer.orders.payment');
+Route::patch('/menu/{token}/orders/{order}/payment', [CustomerMenuController::class, 'confirmPayment'])->name('customer.orders.payment.confirm');
+Route::post('/menu/{token}/orders/{order}/ewallet', [CustomerMenuController::class, 'createEwalletPayment'])->name('customer.orders.ewallet.create');
+Route::post('/menu/{token}/orders/{order}/midtrans-sync', [CustomerMenuController::class, 'syncMidtransPayment'])->name('customer.orders.midtrans.sync');
+Route::get('/menu/{token}/orders/{order}/qris', [CustomerMenuController::class, 'qris'])->name('customer.orders.qris');
+Route::get('/menu/{token}/orders/{order}/qris/status', [CustomerMenuController::class, 'qrisStatus'])->name('customer.orders.qris.status');
 Route::get('/menu/{token}/orders/{order}', [CustomerMenuController::class, 'receipt'])->name('customer.orders.show');

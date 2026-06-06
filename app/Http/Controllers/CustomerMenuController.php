@@ -7,11 +7,15 @@ use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\Package;
 use App\Support\ActivityRecorder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Throwable;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -32,6 +36,7 @@ class CustomerMenuController extends Controller
             ->orderBy('nama_menu')
             ->get()
             ->groupBy('category');
+        $menuItems = collect($menuItems->all());
 
         $categoryOrder = collect(['Promo', 'Paket', 'Makanan', 'Minuman']);
         $menuItems = $categoryOrder
@@ -41,6 +46,8 @@ class CustomerMenuController extends Controller
 
         $packages = Package::with(['items.menuItem.categoryModel', 'choices'])
             ->where('status', 'tersedia')
+            ->where(fn ($query) => $query->whereNull('starts_at')->orWhereDate('starts_at', '<=', today()))
+            ->where(fn ($query) => $query->whereNull('ends_at')->orWhereDate('ends_at', '>=', today()))
             ->orderBy('nama_paket')
             ->get();
 
@@ -156,6 +163,8 @@ class CustomerMenuController extends Controller
             $packages = Package::with(['items.menuItem.categoryModel', 'choices'])
                 ->whereIn('id_paket', $packageQuantities->keys())
                 ->where('status', 'tersedia')
+                ->where(fn ($query) => $query->whereNull('starts_at')->orWhereDate('starts_at', '<=', today()))
+                ->where(fn ($query) => $query->whereNull('ends_at')->orWhereDate('ends_at', '>=', today()))
                 ->lockForUpdate()
                 ->get()
                 ->keyBy('id_paket');
@@ -272,8 +281,137 @@ class CustomerMenuController extends Controller
         ActivityRecorder::activity('Customer', 'Membuat pesanan baru dari ' . ($table->nama_meja ?? 'meja') . ' #' . $order->kode_pesanan, $validated['customer_name'] ?? 'Customer');
 
         return redirect()
-            ->route('customer.orders.show', [$table->token, $order])
-            ->with('success', 'Pesanan berhasil dikirim ke kasir/dapur.');
+            ->route('customer.orders.payment', [$table->token, $order])
+            ->with('success', 'Pesanan berhasil dibuat. Silakan pilih metode pembayaran.');
+    }
+
+    public function payment(string $token, Order $order): View
+    {
+        $table = DiningTable::where('token', $token)->firstOrFail();
+
+        abort_unless((int) $order->id_meja === (int) $table->id_meja, 404);
+
+        $order->load('items.menuItem');
+
+        return view('customer.payment', compact('table', 'order'));
+    }
+
+    public function confirmPayment(Request $request, string $token, Order $order): RedirectResponse
+    {
+        $table = DiningTable::where('token', $token)->firstOrFail();
+
+        abort_unless((int) $order->id_meja === (int) $table->id_meja, 404);
+
+        $validated = $request->validate([
+            'payment_method' => ['required', 'in:cash,qris,gopay,ovo,dana,shopeepay'],
+        ]);
+
+        if ($validated['payment_method'] === 'cash') {
+            $order->update([
+                'metode_pembayaran' => 'cash',
+                'payment_status' => 'berhasil',
+            ]);
+
+            ActivityRecorder::activity('Customer', 'Memilih pembayaran tunai untuk pesanan #' . $order->kode_pesanan);
+
+            return redirect()
+                ->route('customer.orders.show', [$table->token, $order])
+                ->with('success', 'Pembayaran tunai berhasil dikonfirmasi. Silakan bayar ke kasir.');
+        }
+
+        if ($validated['payment_method'] === 'qris') {
+            $order->update([
+                'metode_pembayaran' => 'qris',
+                'payment_status' => 'diproses',
+            ]);
+
+            $result = $this->createMidtransQris($order);
+
+            if (! $result['ok']) {
+                return back()
+                    ->withErrors(['payment_method' => $result['message']])
+                    ->withInput();
+            }
+
+            ActivityRecorder::activity('Customer', 'Membuka pembayaran QRIS untuk pesanan #' . $order->kode_pesanan);
+
+            return redirect()->route('customer.orders.qris', [$table->token, $order]);
+        }
+
+        return redirect()
+            ->route('customer.orders.payment', [$table->token, $order])
+            ->withErrors(['payment_method' => 'Gunakan tombol pembayaran E-Wallet di halaman ini.'])
+            ->withInput();
+    }
+
+    public function createEwalletPayment(Request $request, string $token, Order $order): JsonResponse
+    {
+        $table = DiningTable::where('token', $token)->firstOrFail();
+
+        abort_unless((int) $order->id_meja === (int) $table->id_meja, 404);
+
+        $validated = $request->validate([
+            'payment_method' => ['required', 'in:gopay,ovo,dana,shopeepay'],
+        ]);
+
+        $result = $this->createMidtransSnap($order, $validated['payment_method']);
+
+        if (! $result['ok']) {
+            return response()->json([
+                'message' => $result['message'],
+            ], 422);
+        }
+
+        ActivityRecorder::activity('Customer', 'Membuka pembayaran E-Wallet ' . strtoupper($validated['payment_method']) . ' untuk pesanan #' . $order->kode_pesanan);
+
+        return response()->json([
+            'snap_token' => $result['snap_token'],
+            'order_id' => $result['order_id'],
+            'redirect_url' => route('customer.orders.show', [$table->token, $order]),
+        ]);
+    }
+
+    public function syncMidtransPayment(Request $request, string $token, Order $order): JsonResponse
+    {
+        $table = DiningTable::where('token', $token)->firstOrFail();
+
+        abort_unless((int) $order->id_meja === (int) $table->id_meja, 404);
+
+        $this->syncMidtransStatus($order);
+
+        $order->refresh();
+
+        return response()->json([
+            'status' => $order->payment_status ?? 'diproses',
+            'redirect_url' => route('customer.orders.show', [$table->token, $order]),
+        ]);
+    }
+
+    public function qris(string $token, Order $order): View
+    {
+        $table = DiningTable::where('token', $token)->firstOrFail();
+
+        abort_unless((int) $order->id_meja === (int) $table->id_meja, 404);
+
+        $order->load('items.menuItem');
+
+        return view('customer.qris', compact('table', 'order'));
+    }
+
+    public function qrisStatus(string $token, Order $order): JsonResponse
+    {
+        $table = DiningTable::where('token', $token)->firstOrFail();
+
+        abort_unless((int) $order->id_meja === (int) $table->id_meja, 404);
+
+        $this->syncMidtransStatus($order);
+
+        $order->refresh();
+
+        return response()->json([
+            'status' => $order->payment_status ?? 'diproses',
+            'redirect_url' => route('customer.orders.show', [$table->token, $order]),
+        ]);
     }
 
     public function receipt(string $token, Order $order): View
@@ -290,5 +428,180 @@ class CustomerMenuController extends Controller
     private function tableIsActive(DiningTable $table): bool
     {
         return in_array($table->status, ['aktif', 'kosong', 'terisi'], true);
+    }
+
+    private function createMidtransQris(Order $order): array
+    {
+        if (! $this->midtransConfigured()) {
+            return ['ok' => false, 'message' => 'Midtrans belum dikonfigurasi. Isi MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di .env.'];
+        }
+
+        $midtransOrderId = $this->midtransOrderId($order, 'QRIS');
+        $expiresAt = now()->addMinutes(15);
+
+        try {
+            $response = $this->midtransRequest()
+                ->post($this->midtransApiBaseUrl() . '/v2/charge', [
+                    'payment_type' => 'qris',
+                    'transaction_details' => [
+                        'order_id' => $midtransOrderId,
+                        'gross_amount' => (int) $order->total_harga,
+                    ],
+                    'item_details' => $this->midtransItemDetails($order),
+                    'custom_expiry' => [
+                        'expiry_duration' => 15,
+                        'unit' => 'minute',
+                    ],
+                ]);
+        } catch (Throwable $exception) {
+            return ['ok' => false, 'message' => 'Gagal menghubungi Midtrans: ' . $exception->getMessage()];
+        }
+
+        if (! $response->successful()) {
+            return ['ok' => false, 'message' => $response->json('status_message') ?? 'Gagal membuat pembayaran QRIS Midtrans.'];
+        }
+
+        $payload = $response->json();
+        $qrAction = collect($payload['actions'] ?? [])->firstWhere('name', 'generate-qr-code');
+        $qrUrl = is_array($qrAction) ? ($qrAction['url'] ?? null) : null;
+
+        $order->update([
+            'metode_pembayaran' => 'qris',
+            'payment_status' => 'diproses',
+            'midtrans_order_id' => $midtransOrderId,
+            'qris_url' => $qrUrl,
+            'payment_expires_at' => $expiresAt,
+            'payment_payload' => $payload,
+        ]);
+
+        return ['ok' => true];
+    }
+
+    private function createMidtransSnap(Order $order, string $method): array
+    {
+        if (! $this->midtransConfigured()) {
+            return ['ok' => false, 'message' => 'Midtrans belum dikonfigurasi. Isi MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di .env.'];
+        }
+
+        $midtransOrderId = $this->midtransOrderId($order, strtoupper($method));
+
+        try {
+            $response = $this->midtransRequest()
+                ->post($this->midtransSnapBaseUrl() . '/snap/v1/transactions', [
+                    'transaction_details' => [
+                        'order_id' => $midtransOrderId,
+                        'gross_amount' => (int) $order->total_harga,
+                    ],
+                    'item_details' => $this->midtransItemDetails($order),
+                    'enabled_payments' => [$method],
+                    'callbacks' => [
+                        'finish' => route('customer.orders.show', [$order->diningTable?->qr_token ?? $order->diningTable?->token, $order]),
+                    ],
+                ]);
+        } catch (Throwable $exception) {
+            return ['ok' => false, 'message' => 'Gagal menghubungi Midtrans: ' . $exception->getMessage()];
+        }
+
+        if (! $response->successful()) {
+            return ['ok' => false, 'message' => $response->json('error_messages.0') ?? $response->json('status_message') ?? 'Gagal membuat transaksi E-Wallet Midtrans.'];
+        }
+
+        $payload = $response->json();
+
+        $order->update([
+            'metode_pembayaran' => $method,
+            'payment_status' => 'diproses',
+            'midtrans_order_id' => $midtransOrderId,
+            'payment_expires_at' => now()->addMinutes(30),
+            'payment_payload' => $payload,
+        ]);
+
+        return [
+            'ok' => true,
+            'snap_token' => $payload['token'] ?? null,
+            'order_id' => $midtransOrderId,
+        ];
+    }
+
+    private function syncMidtransStatus(Order $order): void
+    {
+        if (! $order->midtrans_order_id || ! $this->midtransConfigured()) {
+            return;
+        }
+
+        try {
+            $response = $this->midtransRequest()
+                ->get($this->midtransApiBaseUrl() . '/v2/' . $order->midtrans_order_id . '/status');
+        } catch (Throwable) {
+            return;
+        }
+
+        if (! $response->successful()) {
+            return;
+        }
+
+        $payload = $response->json();
+        $transactionStatus = $payload['transaction_status'] ?? null;
+        $fraudStatus = $payload['fraud_status'] ?? null;
+        $paymentStatus = match ($transactionStatus) {
+            'settlement' => 'berhasil',
+            'capture' => $fraudStatus === 'challenge' ? 'diproses' : 'berhasil',
+            'pending' => 'diproses',
+            'deny', 'cancel', 'expire', 'failure' => 'gagal',
+            default => $order->payment_status ?? 'diproses',
+        };
+
+        $order->update([
+            'payment_status' => $paymentStatus,
+            'payment_payload' => $payload,
+        ]);
+    }
+
+    private function midtransItemDetails(Order $order): array
+    {
+        $order->loadMissing('items.menuItem');
+
+        return $order->items
+            ->filter(fn ($item) => (int) $item->subtotal > 0)
+            ->map(fn ($item) => [
+                'id' => (string) ($item->id_menu ?? $item->getKey()),
+                'price' => (int) ($item->subtotal / max((int) $item->qty, 1)),
+                'quantity' => (int) $item->qty,
+                'name' => Str::limit($item->menu_name, 48, ''),
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function midtransRequest()
+    {
+        return Http::withBasicAuth((string) config('midtrans.server_key'), '')
+            ->acceptJson()
+            ->asJson()
+            ->timeout(20);
+    }
+
+    private function midtransConfigured(): bool
+    {
+        return filled(config('midtrans.server_key')) && filled(config('midtrans.client_key'));
+    }
+
+    private function midtransOrderId(Order $order, string $prefix): string
+    {
+        return 'SWIFTBITE-' . $prefix . '-' . $order->getKey() . '-' . now()->format('YmdHis');
+    }
+
+    private function midtransApiBaseUrl(): string
+    {
+        return config('midtrans.is_production')
+            ? 'https://api.midtrans.com'
+            : 'https://api.sandbox.midtrans.com';
+    }
+
+    private function midtransSnapBaseUrl(): string
+    {
+        return config('midtrans.is_production')
+            ? 'https://app.midtrans.com'
+            : 'https://app.sandbox.midtrans.com';
     }
 }
