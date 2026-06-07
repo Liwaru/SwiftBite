@@ -83,6 +83,10 @@
         .price { font-size: 17px; font-weight: 900; white-space: nowrap; }
         .muted { color: rgba(255, 246, 232, .76); line-height: 1.5; }
         .items { display: grid; gap: 7px; padding-top: 2px; }
+        .flow-track { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+        .flow-step { min-width: 0; border: 1px solid rgba(255, 246, 232, .18); border-radius: 7px; padding: 8px 4px; background: rgba(255, 246, 232, .08); color: rgba(255, 246, 232, .62); text-align: center; font-size: 11px; font-weight: 900; }
+        .flow-step.done { background: rgba(237, 245, 232, .16); color: #dffbd8; border-color: rgba(197, 221, 183, .42); }
+        .flow-step.current { background: var(--cream); color: var(--brown-dark); border-color: var(--cream); }
         .note { display: grid; gap: 3px; border-top: 1px solid rgba(255, 246, 232, .16); padding-top: 12px; }
         .note span { color: rgba(255, 246, 232, .68); font-size: 12px; font-weight: 800; }
         .action button { width: 100%; border: 0; border-radius: 7px; background: var(--cream); color: var(--brown-dark); padding: 12px 13px; font: inherit; font-weight: 900; cursor: pointer; }
@@ -126,7 +130,7 @@
         <main>
             <section class="hero-card">
                 <h1 class="hero-title">Pesanan Antar</h1>
-                <p class="hero-subtitle">Lihat pesanan yang perlu diantar dan tandai selesai setelah pesanan sampai ke customer.</p>
+                <p class="hero-subtitle">Lihat pesanan yang siap diantar dari baker dan tandai setelah sampai ke customer.</p>
             </section>
 
             @if (session('success'))
@@ -142,7 +146,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>Perlu Diantar</td><td>{{ $stats['aktif'] }}</td></tr>
+                        <tr><td>Siap Diantar</td><td>{{ $stats['aktif'] }}</td></tr>
                         <tr><td>Selesai Hari Ini</td><td>{{ $stats['selesai_today'] }}</td></tr>
                     </tbody>
                 </table>
@@ -155,9 +159,18 @@
                 <div class="order-list">
                     @forelse ($orders as $order)
                         @php
-                            $paymentMethod = strtoupper($order->payment_method);
-                            $paymentLabel = $paymentMethod === 'CASH' ? 'TUNAI' : $paymentMethod;
-                            $actionLabel = $order->payment_method === 'cash' ? 'Konfirmasi Bayar & Selesai' : 'Tandai Selesai';
+                            $paymentLabel = strtoupper($order->payment_label);
+                            $actionLabel = 'Sudah Diantar';
+                            $waiterStatusLabel = in_array($order->status, ['menunggu_pembayaran', 'selesai'], true)
+                                ? 'Sudah Diantar'
+                                : $order->status_label;
+                            $flowStep = match ($order->status) {
+                                'diproses' => 2,
+                                'siap_diantar' => 3,
+                                'menunggu_pembayaran', 'selesai' => 4,
+                                default => 1,
+                            };
+                            $flowSteps = [1 => 'Cashier', 2 => 'Baker', 3 => 'Waiter', 4 => 'Selesai'];
                             $waitingMinutes = $order->created_at ? (int) $order->created_at->diffInMinutes(now()) : 0;
                             $waitingText = $waitingMinutes < 60
                                 ? max(1, $waitingMinutes) . ' menit lalu'
@@ -167,7 +180,7 @@
                             <div class="card-head">
                                 <div>
                                     <div class="badge-row">
-                                        <span class="badge">{{ ucfirst($order->status) }}</span>
+                                        <span class="badge">{{ $waiterStatusLabel }}</span>
                                         <span class="badge payment">{{ $paymentLabel }}</span>
                                     </div>
                                     <h3>{{ $order->diningTable?->name ?? 'Meja' }} &middot; #{{ $order->kode_pesanan }}</h3>
@@ -182,53 +195,31 @@
                                 @endforeach
                             </div>
 
+                            <div class="flow-track" aria-label="Alur pesanan">
+                                @foreach ($flowSteps as $step => $label)
+                                    <span class="flow-step {{ $flowStep > $step ? 'done' : '' }} {{ $flowStep === $step ? 'current' : '' }}">{{ $label }}</span>
+                                @endforeach
+                            </div>
+
                             <div class="note">
                                 <span>Catatan pelanggan</span>
                                 <p>{{ $order->notes ?: '-' }}</p>
                             </div>
 
-                            @if ($order->status === 'Siap Diantar')
+                            @if ($order->status === 'siap_diantar')
                                 <form class="action" method="post" action="{{ route('waiter.orders.complete', $order) }}">
                                     @csrf
                                     @method('patch')
                                     <button type="submit">{{ $actionLabel }}</button>
                                 </form>
                             @else
-                                <span class="status-done">Pesanan Selesai</span>
+                                <span class="status-done">Tugas Waiter Selesai</span>
                             @endif
                         </article>
                     @empty
-                        @if ($status === 'aktif')
-                            <article class="order-card">
-                                <div class="card-head">
-                                    <div>
-                                        <div class="badge-row">
-                                            <span class="badge">Siap Diantar</span>
-                                            <span class="badge payment">TUNAI</span>
-                                        </div>
-                                        <h3>Meja 06</h3>
-                                        <p class="muted">8 menit lalu</p>
-                                    </div>
-                                    <span class="price">Rp28.000</span>
-                                </div>
-
-                                <div class="items">
-                                    <p>1x Roti Croissant <span class="muted">Rp18.000</span></p>
-                                    <p>1x Air Putih <span class="muted">Rp10.000</span></p>
-                                </div>
-
-                                <div class="note">
-                                    <span>Catatan pelanggan</span>
-                                    <p>-</p>
-                                </div>
-
-                                <form class="action">
-                                    <button type="button" disabled>Konfirmasi Bayar & Selesai</button>
-                                </form>
-                            </article>
-                        @else
-                            <p class="muted empty">Belum ada pesanan selesai.</p>
-                        @endif
+                        <p class="muted empty">
+                            {{ $status === 'aktif' ? 'Belum ada pesanan yang siap diantar.' : 'Belum ada pesanan selesai.' }}
+                        </p>
                     @endforelse
                 </div>
 

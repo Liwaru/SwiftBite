@@ -152,21 +152,49 @@ class OwnerController extends Controller
             'today_orders' => (clone $todayOrders)->count(),
             'average_transaction' => $completedTodayCount > 0 ? $todayRevenue / $completedTodayCount : 0,
             'best_seller' => $topMenusToday->first()?->nama_menu ?? '-',
-            'orders_today' => [
-                'menunggu' => (clone $todayOrders)->where('status', 'menunggu')->count(),
-                'diproses' => (clone $todayOrders)->where('status', 'diproses')->count(),
-                'selesai' => (clone $todayOrders)->where('status', 'selesai')->count(),
-                'dibatalkan' => (clone $todayOrders)->where('status', 'dibatalkan')->count(),
-            ],
+            'orders_today' => $this->orderStatusCounts($todayOrders),
         ];
 
-        $paymentSummary = [
-            'Tunai' => (int) ($paymentMethods['cash'] ?? 0),
-            'QRIS' => (int) ($paymentMethods['qris'] ?? 0),
-            'E-Wallet' => (int) ($paymentMethods['ewallet'] ?? 0),
-        ];
+        $paymentSummary = $this->paymentSummaryFromRows($paymentMethods);
 
         return compact('stats', 'topMenusToday', 'paymentSummary', 'weeklyRevenueDays');
+    }
+
+    private function orderStatusCounts($query): array
+    {
+        return [
+            'menunggu' => (clone $query)->where('status', 'menunggu')->count(),
+            'diproses' => (clone $query)->where('status', 'diproses')->count(),
+            'siap_diantar' => (clone $query)->where('status', 'siap_diantar')->count(),
+            'menunggu_pembayaran' => (clone $query)->where('status', 'menunggu_pembayaran')->count(),
+            'selesai' => (clone $query)->where('status', 'selesai')->count(),
+            'dibatalkan' => (clone $query)->where('status', 'dibatalkan')->count(),
+        ];
+    }
+
+    private function orderStatusSummary($query, int $completedOrders): array
+    {
+        return [
+            'Menunggu' => (clone $query)->where('status', 'menunggu')->count(),
+            'Diproses Baker' => (clone $query)->where('status', 'diproses')->count(),
+            'Siap Diantar' => (clone $query)->where('status', 'siap_diantar')->count(),
+            'Menunggu Pembayaran' => (clone $query)->where('status', 'menunggu_pembayaran')->count(),
+            'Selesai' => $completedOrders,
+            'Dibatalkan' => (clone $query)->where('status', 'dibatalkan')->count(),
+        ];
+    }
+
+    private function paymentSummaryFromRows($paymentRows): array
+    {
+        return [
+            'Tunai' => (int) ($paymentRows['cash'] ?? 0),
+            'QRIS' => (int) ($paymentRows['qris'] ?? 0),
+            'GoPay' => (int) ($paymentRows['gopay'] ?? 0),
+            'DANA' => (int) ($paymentRows['dana'] ?? 0),
+            'OVO' => (int) ($paymentRows['ovo'] ?? 0),
+            'ShopeePay' => (int) ($paymentRows['shopeepay'] ?? 0),
+            'E-Wallet Lain' => (int) ($paymentRows['ewallet'] ?? 0),
+        ];
     }
 
     private function salesReportData(Request $request): array
@@ -190,12 +218,7 @@ class OwnerController extends Controller
             ->where('orders.status', 'selesai')
             ->sum('order_details.qty');
 
-        $statusSummary = [
-            'Menunggu' => (clone $ordersQuery)->where('status', 'menunggu')->count(),
-            'Diproses' => (clone $ordersQuery)->where('status', 'diproses')->count(),
-            'Selesai' => $completedOrders,
-            'Dibatalkan' => (clone $ordersQuery)->where('status', 'dibatalkan')->count(),
-        ];
+        $statusSummary = $this->orderStatusSummary($ordersQuery, $completedOrders);
 
         $topMenus = DB::table('order_details')
             ->join('orders', 'order_details.id_order', '=', 'orders.id_order')
@@ -214,17 +237,7 @@ class OwnerController extends Controller
             ->groupBy('metode_pembayaran')
             ->pluck('total', 'metode_pembayaran');
 
-        $paymentSummary = [
-            'Tunai' => (int) ($paymentRows['cash'] ?? 0),
-            'QRIS' => (int) ($paymentRows['qris'] ?? 0),
-            'Dana' => (int) ($paymentRows['dana'] ?? 0),
-            'OVO' => (int) ($paymentRows['ovo'] ?? 0),
-            'GoPay' => (int) ($paymentRows['gopay'] ?? 0),
-        ];
-
-        if (($paymentRows['ewallet'] ?? 0) > 0) {
-            $paymentSummary['E-Wallet'] = (int) $paymentRows['ewallet'];
-        }
+        $paymentSummary = $this->paymentSummaryFromRows($paymentRows);
 
         $transactions = Order::with('diningTable')
             ->withSum('items as total_items', 'qty')
@@ -379,17 +392,7 @@ class OwnerController extends Controller
             ->groupBy('metode_pembayaran')
             ->pluck('total', 'metode_pembayaran');
 
-        $paymentSummary = [
-            'Tunai' => (int) ($paymentRows['cash'] ?? 0),
-            'QRIS' => (int) ($paymentRows['qris'] ?? 0),
-            'Dana' => (int) ($paymentRows['dana'] ?? 0),
-            'OVO' => (int) ($paymentRows['ovo'] ?? 0),
-            'GoPay' => (int) ($paymentRows['gopay'] ?? 0),
-        ];
-
-        if (($paymentRows['ewallet'] ?? 0) > 0) {
-            $paymentSummary['E-Wallet'] = (int) $paymentRows['ewallet'];
-        }
+        $paymentSummary = $this->paymentSummaryFromRows($paymentRows);
 
         $incomeRows = (clone $incomeQuery)
             ->latest()

@@ -820,7 +820,7 @@
         5 => 'Owner',
         4 => 'Manager',
         3 => 'Cashier',
-        2 => 'Chef',
+        2 => 'Baker',
         1 => 'Waiter',
         default => 'Customer',
     };
@@ -828,7 +828,7 @@
         5 => route('owner.dashboard'),
         4 => route('manager.dashboard'),
         3 => route('cashier.dashboard'),
-        2 => route('chef.dashboard'),
+        2 => route('baker.dashboard'),
         1 => route('waiter.dashboard'),
         default => route('customer.home'),
     };

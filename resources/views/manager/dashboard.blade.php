@@ -112,6 +112,8 @@
                             <tbody>
                                 <tr><td><span class="status-name"><span class="status-dot waiting"></span>Menunggu</span></td><td>{{ $stats['orders_today']['menunggu'] }}</td></tr>
                                 <tr><td><span class="status-name"><span class="status-dot processing"></span>Diproses</span></td><td>{{ $stats['orders_today']['diproses'] }}</td></tr>
+                                <tr><td><span class="status-name"><span class="status-dot processing"></span>Siap Diantar</span></td><td>{{ $stats['orders_today']['siap_diantar'] }}</td></tr>
+                                <tr><td><span class="status-name"><span class="status-dot waiting"></span>Menunggu Pembayaran</span></td><td>{{ $stats['orders_today']['menunggu_pembayaran'] }}</td></tr>
                                 <tr><td><span class="status-name"><span class="status-dot done"></span>Selesai</span></td><td>{{ $stats['orders_today']['selesai'] }}</td></tr>
                                 <tr><td><span class="status-name"><span class="status-dot cancelled"></span>Dibatalkan</span></td><td>{{ $stats['orders_today']['dibatalkan'] }}</td></tr>
                                 <tr><td><strong>Total Pesanan</strong></td><td>{{ $stats['today_orders'] }}</td></tr>

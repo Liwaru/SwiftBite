@@ -51,7 +51,7 @@
         .stat-card { padding: 15px; display: grid; gap: 6px; }
         .stat-card span { color: rgba(255, 246, 232, .76); font-size: 13px; font-weight: 800; }
         .stat-card strong { font-size: 24px; line-height: 1.1; overflow-wrap: anywhere; }
-        .dashboard-grid { min-width: 0; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(min(320px, 100%), .8fr); gap: 16px; align-items: start; }
+        .dashboard-grid { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(430px, .64fr); gap: 16px; align-items: stretch; }
         .panel { max-width: 100%; padding: 18px; overflow-wrap: anywhere; }
         .summary-table { width: 100%; min-width: min(520px, 100vw); border-collapse: collapse; overflow: hidden; border-radius: 8px; }
         .summary-table th, .summary-table td { padding: 13px 14px; border-top: 1px solid rgba(255, 246, 232, .16); text-align: left; }
@@ -60,7 +60,8 @@
         .summary-panel { max-width: 100%; margin-bottom: 16px; overflow-x: auto; scrollbar-width: thin; -ms-overflow-style: auto; }
         .summary-panel::-webkit-scrollbar { display: block; width: 8px; height: 8px; }
         .summary-panel::-webkit-scrollbar-thumb { background: rgba(255, 246, 232, .34); border-radius: 999px; }
-        .notice { padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; background: #edf5e8; color: #355b28; border: 1px solid #c5ddb7; font-weight: 800; }
+        .notice { padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; background: #edf5e8; color: #355b28; border: 1px solid #c5ddb7; font-weight: 800; cursor: pointer; transition: opacity .18s ease, transform .18s ease; }
+        .notice.is-hiding { opacity: 0; transform: translateY(-4px); }
         .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
         .panel .muted { color: rgba(255, 246, 232, .76); }
         .tab { border: 1px solid rgba(255, 246, 232, .24); border-radius: 999px; background: rgba(255, 246, 232, .1); color: var(--cream); padding: 8px 12px; font-weight: 900; text-decoration: none; font-size: 13px; }
@@ -87,6 +88,10 @@
         .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; }
         .detail-grid span { display: block; color: rgba(255, 246, 232, .68); font-size: 12px; font-weight: 800; }
         .detail-grid strong { display: block; margin-top: 2px; }
+        .flow-track { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+        .flow-step { min-width: 0; border: 1px solid rgba(255, 246, 232, .18); border-radius: 7px; padding: 8px 5px; background: rgba(255, 246, 232, .08); color: rgba(255, 246, 232, .62); text-align: center; font-size: 11px; font-weight: 900; }
+        .flow-step.done { background: rgba(237, 245, 232, .16); color: #dffbd8; border-color: rgba(197, 221, 183, .42); }
+        .flow-step.current { background: var(--cream); color: var(--sidebar-brown-dark); border-color: var(--cream); }
         form.status { display: grid; grid-template-columns: 1fr; gap: 10px; }
         .status-done { display: inline-flex; width: fit-content; border-radius: 7px; background: #edf5e8; color: #355b28; padding: 10px 13px; font-weight: 900; }
         select, input { width: 100%; box-sizing: border-box; border: 1px solid rgba(255, 246, 232, .34); border-radius: 7px; padding: 10px 11px; font: inherit; background: var(--cream-soft); color: #352016; }
@@ -100,33 +105,59 @@
         .page-link { border: 1px solid rgba(255, 246, 232, .26); color: var(--cream); text-decoration: none; background: rgba(255, 246, 232, .1); }
         .page-current { background: var(--cream); color: var(--sidebar-brown-dark); }
         .page-disabled { border: 1px solid rgba(255, 246, 232, .12); color: rgba(255, 246, 232, .45); }
-        .pos-panel { display: grid; gap: 14px; }
+        .pos-panel { display: grid; grid-template-rows: auto auto auto auto minmax(82px, 1fr) auto; gap: 9px; align-self: stretch; min-height: 100%; max-height: calc(100vh - 128px); overflow: hidden; }
+        .pos-panel > * { min-width: 0; }
+        .pos-heading { display: grid; gap: 4px; }
+        .pos-heading h2 { margin-bottom: 0; font-size: 22px; }
+        .pos-heading .muted { font-size: 13px; line-height: 1.35; }
         .pos-mode-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .pos-mode-tabs button,
+        .category-tabs button { min-height: 36px; }
         .pos-mode-tab { background: rgba(255, 246, 232, .16); color: var(--cream); border: 1px solid rgba(255, 246, 232, .26); }
         .pos-mode-tab.active { background: var(--cream); color: var(--sidebar-brown-dark); border-color: var(--cream); }
         .pos-mode-panel { display: none; }
         .pos-mode-panel.active { display: block; }
+        .category-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+        .category-tab { min-height: 36px; padding: 7px 8px; border: 1px solid rgba(255, 246, 232, .24); background: rgba(255, 246, 232, .1); color: var(--cream); }
+        .category-tab.active { background: var(--cream); color: var(--sidebar-brown-dark); border-color: var(--cream); }
         .barcode-order-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
         .scan-feedback { min-height: 20px; color: rgba(255, 246, 232, .76); font-size: 13px; font-weight: 900; }
         .scan-feedback.success { color: #dffbd8; }
         .scan-feedback.error { color: #ffd8cf; }
-        .menu-preview { display: grid; gap: 8px; }
-        .menu-row { display: flex; justify-content: space-between; gap: 10px; align-items: center; border-top: 1px solid rgba(255, 246, 232, .18); padding-top: 8px; }
-        .menu-row:first-child { border-top: 0; padding-top: 0; }
+        .menu-preview { min-height: 0; display: grid; align-content: start; gap: 8px; overflow-y: auto; padding-right: 6px; scrollbar-width: thin; scrollbar-color: rgba(255, 246, 232, .38) transparent; }
+        .menu-preview::-webkit-scrollbar { width: 8px; }
+        .menu-preview::-webkit-scrollbar-track { background: transparent; }
+        .menu-preview::-webkit-scrollbar-thumb { background: rgba(255, 246, 232, .32); border-radius: 999px; }
+        .menu-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; border: 1px solid rgba(255, 246, 232, .14); border-radius: 7px; background: rgba(255, 246, 232, .06); padding: 8px 9px; }
+        .menu-row strong, .menu-row p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .menu-row-actions { display: grid; align-items: center; min-width: 88px; }
+        .menu-row-add { width: 42px; height: 36px; justify-self: end; padding: 0; font-size: 0; }
+        .menu-row-add::before { content: "+"; font-size: 18px; line-height: 1; }
+        .menu-inline-qty { display: grid; grid-template-columns: 28px 32px 28px; gap: 3px; align-items: center; }
+        .menu-inline-qty[hidden] { display: none; }
+        .menu-inline-qty button { width: 28px; height: 32px; padding: 0; }
+        .menu-inline-qty span { min-width: 32px; text-align: center; color: var(--cream); font-weight: 900; }
+        .menu-row:first-child { border-top: 1px solid rgba(255, 246, 232, .14); padding-top: 9px; }
         .menu-row.is-hidden { display: none; }
-        .cart-table { display: grid; gap: 8px; border-top: 1px solid rgba(255, 246, 232, .18); padding-top: 12px; }
-        .cart-head, .cart-line { display: grid; grid-template-columns: minmax(0, 1fr) 72px 96px; gap: 8px; align-items: center; }
-        .cart-head { color: rgba(255, 246, 232, .72); font-size: 12px; font-weight: 900; text-transform: uppercase; }
+        .cart-table { display: grid; gap: 6px; max-height: 104px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; scrollbar-color: rgba(255, 246, 232, .38) transparent; }
+        .cart-table h3 { margin: 0; font-size: 16px; line-height: 1.2; }
+        .cart-head, .cart-line { display: grid; grid-template-columns: minmax(0, 1fr) 86px 96px; gap: 10px; align-items: center; }
+        .cart-head { color: rgba(255, 246, 232, .72); font-size: 11px; font-weight: 900; text-transform: uppercase; }
+        .cart-head span:nth-child(2) { text-align: center; }
+        .cart-head span:last-child { text-align: right; }
         .cart-lines { display: grid; gap: 8px; }
         .cart-line { color: var(--cream); font-weight: 900; }
-        .cart-line small { display: block; color: rgba(255, 246, 232, .68); font-weight: 800; }
-        .cart-qty { display: grid; grid-template-columns: 26px 1fr 26px; gap: 4px; align-items: center; }
-        .cart-qty button { padding: 5px 0; }
-        .cart-qty span { text-align: center; }
+        .cart-line > span:first-child { min-width: 0; overflow: hidden; }
+        .cart-line > span:first-child > :first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cart-line > span:last-child { text-align: right; white-space: nowrap; font-size: 14px; }
+        .cart-line small { display: block; color: rgba(255, 246, 232, .68); font-size: 11px; font-weight: 800; }
+        .cart-qty { display: grid; grid-template-columns: 24px 26px 24px; gap: 4px; align-items: center; justify-content: center; }
+        .cart-qty button { width: 24px; height: 28px; padding: 0; line-height: 1; }
+        .cart-qty span { text-align: center; font-size: 14px; line-height: 1; }
         .payment-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .payment-choice label { display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgba(255, 246, 232, .24); border-radius: 7px; padding: 10px; font-weight: 900; }
+        .payment-choice label { display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgba(255, 246, 232, .24); border-radius: 7px; padding: 8px 10px; font-weight: 900; }
         .payment-choice input { width: auto; }
-        .direct-order-form { display: grid; gap: 12px; }
+        .direct-order-form { display: grid; gap: 8px; margin: 0 -18px -18px; padding: 12px 18px 14px; border-top: 1px solid rgba(255, 246, 232, .18); background: linear-gradient(180deg, rgba(90, 50, 31, .96), rgba(39, 20, 13, .98)); box-shadow: 0 -10px 22px rgba(24, 13, 7, .12); }
         .direct-total { display: flex; align-items: center; justify-content: space-between; color: var(--cream); font-weight: 900; }
         .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .scan-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-bottom: 14px; }
@@ -134,7 +165,16 @@
         .scan-result h3 { margin-bottom: 10px; color: var(--cream); }
         .toast { position: fixed; right: 24px; bottom: 24px; z-index: 40; transform: translateY(18px); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; background: #352016; color: #fff8ed; border: 1px solid #8b6040; border-radius: 8px; padding: 12px 14px; font-weight: 900; box-shadow: 0 16px 38px rgba(39, 20, 13, .24); }
         .toast.show { transform: translateY(0); opacity: 1; }
-        @media (max-width: 1050px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 1180px) { .dashboard-grid { grid-template-columns: minmax(0, 1fr) minmax(380px, .72fr); } }
+        @media (max-width: 1050px) { .dashboard-grid { grid-template-columns: 1fr; } .pos-panel { max-height: none; overflow: visible; } }
+        @media (max-height: 760px) and (min-width: 1051px) {
+            .pos-panel { grid-template-rows: auto auto auto auto minmax(70px, 1fr) auto; gap: 8px; max-height: calc(100vh - 112px); }
+            .pos-heading .muted { display: none; }
+            .pos-mode-tabs button, .category-tabs button { min-height: 34px; padding-block: 7px; }
+            .menu-row { padding-block: 7px; }
+            .cart-table { max-height: 82px; }
+            .direct-order-form { padding-block: 10px 12px; }
+        }
         @media (max-width: 760px) { main { padding: 24px 16px 44px; } .hero-card { align-items: flex-start; flex-direction: column; } .stats { grid-template-columns: 1fr; } form.status, .quick-actions, .detail-grid { grid-template-columns: 1fr; } .row { flex-direction: column; } .pagination { align-items: flex-start; flex-direction: column; } }
     </style>
 </head>
@@ -145,13 +185,13 @@
         <div class="content-with-sidebar">
             <main>
                 @if (session('success'))
-                    <div class="notice">{{ session('success') }}</div>
+                    <div class="notice" role="button" tabindex="0" aria-label="Tutup notifikasi">{{ session('success') }}</div>
                 @endif
                 @if ($errors->has('scan_code'))
-                    <div class="notice">{{ $errors->first('scan_code') }}</div>
+                    <div class="notice" role="button" tabindex="0" aria-label="Tutup notifikasi">{{ $errors->first('scan_code') }}</div>
                 @endif
                 @if ($errors->has('direct_order'))
-                    <div class="notice">{{ $errors->first('direct_order') }}</div>
+                    <div class="notice" role="button" tabindex="0" aria-label="Tutup notifikasi">{{ $errors->first('direct_order') }}</div>
                 @endif
 
                 @if (($mode ?? 'dashboard') === 'dashboard')
@@ -169,7 +209,7 @@
                             <strong id="statTodayOrders">{{ $stats['today_orders'] }}</strong>
                         </article>
                         <article class="stat-card">
-                            <span>Pending Payment</span>
+                            <span>Menunggu Pembayaran</span>
                             <strong id="statPendingPayment">{{ $stats['pending_payment'] }}</strong>
                         </article>
                         <article class="stat-card">
@@ -193,7 +233,7 @@
                             </thead>
                             <tbody>
                                 <tr><td>Pesanan Hari Ini</td><td>{{ $stats['today_orders'] }}</td></tr>
-                                <tr><td>Pending Payment</td><td>{{ $stats['pending_payment'] }}</td></tr>
+                                <tr><td>Menunggu Pembayaran</td><td>{{ $stats['pending_payment'] }}</td></tr>
                                 <tr><td>Diproses</td><td>{{ $stats['processing_orders'] }}</td></tr>
                                 <tr><td>Pendapatan Hari Ini</td><td>Rp{{ number_format($stats['today_revenue'], 0, ',', '.') }}</td></tr>
                             </tbody>
@@ -228,7 +268,7 @@
                         @endif
 
                         <div class="tabs">
-                            @foreach (['aktif' => 'Aktif', 'menunggu' => 'Menunggu', 'diproses' => 'Diproses', 'selesai' => 'Selesai'] as $value => $label)
+                            @foreach (['aktif' => 'Aktif', 'menunggu' => 'Menunggu', 'diproses' => 'Baker', 'siap_diantar' => 'Waiter', 'menunggu_pembayaran' => 'Pembayaran', 'selesai' => 'Selesai'] as $value => $label)
                                 <a class="tab {{ $status === $value ? 'active' : '' }}" href="{{ route('cashier.orders', ['status' => $value]) }}">{{ $label }}</a>
                             @endforeach
                         </div>
@@ -239,8 +279,8 @@
                     </div>
 
                     <aside class="panel pos-panel">
-                        <div>
-                            <h2>Pesanan Kasir Langsung</h2>
+                        <div class="pos-heading">
+                            <h2>Pesanan Walk-In</h2>
                             <p class="muted">Untuk customer walk-in yang beli roti langsung di kasir.</p>
                         </div>
 
@@ -253,6 +293,12 @@
                             <input type="search" id="manualMenuSearch" placeholder="Cari menu bakery" aria-label="Cari menu bakery">
                         </div>
 
+                        <div class="category-tabs" role="tablist" aria-label="Filter kategori menu">
+                            <button class="category-tab active" type="button" data-category-filter="all">Semua</button>
+                            <button class="category-tab" type="button" data-category-filter="makanan">Makanan</button>
+                            <button class="category-tab" type="button" data-category-filter="minuman">Minuman</button>
+                        </div>
+
                         <div class="pos-mode-panel" data-pos-panel="scan">
                             <form class="barcode-order-form" id="barcodeOrderForm">
                                 <input type="search" id="barcodeOrderInput" placeholder="Scan barcode produk" autocomplete="off" inputmode="numeric" aria-label="Scan barcode produk">
@@ -263,20 +309,37 @@
 
                         <div class="menu-preview" id="manualMenuList">
                             @forelse ($menuItems as $item)
-                                <div class="menu-row" data-menu-name="{{ strtolower($item->name) }}">
+                                <div class="menu-row" data-menu-id="{{ $item->getKey() }}" data-menu-name="{{ strtolower($item->name) }}" data-menu-category-filter="{{ strtolower($item->category) }}">
                                     <div>
                                         <strong>{{ $item->name }}</strong>
                                         <p class="muted">{{ $item->category }} · Stok {{ $item->stok }}</p>
                                     </div>
-                                    <button
-                                        type="button"
-                                        class="secondary js-add-direct-item"
-                                        data-menu-id="{{ $item->getKey() }}"
-                                        data-menu-name="{{ $item->name }}"
-                                        data-menu-category="{{ $item->category }}"
-                                        data-menu-price="{{ (int) $item->price }}"
-                                        data-menu-stock="{{ (int) $item->stok }}"
-                                    >Tambah</button>
+                                    <div class="menu-row-actions">
+                                        <button
+                                            type="button"
+                                            class="secondary menu-row-add js-add-direct-item"
+                                            data-menu-id="{{ $item->getKey() }}"
+                                            data-menu-name="{{ $item->name }}"
+                                            data-menu-category="{{ $item->category }}"
+                                            data-menu-price="{{ (int) $item->price }}"
+                                            data-menu-stock="{{ (int) $item->stok }}"
+                                            aria-label="Tambah {{ $item->name }}"
+                                        >Tambah</button>
+                                        <div class="menu-inline-qty" data-menu-qty-wrap="{{ $item->getKey() }}" hidden>
+                                            <button type="button" data-menu-inline-minus="{{ $item->getKey() }}" aria-label="Kurangi {{ $item->name }}">-</button>
+                                            <span data-menu-inline-qty="{{ $item->getKey() }}">0</span>
+                                            <button
+                                                type="button"
+                                                data-menu-inline-plus="{{ $item->getKey() }}"
+                                                data-menu-id="{{ $item->getKey() }}"
+                                                data-menu-name="{{ $item->name }}"
+                                                data-menu-category="{{ $item->category }}"
+                                                data-menu-price="{{ (int) $item->price }}"
+                                                data-menu-stock="{{ (int) $item->stok }}"
+                                                aria-label="Tambah {{ $item->name }}"
+                                            >+</button>
+                                        </div>
+                                    </div>
                                 </div>
                             @empty
                                 <p class="muted">Menu belum tersedia. Tambahkan menu dari dashboard management.</p>
@@ -286,6 +349,7 @@
                         <form method="post" action="{{ route('cashier.orders.direct-store') }}" id="directOrderForm" class="direct-order-form">
                             @csrf
                             <div class="cart-table">
+                                <h3>Pesanan Dipilih</h3>
                                 <div class="cart-head">
                                     <span>Menu</span>
                                     <span>Qty</span>
@@ -319,6 +383,23 @@
         </div>
     </div>
 
+    <script>
+        document.querySelectorAll('.notice').forEach((notice) => {
+            const dismiss = () => {
+                notice.classList.add('is-hiding');
+                setTimeout(() => notice.remove(), 180);
+            };
+
+            notice.addEventListener('click', dismiss);
+            notice.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    dismiss();
+                }
+            });
+        });
+    </script>
+
     @if (($mode ?? 'dashboard') === 'orders')
         <div class="toast" id="liveToast">Pesanan baru masuk.</div>
 
@@ -344,7 +425,10 @@
                 const barcodeInput = document.getElementById('barcodeOrderInput');
                 const barcodeFeedback = document.getElementById('barcodeOrderFeedback');
                 const manualMenuSearch = document.getElementById('manualMenuSearch');
+                const manualMenuList = document.getElementById('manualMenuList');
+                const categoryTabs = document.querySelectorAll('.category-tab');
                 const cart = new Map();
+                let activeCategory = 'all';
                 let latestOrderId = getLatestOrderId();
                 let firstSync = true;
                 let toastTimer = null;
@@ -415,6 +499,16 @@
                 renderDirectCart();
             }
 
+            function menuFromDataset(dataset) {
+                return {
+                    id: dataset.menuId,
+                    name: dataset.menuName,
+                    category: dataset.menuCategory,
+                    price: dataset.menuPrice,
+                    stock: dataset.menuStock
+                };
+            }
+
             function changeDirectQty(id, delta) {
                 const item = cart.get(String(id));
 
@@ -448,6 +542,7 @@
                     directCartLines.innerHTML = '<p class="muted cart-empty">Belum ada menu dipilih.</p>';
                     directOrderTotal.textContent = 'Rp0';
                     directOrderSubmit.disabled = true;
+                    updateMenuQtyControls();
                     return;
                 }
 
@@ -459,7 +554,7 @@
                     const row = document.createElement('div');
                     row.className = 'cart-line';
                     row.innerHTML =
-                        '<span>' + escapeHtml(item.name) + '<small>' + escapeHtml(item.category) + '</small></span>' +
+                        '<span><strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(item.category) + '</small></span>' +
                         '<span class="cart-qty">' +
                             '<button type="button" data-cart-minus="' + item.id + '">-</button>' +
                             '<span>' + item.qty + '</span>' +
@@ -477,6 +572,39 @@
 
                 directOrderTotal.textContent = money(total);
                 directOrderSubmit.disabled = false;
+                updateMenuQtyControls();
+            }
+
+            function updateMenuQtyControls() {
+                document.querySelectorAll('#manualMenuList .menu-row').forEach(function (row) {
+                    const id = String(row.dataset.menuId || '');
+                    const item = cart.get(id);
+                    const addButton = row.querySelector('.menu-row-add');
+                    const qtyWrap = row.querySelector('[data-menu-qty-wrap]');
+                    const qtyText = row.querySelector('[data-menu-inline-qty]');
+
+                    if (item) {
+                        if (addButton) {
+                            addButton.hidden = true;
+                        }
+                        if (qtyWrap) {
+                            qtyWrap.hidden = false;
+                        }
+                        if (qtyText) {
+                            qtyText.textContent = item.qty;
+                        }
+                    } else {
+                        if (addButton) {
+                            addButton.hidden = false;
+                        }
+                        if (qtyWrap) {
+                            qtyWrap.hidden = true;
+                        }
+                        if (qtyText) {
+                            qtyText.textContent = '0';
+                        }
+                    }
+                });
             }
 
             async function lookupBarcode(code) {
@@ -520,13 +648,40 @@
 
             document.querySelectorAll('.js-add-direct-item').forEach(function (button) {
                 button.addEventListener('click', function () {
-                    addDirectItem({
-                        id: button.dataset.menuId,
-                        name: button.dataset.menuName,
-                        category: button.dataset.menuCategory,
-                        price: button.dataset.menuPrice,
-                        stock: button.dataset.menuStock
-                    }, 'manual');
+                    addDirectItem(menuFromDataset(button.dataset), 'manual');
+                });
+            });
+
+            manualMenuList?.addEventListener('click', function (event) {
+                const minus = event.target.closest('[data-menu-inline-minus]');
+                const plus = event.target.closest('[data-menu-inline-plus]');
+
+                if (minus) {
+                    changeDirectQty(minus.dataset.menuInlineMinus, -1);
+                }
+
+                if (plus) {
+                    addDirectItem(menuFromDataset(plus.dataset), 'manual');
+                }
+            });
+
+            function applyMenuFilters() {
+                const keyword = (manualMenuSearch?.value || '').trim().toLowerCase();
+
+                document.querySelectorAll('#manualMenuList .menu-row').forEach(function (row) {
+                    const nameMatches = keyword === '' || row.dataset.menuName.includes(keyword);
+                    const categoryMatches = activeCategory === 'all' || row.dataset.menuCategoryFilter === activeCategory;
+                    row.classList.toggle('is-hidden', !nameMatches || !categoryMatches);
+                });
+            }
+
+            categoryTabs.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    activeCategory = button.dataset.categoryFilter || 'all';
+                    categoryTabs.forEach(function (tab) {
+                        tab.classList.toggle('active', tab === button);
+                    });
+                    applyMenuFilters();
                 });
             });
 
@@ -544,10 +699,7 @@
             });
 
             manualMenuSearch?.addEventListener('input', function () {
-                const keyword = manualMenuSearch.value.trim().toLowerCase();
-                document.querySelectorAll('#manualMenuList .menu-row').forEach(function (row) {
-                    row.classList.toggle('is-hidden', keyword !== '' && !row.dataset.menuName.includes(keyword));
-                });
+                applyMenuFilters();
             });
 
             barcodeForm?.addEventListener('submit', async function (event) {

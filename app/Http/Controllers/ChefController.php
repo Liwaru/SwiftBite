@@ -43,6 +43,17 @@ class ChefController extends Controller
         return view('chef.orders', compact('orders'));
     }
 
+    public function markReady(Order $order): RedirectResponse
+    {
+        abort_unless($order->status === 'diproses', 403);
+
+        $order->update(['status' => 'siap_diantar']);
+
+        ActivityRecorder::activity('Baker', 'Menandai pesanan #' . $order->kode_pesanan . ' siap diantar');
+
+        return back()->with('success', 'Tugas Baker selesai. Pesanan dikirim ke Waiter.');
+    }
+
     public function ingredients(): View
     {
         $ingredients = Ingredient::query()
@@ -77,10 +88,10 @@ class ChefController extends Controller
             'actor_name' => session('auth_name'),
         ]);
 
-        ActivityRecorder::activity('Chef', 'Menggunakan bahan ' . $ingredient->nama_bahan . ' sebanyak ' . $qty . ' ' . $ingredient->satuan);
+        ActivityRecorder::activity('Baker', 'Menggunakan bahan ' . $ingredient->nama_bahan . ' sebanyak ' . $qty . ' ' . $ingredient->satuan);
 
         return redirect()
-            ->route('chef.ingredients')
+            ->route('baker.ingredients')
             ->with('success', 'Penggunaan bahan berhasil dicatat.');
     }
 }

@@ -44,7 +44,7 @@ class ActivityRecorder
             5 => 'Owner',
             4 => 'Manager',
             3 => 'Cashier',
-            2 => 'Chef',
+            2 => 'Baker',
             1 => 'Waiter',
             default => 'Customer',
         };

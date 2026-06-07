@@ -47,6 +47,13 @@
     .order-card, .ingredient-row { border-top: 1px solid rgba(255, 246, 232, .16); padding-top: 10px; font-weight: 900; }
     .order-card:first-child, .ingredient-row:first-child { border-top: 0; padding-top: 0; }
     .order-meta, .small { margin-top: 5px; color: rgba(255, 246, 232, .7); font-size: 13px; font-weight: 800; }
+    .flow-track { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; margin-top: 10px; }
+    .flow-step { min-width: 0; border: 1px solid rgba(255, 246, 232, .18); border-radius: 7px; padding: 8px 4px; background: rgba(255, 246, 232, .08); color: rgba(255, 246, 232, .62); text-align: center; font-size: 11px; font-weight: 900; }
+    .flow-step.done { background: rgba(237, 245, 232, .16); color: #dffbd8; border-color: rgba(197, 221, 183, .42); }
+    .flow-step.current { background: var(--cream); color: var(--brown-dark); border-color: var(--cream); }
+    .table-flow { min-width: 260px; margin-top: 0; }
+    .ready-form { margin-top: 10px; }
+    .ready-form button { width: 100%; }
     .status { display: inline-flex; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 900; }
     .status.safe { background: #e6ffd9; color: #2c642b; }
     .status.low { background: #fff0b8; color: #755000; }

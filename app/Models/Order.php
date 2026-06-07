@@ -60,6 +60,44 @@ class Order extends Model
         return $this->attributes['metode_pembayaran'] ?? $this->attributes['payment_method'] ?? 'cash';
     }
 
+    public function getPaymentLabelAttribute(): string
+    {
+        return match ($this->payment_method) {
+            'cash' => 'Tunai',
+            'qris' => 'QRIS',
+            'gopay' => 'GoPay',
+            'ovo' => 'OVO',
+            'dana' => 'DANA',
+            'shopeepay' => 'ShopeePay',
+            default => strtoupper((string) $this->payment_method),
+        };
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'menunggu' => 'Menunggu',
+            'diproses' => 'Diproses Baker',
+            'siap_diantar' => 'Siap Diantar',
+            'menunggu_pembayaran' => 'Menunggu Pembayaran',
+            'selesai' => 'Selesai',
+            'dibatalkan' => 'Dibatalkan',
+            default => ucfirst(str_replace('_', ' ', (string) $this->status)),
+        };
+    }
+
+    public function getFlowStepAttribute(): int
+    {
+        return match ($this->status) {
+            'menunggu' => 1,
+            'diproses' => 2,
+            'siap_diantar' => 3,
+            'menunggu_pembayaran' => 4,
+            'selesai' => 5,
+            default => 0,
+        };
+    }
+
     public function getTotalPriceAttribute(): float
     {
         return (float) $this->total_harga;

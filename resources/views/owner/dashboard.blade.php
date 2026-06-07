@@ -78,6 +78,8 @@
                                 <tbody>
                                     <tr><td>Menunggu</td><td>{{ $stats['orders_today']['menunggu'] }}</td></tr>
                                     <tr><td>Diproses</td><td>{{ $stats['orders_today']['diproses'] }}</td></tr>
+                                    <tr><td>Siap Diantar</td><td>{{ $stats['orders_today']['siap_diantar'] }}</td></tr>
+                                    <tr><td>Menunggu Pembayaran</td><td>{{ $stats['orders_today']['menunggu_pembayaran'] }}</td></tr>
                                     <tr><td>Selesai</td><td>{{ $stats['orders_today']['selesai'] }}</td></tr>
                                     <tr><td>Dibatalkan</td><td>{{ $stats['orders_today']['dibatalkan'] }}</td></tr>
                                     <tr><td><strong>Total Pesanan</strong></td><td>{{ $stats['today_orders'] }}</td></tr>

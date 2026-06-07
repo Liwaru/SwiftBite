@@ -18,7 +18,7 @@
                         <div>
                             <div class="eyebrow">Manager Operasional</div>
                             <h1 class="hero-title">Data Bahan</h1>
-                            <p class="hero-subtitle">Kelola stok bahan baku bakery agar chef dan owner bisa memantau kondisi bahan dengan jelas.</p>
+                            <p class="hero-subtitle">Kelola stok bahan baku bakery agar baker dan owner bisa memantau kondisi bahan dengan jelas.</p>
                         </div>
                     </section>
 

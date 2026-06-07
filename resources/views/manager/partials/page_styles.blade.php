@@ -147,7 +147,7 @@
         .pill, .status-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 900; }
         .pill { background: #fff6e8; color: var(--brown-dark); }
         .pill.waiter { background: #d8ebff; color: #1f4e7b; }
-        .pill.chef { background: #f0ffd7; color: #41620d; }
+        .pill.baker { background: #f0ffd7; color: #41620d; }
         .pill.cashier { background: #e6ffd9; color: #2c642b; }
         .pill.manager { background: #ffe2ad; color: #6b3d00; }
         .pill.owner { background: #f2d9ff; color: #59306d; }

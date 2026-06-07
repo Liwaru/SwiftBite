@@ -1,11 +1,11 @@
 <header class="topbar">
-    <a class="brand" href="{{ route('chef.dashboard') }}" aria-label="Buka dashboard chef">
+    <a class="brand" href="{{ route('baker.dashboard') }}" aria-label="Buka dashboard baker">
         <span class="logo">
             <img src="{{ asset('images/Swiftbite.png') }}" alt="SwiftBite">
         </span>
         <div>
             <strong>SwiftBite</strong>
-            <span>Chef</span>
+            <span>Baker</span>
         </div>
     </a>
 

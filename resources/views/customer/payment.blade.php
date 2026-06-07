@@ -21,13 +21,15 @@
                 repeating-linear-gradient(45deg, rgba(255, 246, 232, .08) 0 1px, transparent 1px 14px),
                 var(--brown);
             color: var(--brown-dark);
+            overflow-x: hidden;
         }
         h1, h2, p { margin: 0; }
         button { font: inherit; }
         main {
             width: min(100%, 540px);
             margin: 0 auto;
-            padding: 18px 14px calc(22px + env(safe-area-inset-bottom));
+            padding: 18px 12px calc(22px + env(safe-area-inset-bottom));
+            overflow-x: hidden;
         }
         .brand-header {
             display: flex;
@@ -60,7 +62,9 @@
         .panel {
             display: grid;
             gap: 14px;
-            padding: 14px;
+            width: 100%;
+            min-width: 0;
+            padding: 12px;
             border-radius: 8px;
             border: 1px solid #e1ad73;
             background: var(--cream);
@@ -86,7 +90,8 @@
         .method-section {
             display: grid;
             gap: 10px;
-            padding: 12px;
+            min-width: 0;
+            padding: 11px;
             border-radius: 8px;
             border: 1px solid #ead4ba;
             background: #fffdfa;
@@ -115,9 +120,10 @@
             color: var(--brown-dark);
         }
         .total {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            gap: 10px;
             padding: 12px;
             border-radius: 8px;
             background: #fff6e8;
@@ -125,21 +131,28 @@
             font-size: 17px;
             font-weight: 900;
         }
+        .total span:last-child {
+            justify-self: center;
+            text-align: center;
+        }
         .method-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 8px;
+            min-width: 0;
         }
         .method-grid.ewallet-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 6px;
         }
         .method-item {
             display: grid;
             justify-items: center;
             align-content: center;
-            gap: 7px;
-            min-height: 96px;
-            padding: 10px 8px;
+            gap: 6px;
+            min-width: 0;
+            min-height: 82px;
+            padding: 8px 5px;
             border-radius: 8px;
             border: 1px solid #d8b893;
             background: var(--cream-soft);
@@ -155,8 +168,8 @@
             transform: translateY(-1px);
         }
         .method-item img {
-            width: 38px;
-            height: 38px;
+            width: 32px;
+            height: 32px;
             object-fit: contain;
             border-radius: 8px;
         }
@@ -172,24 +185,72 @@
             font-weight: 900;
         }
         .method-item strong {
-            font-size: 13px;
+            width: 100%;
+            font-size: 12px;
             line-height: 1.2;
+            overflow-wrap: anywhere;
         }
         .method-item span {
             color: #7a5a46;
-            font-size: 11px;
+            font-size: 10px;
             line-height: 1.25;
             font-weight: 800;
         }
+        .ewallet-grid .method-item {
+            min-height: 76px;
+            gap: 5px;
+            padding: 7px 4px;
+        }
+        .ewallet-grid .method-item img,
+        .ewallet-grid .method-icon {
+            width: 30px;
+            height: 30px;
+            font-size: 10px;
+        }
+        .ewallet-grid .method-item strong {
+            font-size: 9px;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow-wrap: normal;
+            text-align: center;
+        }
+        .ewallet-grid .method-item span:not(.method-icon) {
+            display: none;
+        }
+        .ewallet-number {
+            display: grid;
+            gap: 6px;
+            margin-top: 2px;
+        }
+        .ewallet-number label {
+            color: var(--brown-dark);
+            font-size: 13px;
+            font-weight: 900;
+        }
+        .ewallet-number input {
+            width: 100%;
+            min-width: 0;
+            min-height: 44px;
+            border: 1px solid #d8b893;
+            border-radius: 8px;
+            background: var(--cream-soft);
+            color: var(--brown-dark);
+            padding: 10px 11px;
+            font: inherit;
+            font-weight: 800;
+        }
+        .ewallet-number[hidden] { display: none; }
         .small-note {
             color: #7a5a46;
             font-size: 11px;
             line-height: 1.4;
             text-align: center;
             font-weight: 800;
+            overflow-wrap: anywhere;
         }
         .submit-payment {
             width: 100%;
+            min-width: 0;
             min-height: 50px;
             border: 0;
             border-radius: 8px;
@@ -197,6 +258,7 @@
             color: #fff8ed;
             font-weight: 900;
             cursor: pointer;
+            overflow-wrap: anywhere;
         }
         .submit-payment:disabled {
             opacity: .72;
@@ -265,20 +327,15 @@
                         <strong>QRIS</strong>
                         <span>Scan QR Midtrans</span>
                     </button>
-                    <button type="button" class="method-item js-method" data-method="gopay" data-type="ewallet">
-                        <img src="{{ asset('images/gopay.png') }}" alt="GoPay">
-                        <strong>GoPay</strong>
-                        <span>E-Wallet</span>
-                    </button>
                 </div>
             </section>
 
             <section class="method-section" aria-label="E-Wallet">
                 <h2>E-Wallet</h2>
                 <div class="method-grid ewallet-grid">
-                    <button type="button" class="method-item js-method" data-method="ovo" data-type="ewallet">
-                        <span class="method-icon">OVO</span>
-                        <strong>OVO</strong>
+                    <button type="button" class="method-item js-method" data-method="gopay" data-type="ewallet">
+                        <img src="{{ asset('images/gopay.png') }}" alt="GoPay">
+                        <strong>GoPay</strong>
                         <span>E-Wallet</span>
                     </button>
                     <button type="button" class="method-item js-method" data-method="dana" data-type="ewallet">
@@ -286,11 +343,20 @@
                         <strong>DANA</strong>
                         <span>E-Wallet</span>
                     </button>
+                    <button type="button" class="method-item js-method" data-method="ovo" data-type="ewallet">
+                        <span class="method-icon">OVO</span>
+                        <strong>OVO</strong>
+                        <span>E-Wallet</span>
+                    </button>
                     <button type="button" class="method-item js-method" data-method="shopeepay" data-type="ewallet">
                         <img src="{{ asset('images/shopeepay.webp') }}" alt="ShopeePay">
                         <strong>ShopeePay</strong>
                         <span>E-Wallet</span>
                     </button>
+                </div>
+                <div class="ewallet-number" id="ewalletNumberBox" hidden>
+                    <label for="ewalletNumber">Nomor Ponsel</label>
+                    <input id="ewalletNumber" type="tel" inputmode="numeric" autocomplete="tel" placeholder="Contoh: 081234567890">
                 </div>
             </section>
 
@@ -309,6 +375,8 @@
         const payButton = document.getElementById('payButton');
         const paymentMethodInput = document.getElementById('paymentMethodInput');
         const methodButtons = document.querySelectorAll('.js-method');
+        const ewalletNumberBox = document.getElementById('ewalletNumberBox');
+        const ewalletNumber = document.getElementById('ewalletNumber');
         let selectedMethod = paymentMethodInput?.value || 'cash';
         let selectedType = selectedMethod === 'qris' ? 'qris' : (selectedMethod === 'cash' ? 'cash' : 'ewallet');
 
@@ -316,6 +384,9 @@
             selectedMethod = method;
             selectedType = type;
             paymentMethodInput.value = method;
+            if (ewalletNumberBox) {
+                ewalletNumberBox.hidden = type !== 'ewallet';
+            }
             methodButtons.forEach((button) => {
                 button.classList.toggle('is-active', button.dataset.method === method);
             });
@@ -347,6 +418,13 @@
             }
 
             event.preventDefault();
+
+            if (!ewalletNumber?.value.trim()) {
+                alert('Masukkan nomor ponsel terlebih dahulu.');
+                ewalletNumber?.focus();
+                return;
+            }
+
             payButton.disabled = true;
             payButton.textContent = 'Memproses...';
 
@@ -354,6 +432,7 @@
                 const formData = new FormData();
                 formData.append('_token', @json(csrf_token()));
                 formData.append('payment_method', selectedMethod);
+                formData.append('account_number', ewalletNumber.value.trim());
 
                 const response = await fetch(paymentForm.dataset.ewalletUrl, {
                     method: 'POST',

@@ -48,11 +48,13 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
+        User::where('name', 'chef')->delete();
+
         User::updateOrCreate(
-            ['name' => 'chef'],
+            ['name' => 'baker'],
             [
-                'email' => 'chef@example.com',
-                'password' => 'chef',
+                'email' => 'baker@example.com',
+                'password' => 'baker',
                 'level' => 2,
             ],
         );

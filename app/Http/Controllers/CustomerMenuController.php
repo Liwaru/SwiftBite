@@ -309,14 +309,14 @@ class CustomerMenuController extends Controller
         if ($validated['payment_method'] === 'cash') {
             $order->update([
                 'metode_pembayaran' => 'cash',
-                'payment_status' => 'berhasil',
+                'payment_status' => 'belum_dibayar',
             ]);
 
             ActivityRecorder::activity('Customer', 'Memilih pembayaran tunai untuk pesanan #' . $order->kode_pesanan);
 
             return redirect()
                 ->route('customer.orders.show', [$table->token, $order])
-                ->with('success', 'Pembayaran tunai berhasil dikonfirmasi. Silakan bayar ke kasir.');
+                ->with('success', 'Metode tunai dipilih. Silakan bayar ke kasir saat pesanan siap.');
         }
 
         if ($validated['payment_method'] === 'qris') {
@@ -352,9 +352,10 @@ class CustomerMenuController extends Controller
 
         $validated = $request->validate([
             'payment_method' => ['required', 'in:gopay,ovo,dana,shopeepay'],
+            'account_number' => ['required', 'string', 'max:30', 'regex:/^[0-9+\-\s]+$/'],
         ]);
 
-        $result = $this->createMidtransSnap($order, $validated['payment_method']);
+        $result = $this->createMidtransSnap($order, $validated['payment_method'], $validated['account_number']);
 
         if (! $result['ok']) {
             return response()->json([
@@ -414,6 +415,35 @@ class CustomerMenuController extends Controller
         ]);
     }
 
+    public function midtransNotification(Request $request): JsonResponse
+    {
+        $payload = $request->all();
+        $midtransOrderId = (string) ($payload['order_id'] ?? '');
+
+        if ($midtransOrderId === '') {
+            return response()->json(['message' => 'order_id tidak ditemukan.'], 422);
+        }
+
+        if (! $this->validMidtransSignature($payload)) {
+            return response()->json(['message' => 'Signature Midtrans tidak valid.'], 403);
+        }
+
+        $order = Order::where('midtrans_order_id', $midtransOrderId)->first();
+
+        if (! $order) {
+            return response()->json(['message' => 'Pesanan tidak ditemukan.'], 404);
+        }
+
+        $this->applyMidtransPayload($order, $payload);
+
+        ActivityRecorder::activity('Customer', 'Webhook Midtrans memperbarui pembayaran #' . $order->kode_pesanan . ' menjadi ' . $order->payment_status);
+
+        return response()->json([
+            'message' => 'Status pembayaran diperbarui.',
+            'payment_status' => $order->payment_status,
+        ]);
+    }
+
     public function receipt(string $token, Order $order): View
     {
         $table = DiningTable::where('token', $token)->firstOrFail();
@@ -428,6 +458,11 @@ class CustomerMenuController extends Controller
     private function tableIsActive(DiningTable $table): bool
     {
         return in_array($table->status, ['aktif', 'kosong', 'terisi'], true);
+    }
+
+    public function createMidtransQrisForOrder(Order $order): array
+    {
+        return $this->createMidtransQris($order);
     }
 
     private function createMidtransQris(Order $order): array
@@ -477,7 +512,7 @@ class CustomerMenuController extends Controller
         return ['ok' => true];
     }
 
-    private function createMidtransSnap(Order $order, string $method): array
+    private function createMidtransSnap(Order $order, string $method, ?string $accountNumber = null): array
     {
         if (! $this->midtransConfigured()) {
             return ['ok' => false, 'message' => 'Midtrans belum dikonfigurasi. Isi MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di .env.'];
@@ -513,7 +548,9 @@ class CustomerMenuController extends Controller
             'payment_status' => 'diproses',
             'midtrans_order_id' => $midtransOrderId,
             'payment_expires_at' => now()->addMinutes(30),
-            'payment_payload' => $payload,
+            'payment_payload' => array_merge($payload, [
+                'account_number' => $accountNumber,
+            ]),
         ]);
 
         return [
@@ -540,7 +577,11 @@ class CustomerMenuController extends Controller
             return;
         }
 
-        $payload = $response->json();
+        $this->applyMidtransPayload($order, $response->json());
+    }
+
+    private function applyMidtransPayload(Order $order, array $payload): void
+    {
         $transactionStatus = $payload['transaction_status'] ?? null;
         $fraudStatus = $payload['fraud_status'] ?? null;
         $paymentStatus = match ($transactionStatus) {
@@ -555,6 +596,26 @@ class CustomerMenuController extends Controller
             'payment_status' => $paymentStatus,
             'payment_payload' => $payload,
         ]);
+    }
+
+    private function validMidtransSignature(array $payload): bool
+    {
+        if (! $this->midtransConfigured()) {
+            return false;
+        }
+
+        $orderId = (string) ($payload['order_id'] ?? '');
+        $statusCode = (string) ($payload['status_code'] ?? '');
+        $grossAmount = (string) ($payload['gross_amount'] ?? '');
+        $signature = (string) ($payload['signature_key'] ?? '');
+
+        if ($orderId === '' || $statusCode === '' || $grossAmount === '' || $signature === '') {
+            return false;
+        }
+
+        $expected = hash('sha512', $orderId . $statusCode . $grossAmount . (string) config('midtrans.server_key'));
+
+        return hash_equals($expected, $signature);
     }
 
     private function midtransItemDetails(Order $order): array

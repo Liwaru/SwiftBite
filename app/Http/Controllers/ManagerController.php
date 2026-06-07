@@ -41,6 +41,8 @@ class ManagerController extends Controller
             'orders_today' => [
                 'menunggu' => (clone $todayOrders)->where('status', 'menunggu')->count(),
                 'diproses' => (clone $todayOrders)->where('status', 'diproses')->count(),
+                'siap_diantar' => (clone $todayOrders)->where('status', 'siap_diantar')->count(),
+                'menunggu_pembayaran' => (clone $todayOrders)->where('status', 'menunggu_pembayaran')->count(),
                 'selesai' => (clone $todayOrders)->where('status', 'selesai')->count(),
                 'dibatalkan' => (clone $todayOrders)->where('status', 'dibatalkan')->count(),
             ],
@@ -69,7 +71,7 @@ class ManagerController extends Controller
         if ($section === 'users') {
             $roleOptions = [
                 1 => 'Waiter',
-                2 => 'Chef',
+                2 => 'Baker',
                 3 => 'Cashier',
                 4 => 'Manager',
                 5 => 'Owner',
@@ -100,7 +102,7 @@ class ManagerController extends Controller
             $data['summary'] = [
                 'total_user' => User::whereIn('level', [1, 2, 3, 4, 5])->count(),
                 'waiter' => User::where('level', 1)->count(),
-                'chef' => User::where('level', 2)->count(),
+                'baker' => User::where('level', 2)->count(),
                 'cashier' => User::where('level', 3)->count(),
                 'pengelola' => User::whereIn('level', [4, 5])->count(),
             ];
@@ -198,7 +200,7 @@ class ManagerController extends Controller
             $tab = request('tab') === 'data' ? 'data' : 'activity';
             $activityRole = (string) request('role', 'semua');
             $changeFilter = (string) request('change', 'semua');
-            $activityRoleOptions = ['semua', 'Customer', 'Waiter', 'Chef', 'Cashier', 'Manager', 'Owner'];
+            $activityRoleOptions = ['semua', 'Customer', 'Waiter', 'Baker', 'Cashier', 'Manager', 'Owner'];
             $dataChangeOptions = ['semua', 'Tambah', 'Edit', 'Hapus', 'Dipulihkan'];
 
             if (! in_array($activityRole, $activityRoleOptions, true)) {

@@ -143,7 +143,7 @@
                     </div>
 
                     <p class="access-note">
-                        Hak akses mengikuti level role terbaru: Customer 0, Waiter 1, Chef 2, Cashier 3, Manager 4, dan Owner 5. Halaman ini menampilkan fokus akses untuk role yang dikelola di area manager.
+                        Hak akses mengikuti level role terbaru: Customer 0, Waiter 1, Baker 2, Cashier 3, Manager 4, dan Owner 5. Halaman ini menampilkan fokus akses untuk role yang dikelola di area manager.
                     </p>
                 </section>
             </main>

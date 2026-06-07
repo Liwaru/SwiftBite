@@ -17,7 +17,7 @@ class AuthController extends Controller
                 5 => redirect()->route('owner.dashboard'),
                 4 => redirect()->route('manager.dashboard'),
                 3 => redirect()->route('cashier.dashboard'),
-                2 => redirect()->route('chef.dashboard'),
+                2 => redirect()->route('baker.dashboard'),
                 1 => redirect()->route('waiter.dashboard'),
                 default => redirect()->route('customer.home'),
             };
@@ -53,7 +53,7 @@ class AuthController extends Controller
             5 => redirect()->route('owner.dashboard'),
             4 => redirect()->route('manager.dashboard'),
             3 => redirect()->route('cashier.dashboard'),
-            2 => redirect()->route('chef.dashboard'),
+            2 => redirect()->route('baker.dashboard'),
             1 => redirect()->route('waiter.dashboard'),
             default => redirect()->route('customer.home'),
         };

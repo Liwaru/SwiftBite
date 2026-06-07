@@ -80,10 +80,11 @@
                 <section class="profile-card">
                     @php
                         $roleName = match ((int) $user->level) {
-                            1 => 'Manager',
-                            2 => 'Kasir',
-                            3 => 'Waiter',
-                            4 => 'Chef',
+                            1 => 'Waiter',
+                            2 => 'Baker',
+                            3 => 'Cashier',
+                            4 => 'Manager',
+                            5 => 'Owner',
                             default => 'User',
                         };
                     @endphp

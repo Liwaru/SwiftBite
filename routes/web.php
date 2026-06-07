@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CashierController;
 use App\Http\Controllers\ChefController;
@@ -16,6 +15,7 @@ Route::redirect('/', '/login');
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.store');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/midtrans/notification', [CustomerMenuController::class, 'midtransNotification'])->name('midtrans.notification');
 
 Route::middleware('simple.auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
@@ -29,9 +29,16 @@ Route::middleware(['simple.auth', 'user.level:1'])->group(function () {
 });
 
 Route::middleware(['simple.auth', 'user.level:2'])->group(function () {
-    Route::get('/chef', [ChefController::class, 'dashboard'])->name('chef.dashboard');
-    Route::get('/chef/orders', [ChefController::class, 'orders'])->name('chef.orders');
-    Route::get('/chef/ingredients', [ChefController::class, 'ingredients'])->name('chef.ingredients');
+    Route::get('/baker', [ChefController::class, 'dashboard'])->name('baker.dashboard');
+    Route::get('/baker/orders', [ChefController::class, 'orders'])->name('baker.orders');
+    Route::patch('/baker/orders/{order}/ready', [ChefController::class, 'markReady'])->name('baker.orders.ready');
+    Route::get('/baker/ingredients', [ChefController::class, 'ingredients'])->name('baker.ingredients');
+    Route::post('/baker/ingredients/{ingredient}/use', [ChefController::class, 'useIngredient'])->name('baker.ingredients.use');
+
+    Route::redirect('/chef', '/baker')->name('chef.dashboard');
+    Route::redirect('/chef/orders', '/baker/orders')->name('chef.orders');
+    Route::patch('/chef/orders/{order}/ready', [ChefController::class, 'markReady'])->name('chef.orders.ready');
+    Route::redirect('/chef/ingredients', '/baker/ingredients')->name('chef.ingredients');
     Route::post('/chef/ingredients/{ingredient}/use', [ChefController::class, 'useIngredient'])->name('chef.ingredients.use');
 });
 
@@ -69,10 +76,12 @@ Route::middleware(['simple.auth', 'user.level:5'])->group(function () {
 });
 
 Route::middleware(['simple.auth', 'user.level:4,5'])->group(function () {
-    Route::get('/admin', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    Route::post('/admin/tables', [AdminController::class, 'storeTable'])->name('admin.tables.store');
-    Route::post('/admin/menu-items', [AdminController::class, 'storeMenuItem'])->name('admin.menu-items.store');
-    Route::patch('/admin/orders/{order}/status', [AdminController::class, 'updateOrderStatus'])->name('admin.orders.status');
+    Route::get('/admin', fn () => session('auth_level') == 5
+        ? redirect()->route('owner.dashboard')
+        : redirect()->route('manager.dashboard'))->name('admin.dashboard');
+    Route::post('/admin/tables', fn () => abort(404))->name('admin.tables.store');
+    Route::post('/admin/menu-items', fn () => abort(404))->name('admin.menu-items.store');
+    Route::patch('/admin/orders/{order}/status', fn () => abort(404))->name('admin.orders.status');
 });
 
 Route::middleware(['simple.auth', 'user.level:3'])->group(function () {

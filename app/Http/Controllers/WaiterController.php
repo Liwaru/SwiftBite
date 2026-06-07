@@ -17,15 +17,15 @@ class WaiterController extends Controller
         $perPage = in_array($perPage, [3, 5], true) ? $perPage : 5;
 
         $orders = Order::with(['diningTable', 'items.menuItem'])
-            ->when($status === 'aktif', fn ($query) => $query->where('status', 'diproses'))
-            ->when($status === 'selesai', fn ($query) => $query->where('status', 'selesai'))
+            ->when($status === 'aktif', fn ($query) => $query->where('status', 'siap_diantar'))
+            ->when($status === 'selesai', fn ($query) => $query->whereIn('status', ['menunggu_pembayaran', 'selesai']))
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
 
         $stats = [
-            'aktif' => Order::where('status', 'diproses')->count(),
-            'selesai_today' => Order::where('status', 'selesai')->whereDate('updated_at', today())->count(),
+            'aktif' => Order::where('status', 'siap_diantar')->count(),
+            'selesai_today' => Order::whereIn('status', ['menunggu_pembayaran', 'selesai'])->whereDate('updated_at', today())->count(),
         ];
 
         return view('waiter.dashboard', compact('orders', 'status', 'perPage', 'stats'));
@@ -33,12 +33,20 @@ class WaiterController extends Controller
 
     public function complete(Order $order): RedirectResponse
     {
-        abort_unless($order->status === 'diproses', 403);
+        abort_unless($order->status === 'siap_diantar', 403);
 
-        $order->update(['status' => 'selesai']);
+        $nextStatus = $order->payment_method === 'cash' || $order->payment_status !== 'berhasil'
+            ? 'menunggu_pembayaran'
+            : 'selesai';
 
-        ActivityRecorder::activity('Waiter', 'Menyelesaikan pesanan #' . $order->kode_pesanan);
+        $order->update(['status' => $nextStatus]);
 
-        return back()->with('success', 'Pesanan ditandai selesai.');
+        ActivityRecorder::activity('Waiter', 'Mengantar pesanan #' . $order->kode_pesanan);
+
+        $message = $nextStatus === 'menunggu_pembayaran'
+            ? 'Pesanan sudah diantar dan menunggu pembayaran kasir.'
+            : 'Pesanan sudah diantar dan selesai.';
+
+        return back()->with('success', $message);
     }
 }

@@ -4,18 +4,24 @@
         $waitingText = $waitingMinutes < 60
             ? 'Menunggu ' . max(1, $waitingMinutes) . ' menit'
             : 'Menunggu ' . floor($waitingMinutes / 60) . ' jam ' . ($waitingMinutes % 60) . ' menit';
-        $paymentMethod = strtoupper($order->payment_method);
-        $paymentLabel = $paymentMethod === 'CASH' ? 'TUNAI' : $paymentMethod;
         $isPaid = $order->status === 'selesai';
         $paidAt = $isPaid ? $order->updated_at?->format('d M Y H:i') : '-';
         $canCashierAccept = $order->status === 'menunggu';
+        $canConfirmPayment = $order->status === 'menunggu_pembayaran';
+        $flowSteps = [
+            1 => 'Kasir',
+            2 => 'Baker',
+            3 => 'Waiter',
+            4 => 'Bayar',
+            5 => 'Selesai',
+        ];
     @endphp
     <article class="order-card" data-order-id="{{ $order->id_order }}">
         <div class="row">
             <div>
                 <div class="badge-row">
-                    <span class="badge">{{ ucfirst($order->status) }}</span>
-                    <span class="badge payment {{ $isPaid ? '' : 'pending' }}">{{ $paymentLabel }}</span>
+                    <span class="badge">{{ $order->status_label }}</span>
+                    <span class="badge payment {{ $isPaid ? '' : 'pending' }}">{{ strtoupper($order->payment_label) }}</span>
                 </div>
                 <h3>{{ $order->diningTable?->name ?? 'Meja' }} &middot; #{{ $order->kode_pesanan }}</h3>
                 <p class="order-meta">
@@ -30,6 +36,12 @@
         <div class="items">
             @foreach ($order->items as $item)
                 <p>{{ $item->quantity }}x {{ $item->menu_name }} <span class="muted">Rp{{ number_format($item->subtotal, 0, ',', '.') }}</span></p>
+            @endforeach
+        </div>
+
+        <div class="flow-track" aria-label="Alur pesanan">
+            @foreach ($flowSteps as $step => $label)
+                <span class="flow-step {{ $order->flow_step > $step ? 'done' : '' }} {{ $order->flow_step === $step ? 'current' : '' }}">{{ $label }}</span>
             @endforeach
         </div>
 
@@ -52,65 +64,27 @@
                 @csrf
                 @method('patch')
                 <input type="hidden" name="status" value="diproses">
-                <button type="submit">Terima Pesanan</button>
+                <button type="submit">Terima Pesanan & Kirim ke Baker</button>
+            </form>
+        @elseif ($canConfirmPayment)
+            <form class="status" method="post" action="{{ route('cashier.orders.status', $order) }}">
+                @csrf
+                @method('patch')
+                <input type="hidden" name="status" value="selesai">
+                <button type="submit">Konfirmasi Pembayaran & Selesai</button>
             </form>
         @elseif ($order->status === 'diproses')
-            <span class="status-done">Menunggu konfirmasi waiter</span>
+            <span class="status-done">Sedang dibuat oleh Baker</span>
+        @elseif ($order->status === 'siap_diantar')
+            <span class="status-done">Menunggu Waiter mengantar</span>
         @else
             <span class="status-done">Pesanan Selesai</span>
         @endif
     </article>
 @empty
-    @php
-        $activeStatus = $status ?? request('status', 'aktif');
-    @endphp
-
-    @if (in_array($activeStatus, ['aktif', 'menunggu'], true))
-        <article class="order-card" data-order-id="0">
-            <div class="row">
-                <div>
-                    <div class="badge-row">
-                        <span class="badge">Menunggu</span>
-                        <span class="badge payment pending">Tunai</span>
-                    </div>
-                    <h3>Meja 06 &middot; #SB-1025</h3>
-                    <p class="order-meta">
-                        <span>18:35</span>
-                        <span>&middot;</span>
-                        <span class="wait-time">Menunggu 8 menit</span>
-                    </p>
-                </div>
-                <span class="price">Rp28.000</span>
-            </div>
-
-            <div class="items">
-                <p>1x Roti Croissant <span class="muted">Rp18.000</span></p>
-                <p>1x Air Putih <span class="muted">Rp10.000</span></p>
-            </div>
-
-            <details class="order-detail">
-                <summary class="detail-toggle">Detail Pesanan</summary>
-                <div class="detail-grid">
-                    <p>
-                        <span>Catatan pelanggan</span>
-                        <strong>-</strong>
-                    </p>
-                    <p>
-                        <span>Waktu bayar</span>
-                        <strong>-</strong>
-                    </p>
-                </div>
-            </details>
-
-            <form class="status">
-                <button type="button" disabled>Terima Pesanan</button>
-            </form>
-        </article>
-    @else
-        <p class="muted empty">
-            Belum ada pesanan {{ $activeStatus === 'diproses' ? 'diproses' : 'selesai' }}.
-        </p>
-    @endif
+    <p class="muted empty">
+        Belum ada pesanan pada tahap ini.
+    </p>
 @endforelse
 
 @if (method_exists($orders, 'hasPages') && $orders->hasPages())

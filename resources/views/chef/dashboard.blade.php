@@ -4,7 +4,7 @@
     @include('partials.favicon')
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard Chef</title>
+    <title>Dashboard Baker</title>
     @include('chef.partials.styles')
 </head>
 <body>
@@ -13,9 +13,9 @@
 
         <main>
             <section class="hero-card">
-                <div class="eyebrow">Dapur SwiftBite</div>
-                <h1 class="hero-title">Dashboard Chef</h1>
-                <p class="hero-subtitle">Pantau pesanan yang sedang dibuat dan kondisi bahan baku dapur.</p>
+                <div class="eyebrow">Baker SwiftBite</div>
+                <h1 class="hero-title">Dashboard Baker</h1>
+                <p class="hero-subtitle">Pantau pesanan roti yang sedang dibuat dan kondisi bahan baku bakery.</p>
             </section>
 
             <section class="stats">
@@ -27,12 +27,21 @@
 
             <section class="grid">
                 <div class="panel">
-                    <h2>Pesanan Diproses</h2>
+                    <h2>Pesanan Untuk Dibuat</h2>
                     @if ($processingOrders->isEmpty())
                         <p class="empty-state">Belum ada pesanan yang sedang diproses.</p>
                     @else
                         <div class="list-stack">
                             @foreach ($processingOrders as $order)
+                                @php
+                                    $flowStep = match ($order->status) {
+                                        'diproses' => 2,
+                                        'siap_diantar' => 3,
+                                        'menunggu_pembayaran', 'selesai' => 4,
+                                        default => 1,
+                                    };
+                                    $flowSteps = [1 => 'Cashier', 2 => 'Baker', 3 => 'Waiter', 4 => 'Selesai'];
+                                @endphp
                                 <div class="order-card">
                                     <div>{{ $order->kode_pesanan }} - {{ $order->diningTable?->nama_meja ?? 'Tanpa meja' }}</div>
                                     <div class="order-meta">
@@ -40,6 +49,16 @@
                                             {{ $item->qty }}x {{ $item->menuItem?->nama_menu ?? 'Menu' }}@if (! $loop->last), @endif
                                         @endforeach
                                     </div>
+                                    <div class="flow-track" aria-label="Alur pesanan">
+                                        @foreach ($flowSteps as $step => $label)
+                                            <span class="flow-step {{ $flowStep > $step ? 'done' : '' }} {{ $flowStep === $step ? 'current' : '' }}">{{ $label }}</span>
+                                        @endforeach
+                                    </div>
+                                    <form class="ready-form" method="post" action="{{ route('baker.orders.ready', $order) }}">
+                                        @csrf
+                                        @method('patch')
+                                        <button type="submit">Siap Diantar</button>
+                                    </form>
                                 </div>
                             @endforeach
                         </div>

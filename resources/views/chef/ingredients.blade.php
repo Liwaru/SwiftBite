@@ -4,7 +4,7 @@
     @include('partials.favicon')
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Data Bahan Chef</title>
+    <title>Data Bahan Baker</title>
     @include('chef.partials.styles')
 </head>
 <body>
@@ -57,7 +57,7 @@
                                         <td>{{ number_format($ingredient->used_today ?? 0, 2, ',', '.') }} {{ $ingredient->satuan }}</td>
                                         <td><span class="status {{ $ingredient->status_type }}">{{ $ingredient->status_label }}</span></td>
                                         <td>
-                                            <form method="POST" action="{{ route('chef.ingredients.use', $ingredient) }}" class="action-form">
+                                            <form method="POST" action="{{ route('baker.ingredients.use', $ingredient) }}" class="action-form">
                                                 @csrf
                                                 <input type="number" name="qty" min="0.01" max="{{ $ingredient->stok }}" step="0.01" placeholder="Qty" required>
                                                 <input type="text" name="note" maxlength="120" placeholder="Catatan">

@@ -66,7 +66,7 @@ class CashierController extends Controller
 
         return redirect()
             ->route('cashier.orders', [
-                'status' => in_array($order->status, ['menunggu', 'diproses', 'selesai'], true) ? $order->status : 'aktif',
+                'status' => in_array($order->status, ['menunggu', 'diproses', 'siap_diantar', 'menunggu_pembayaran', 'selesai'], true) ? $order->status : 'aktif',
                 'scan_order' => $order->id_order,
             ])
             ->with('success', 'Pesanan #' . $order->kode_pesanan . ' berhasil dibuka dari scan.');
@@ -152,8 +152,9 @@ class CashierController extends Controller
                     'id_meja' => $table->id_meja,
                     'kode_pesanan' => 'POS-' . now()->format('YmdHis') . '-' . Str::upper(Str::random(4)),
                     'total_harga' => $total,
-                    'status' => 'selesai',
+                    'status' => $validated['payment_method'] === 'qris' ? 'menunggu_pembayaran' : 'selesai',
                     'metode_pembayaran' => $validated['payment_method'],
+                    'payment_status' => $validated['payment_method'] === 'qris' ? 'diproses' : 'berhasil',
                 ]);
 
                 foreach ($lines as $line) {
@@ -178,8 +179,23 @@ class CashierController extends Controller
 
         ActivityRecorder::activity('Cashier', 'Membuat pesanan kasir langsung #' . $order->kode_pesanan);
 
+        if ($order->metode_pembayaran === 'qris') {
+            $order->loadMissing('diningTable');
+            $qrisResult = app(CustomerMenuController::class)->createMidtransQrisForOrder($order);
+
+            if ($qrisResult['ok']) {
+                return redirect()
+                    ->route('customer.orders.qris', [$order->diningTable->token, $order])
+                    ->with('success', 'Pesanan QRIS #' . $order->kode_pesanan . ' dibuat. Tampilkan QRIS untuk pembayaran.');
+            }
+
+            return redirect()
+                ->route('cashier.orders', ['status' => $order->status, 'scan_order' => $order->id_order])
+                ->withErrors(['direct_order' => $qrisResult['message']]);
+        }
+
         return redirect()
-            ->route('cashier.orders', ['status' => 'selesai', 'scan_order' => $order->id_order])
+            ->route('cashier.orders', ['status' => $order->status, 'scan_order' => $order->id_order])
             ->with('success', 'Pesanan kasir langsung #' . $order->kode_pesanan . ' berhasil dibuat.');
     }
 
@@ -258,21 +274,54 @@ class CashierController extends Controller
     public function updateOrderStatus(Request $request, Order $order): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => ['required', 'in:diproses,dibatalkan'],
+            'status' => ['required', 'in:diproses,selesai,dibatalkan'],
         ]);
 
-        abort_unless($order->status === 'menunggu', 403);
+        if ($validated['status'] === 'diproses') {
+            abort_unless($order->status === 'menunggu', 403);
 
-        $order->update($validated);
+            $order->update(['status' => 'diproses']);
 
-        ActivityRecorder::activity('Cashier', 'Menerima pesanan #' . $order->kode_pesanan);
+            ActivityRecorder::activity('Cashier', 'Menerima pesanan #' . $order->kode_pesanan);
 
-        return back()->with('success', 'Status pesanan diperbarui.');
+            return back()->with('success', 'Pesanan diterima dan dikirim ke Baker.');
+        }
+
+        if ($validated['status'] === 'selesai') {
+            abort_unless($order->status === 'menunggu_pembayaran', 403);
+
+            $order->update([
+                'status' => 'selesai',
+                'payment_status' => 'berhasil',
+            ]);
+
+            ActivityRecorder::activity('Cashier', 'Menyelesaikan pembayaran pesanan #' . $order->kode_pesanan);
+
+            return back()->with('success', 'Pembayaran dikonfirmasi dan pesanan selesai.');
+        }
+
+        abort_unless(in_array($order->status, ['menunggu', 'diproses'], true), 403);
+
+        DB::transaction(function () use ($order) {
+            $order->loadMissing('items');
+
+            foreach ($order->items as $item) {
+                if ($item->id_menu) {
+                    MenuItem::whereKey($item->id_menu)->increment('stok', (int) $item->qty);
+                }
+            }
+
+            $order->update(['status' => 'dibatalkan']);
+        });
+
+        ActivityRecorder::activity('Cashier', 'Membatalkan pesanan #' . $order->kode_pesanan);
+
+        return back()->with('success', 'Pesanan dibatalkan.');
     }
 
     private function normalizeStatus(?string $status): string
     {
-        $allowedStatuses = ['aktif', 'menunggu', 'diproses', 'selesai'];
+        $allowedStatuses = ['aktif', 'menunggu', 'diproses', 'siap_diantar', 'menunggu_pembayaran', 'selesai'];
 
         return in_array($status, $allowedStatuses, true) ? $status : 'aktif';
     }
@@ -305,7 +354,7 @@ class CashierController extends Controller
     private function ordersForStatus(string $status)
     {
         return Order::with(['diningTable', 'items.menuItem'])
-            ->when($status === 'aktif', fn ($query) => $query->whereIn('status', ['menunggu', 'diproses']))
+            ->when($status === 'aktif', fn ($query) => $query->whereIn('status', ['menunggu', 'diproses', 'siap_diantar', 'menunggu_pembayaran']))
             ->when($status !== 'aktif', fn ($query) => $query->where('status', $status))
             ->latest();
     }
@@ -332,7 +381,7 @@ class CashierController extends Controller
 
         return [
             'today_orders' => (clone $todayOrders)->count(),
-            'pending_payment' => (clone $todayOrders)->where('status', 'menunggu')->count(),
+            'pending_payment' => (clone $todayOrders)->where('status', 'menunggu_pembayaran')->count(),
             'processing_orders' => (clone $todayOrders)->where('status', 'diproses')->count(),
             'today_revenue' => (float) (clone $todayOrders)->where('status', 'selesai')->sum('total_harga'),
         ];

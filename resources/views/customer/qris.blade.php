@@ -72,6 +72,14 @@
             gap: 12px;
         }
         .back-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 36px;
+            padding: 8px 12px;
+            border: 1px solid #d8b893;
+            border-radius: 999px;
+            background: var(--cream-soft);
             color: var(--brown);
             font-weight: 900;
             text-decoration: none;
@@ -141,6 +149,14 @@
         .status-diproses { background: #fff4cc; color: #8a5a00; }
         .status-berhasil { background: #dcfce7; color: #166534; }
         .status-gagal { background: #fee2e2; color: #991b1b; }
+        .status-card {
+            justify-items: center;
+            text-align: center;
+        }
+        .status-card #statusMessage {
+            text-align: center;
+            justify-self: center;
+        }
         .summary-row {
             display: flex;
             justify-content: space-between;
@@ -187,14 +203,6 @@
 </head>
 <body>
     <main>
-        <header class="brand-header">
-            <div class="brand-left">
-                <img class="brand-logo" src="{{ asset('images/Swiftbite-icon.png') }}" alt="SwiftBite">
-                <span class="brand-name">SwiftBite</span>
-            </div>
-            <span class="table-chip">{{ $table->name }}</span>
-        </header>
-
         <section class="panel">
             <div class="topline">
                 <a class="back-link" href="{{ route('customer.orders.payment', [$table->qr_token, $order]) }}">Kembali</a>
@@ -203,7 +211,7 @@
 
             <div>
                 <p class="eyebrow">Pembayaran QRIS</p>
-                <h1>Pesanan #{{ $order->id }}</h1>
+                <h1>{{ $table->name }}</h1>
             </div>
 
             <div class="card qr-card">
@@ -223,7 +231,7 @@
                 <p class="timer-value" id="countdown">00:00:00</p>
             </div>
 
-            <div class="card">
+            <div class="card status-card">
                 <span class="status-pill status-{{ $order->payment_status ?? 'diproses' }}" id="statusBadge">{{ str_replace('_', ' ', $order->payment_status ?? 'diproses') }}</span>
                 <p class="eyebrow" id="statusMessage">Midtrans akan memperbarui status pembayaran otomatis setelah QRIS dibayar.</p>
             </div>

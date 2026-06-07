@@ -11,6 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->validateCsrfTokens(except: [
+            'midtrans/notification',
+        ]);
+
         $middleware->alias([
             'simple.auth' => \App\Http\Middleware\EnsureSimpleLogin::class,
             'user.level' => \App\Http\Middleware\EnsureUserLevel::class,
