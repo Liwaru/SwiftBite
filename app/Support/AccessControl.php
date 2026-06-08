@@ -10,6 +10,8 @@ class AccessControl
     public static function roles(): array
     {
         return [
+            1 => 'Waiter',
+            2 => 'Baker',
             3 => 'Cashier',
             4 => 'Manager',
             5 => 'Owner',
@@ -19,6 +21,9 @@ class AccessControl
     public static function features(): array
     {
         return [
+            'waiter.orders' => ['group' => 'Waiter', 'name' => 'Pesanan Antar', 'default_roles' => [1]],
+            'chef.orders' => ['group' => 'Baker', 'name' => 'Pesanan Dapur', 'default_roles' => [2]],
+            'chef.ingredients' => ['group' => 'Baker', 'name' => 'Bahan Dapur', 'default_roles' => [2]],
             'cashier.orders' => ['group' => 'Cashier', 'name' => 'Pesanan', 'default_roles' => [3]],
             'cashier.history' => ['group' => 'Cashier', 'name' => 'Riwayat Transaksi', 'default_roles' => [3]],
             'cashier.order_status' => ['group' => 'Cashier', 'name' => 'Ubah Status Pesanan', 'default_roles' => [3]],
@@ -68,6 +73,8 @@ class AccessControl
                 }
             });
 
+        $permissions[4]['manager.access'] = true;
+
         return $permissions;
     }
 
@@ -83,6 +90,8 @@ class AccessControl
         if (! Schema::hasTable('role_menu_permissions')) {
             return;
         }
+
+        $selected[4] = array_values(array_unique(array_merge($selected[4] ?? [], ['manager.access'])));
 
         $now = now();
 

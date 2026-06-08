@@ -88,6 +88,56 @@
             font-size: 22px;
             line-height: 1.15;
         }
+        .menu-section-head {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: grid;
+            gap: 9px;
+            margin: 8px -14px 16px;
+            padding: 10px 14px 11px;
+            background:
+                linear-gradient(180deg, rgba(43, 26, 18, .98), rgba(43, 26, 18, .92));
+            border-top: 1px solid rgba(255, 246, 232, .12);
+            border-bottom: 1px solid rgba(255, 246, 232, .18);
+            box-shadow: 0 10px 22px rgba(24, 13, 7, .16);
+        }
+        .menu-section-head .section-title {
+            margin: 0;
+        }
+        .category-filter {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 7px;
+        }
+        .category-filter button {
+            min-height: 38px;
+            border: 1px solid rgba(255, 246, 232, .34);
+            border-radius: 999px;
+            background: transparent;
+            color: #fff8ed;
+            padding: 8px 10px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: none;
+            transition: background .16s ease, color .16s ease, border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+        }
+        .category-filter button.is-active {
+            background: var(--cream);
+            border-color: var(--cream);
+            color: var(--brown-dark);
+            font-weight: 900;
+            box-shadow: 0 8px 18px rgba(24, 13, 7, .2);
+        }
+        .category-filter button:active {
+            transform: translateY(1px);
+        }
+        .item.is-hidden,
+        .filter-empty[hidden] {
+            display: none;
+        }
         .section-subtitle {
             margin-top: -6px;
             margin-bottom: 10px;
@@ -664,7 +714,7 @@
                 @else
                     <article class="item package-item package-card package-empty">
                         <div class="thumb">
-                            <img src="{{ asset('images/Promo Emoji.png') }}" alt="Paket SwiftBite">
+                            <img src="{{ asset('images/Paket Emoji.png') }}" alt="Paket SwiftBite">
                         </div>
                         <div class="item-body">
                             <span class="package-badge">Paket Hemat</span>
@@ -675,13 +725,26 @@
                 @endif
             </div>
 
-            @forelse ($menuItems as $category => $items)
-                <h2 class="section-title">{{ $category }}</h2>
-                @foreach ($items as $item)
+            @php
+                $allMenuItems = collect($menuItems)->flatMap(fn ($items) => $items);
+            @endphp
+
+            @if ($allMenuItems->isNotEmpty())
+                <div class="menu-section-head">
+                    <h2 class="section-title">Jelajahi Menu</h2>
+                    <div class="category-filter" role="group" aria-label="Filter kategori menu">
+                        <button type="button" class="is-active" data-menu-filter="all">Semua</button>
+                        <button type="button" data-menu-filter="makanan">Makanan</button>
+                        <button type="button" data-menu-filter="minuman">Minuman</button>
+                    </div>
+                </div>
+
+                @foreach ($allMenuItems as $item)
                     @php
                         $initial = strtoupper(substr($item->name, 0, 1));
+                        $itemCategory = strtolower($item->category ?? '');
                     @endphp
-                    <article class="item">
+                    <article class="item menu-item-card" data-menu-category="{{ $itemCategory }}">
                         <div class="thumb">
                             @if ($item->foto)
                                 <img src="{{ asset($item->foto) }}" alt="{{ $item->name }}">
@@ -705,9 +768,10 @@
                         </div>
                     </article>
                 @endforeach
-            @empty
+                <p class="empty filter-empty" id="filterEmpty" hidden>Menu kategori ini belum tersedia.</p>
+            @else
                 <p class="empty">Menu belum tersedia.</p>
-            @endforelse
+            @endif
 
             <section class="menu-end-card" aria-label="Akhir daftar menu">
                 <p>Terima kasih telah memilih SwiftBite.</p>
@@ -730,6 +794,9 @@
         const checkoutBar = document.getElementById('checkoutBar');
         const cartSummaryList = document.getElementById('cartSummaryList');
         const quantityInputs = document.querySelectorAll('.qty-input');
+        const categoryFilterButtons = document.querySelectorAll('[data-menu-filter]');
+        const menuItemCards = document.querySelectorAll('.menu-item-card');
+        const filterEmpty = document.getElementById('filterEmpty');
 
         function escapeHtml(value) {
             return String(value || '').replace(/[&<>"']/g, (char) => ({
@@ -783,6 +850,30 @@
 
         quantityInputs.forEach((input) => {
             input.addEventListener('input', renderCartSummary);
+        });
+
+        categoryFilterButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const activeFilter = button.dataset.menuFilter || 'all';
+                let visibleCount = 0;
+
+                categoryFilterButtons.forEach((filterButton) => {
+                    filterButton.classList.toggle('is-active', filterButton === button);
+                });
+
+                menuItemCards.forEach((card) => {
+                    const matches = activeFilter === 'all' || card.dataset.menuCategory === activeFilter;
+                    card.classList.toggle('is-hidden', !matches);
+
+                    if (matches) {
+                        visibleCount += 1;
+                    }
+                });
+
+                if (filterEmpty) {
+                    filterEmpty.hidden = visibleCount > 0;
+                }
+            });
         });
 
         renderCartSummary();
