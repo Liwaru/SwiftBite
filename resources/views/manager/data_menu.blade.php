@@ -393,7 +393,7 @@
                                                         <input id="packageCheck{{ $menu->getKey() }}" type="checkbox" class="js-package-check" data-menu-id="{{ $menu->getKey() }}">
                                                         <span class="package-picker-info">
                                                             <strong>{{ $menu->nama_menu }}</strong>
-                                                            <em>{{ $menu->category }} · Rp{{ number_format($menu->harga, 0, ',', '.') }}</em>
+                                                            <em>{{ $menu->category }} ï¿½ Rp{{ number_format($menu->harga, 0, ',', '.') }}</em>
                                                         </span>
                                                         <input type="number" name="items[{{ $menu->getKey() }}]" class="package-qty js-package-qty" data-menu-id="{{ $menu->getKey() }}" data-menu-name="{{ $menu->nama_menu }}" value="{{ old('items.' . $menu->getKey(), 0) }}" min="0" max="99" aria-label="Jumlah {{ $menu->nama_menu }}">
                                                     </label>
@@ -501,7 +501,7 @@
                                                         <input id="editPackageCheck{{ $menu->getKey() }}" type="checkbox" class="js-package-check" data-menu-id="{{ $menu->getKey() }}">
                                                         <span class="package-picker-info">
                                                             <strong>{{ $menu->nama_menu }}</strong>
-                                                            <em>{{ $menu->category }} · Rp{{ number_format($menu->harga, 0, ',', '.') }}</em>
+                                                            <em>{{ $menu->category }} ï¿½ Rp{{ number_format($menu->harga, 0, ',', '.') }}</em>
                                                         </span>
                                                         <input type="number" name="items[{{ $menu->getKey() }}]" class="package-qty js-package-qty js-edit-package-qty" data-menu-id="{{ $menu->getKey() }}" data-menu-name="{{ $menu->nama_menu }}" value="0" min="0" max="99" aria-label="Jumlah {{ $menu->nama_menu }}">
                                                     </label>

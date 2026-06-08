@@ -95,7 +95,31 @@
                                 </div>
 
                                 @if ($activityLogs->hasPages())
-                                    <div class="pagination-wrap">{{ $activityLogs->links() }}</div>
+                                    <div class="pagination-wrap">
+                                        <div class="pagination" aria-label="Pagination aktivitas">
+                                            <span class="pagination-info">Halaman {{ $activityLogs->currentPage() }} dari {{ $activityLogs->lastPage() }}</span>
+
+                                            @if ($activityLogs->onFirstPage())
+                                                <span class="page-disabled">Prev</span>
+                                            @else
+                                                <a class="page-link" href="{{ $activityLogs->previousPageUrl() }}">Prev</a>
+                                            @endif
+
+                                            @foreach ($activityLogs->getUrlRange(1, $activityLogs->lastPage()) as $page => $url)
+                                                @if ($page === $activityLogs->currentPage())
+                                                    <span class="page-current">{{ $page }}</span>
+                                                @else
+                                                    <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                                @endif
+                                            @endforeach
+
+                                            @if ($activityLogs->hasMorePages())
+                                                <a class="page-link" href="{{ $activityLogs->nextPageUrl() }}">Next</a>
+                                            @else
+                                                <span class="page-disabled">Next</span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 @endif
                             @else
                                 <form class="filter-form" method="GET" action="{{ route('manager.page', ['section' => 'activity']) }}">
@@ -163,7 +187,31 @@
                                 </div>
 
                                 @if ($dataChanges->hasPages())
-                                    <div class="pagination-wrap">{{ $dataChanges->links() }}</div>
+                                    <div class="pagination-wrap">
+                                        <div class="pagination" aria-label="Pagination data perubahan">
+                                            <span class="pagination-info">Halaman {{ $dataChanges->currentPage() }} dari {{ $dataChanges->lastPage() }}</span>
+
+                                            @if ($dataChanges->onFirstPage())
+                                                <span class="page-disabled">Prev</span>
+                                            @else
+                                                <a class="page-link" href="{{ $dataChanges->previousPageUrl() }}">Prev</a>
+                                            @endif
+
+                                            @foreach ($dataChanges->getUrlRange(1, $dataChanges->lastPage()) as $page => $url)
+                                                @if ($page === $dataChanges->currentPage())
+                                                    <span class="page-current">{{ $page }}</span>
+                                                @else
+                                                    <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                                @endif
+                                            @endforeach
+
+                                            @if ($dataChanges->hasMorePages())
+                                                <a class="page-link" href="{{ $dataChanges->nextPageUrl() }}">Next</a>
+                                            @else
+                                                <span class="page-disabled">Next</span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 @endif
                             @endif
                         </section>

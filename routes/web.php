@@ -44,6 +44,7 @@ Route::middleware(['simple.auth', 'user.level:2'])->group(function () {
 
 Route::middleware(['simple.auth', 'user.level:4'])->group(function () {
     Route::get('/manager', [ManagerController::class, 'dashboard'])->name('manager.dashboard');
+    Route::post('/manager/access', [ManagerController::class, 'updateAccess'])->name('manager.access.update');
     Route::post('/manager/users', [ManagerController::class, 'storeUser'])->name('manager.users.store');
     Route::patch('/manager/users/{user}', [ManagerController::class, 'updateUser'])->name('manager.users.update');
     Route::post('/manager/tables', [ManagerController::class, 'storeTable'])->name('manager.tables.store');
@@ -65,6 +66,11 @@ Route::middleware(['simple.auth', 'user.level:4'])->group(function () {
     Route::delete('/manager/database/reset', [ManagerController::class, 'resetDatabase'])->name('manager.database.reset');
     Route::post('/manager/activity/data/{change}/restore', [ManagerController::class, 'restoreDataChange'])->name('manager.activity.restore');
     Route::get('/manager/{section}', [ManagerController::class, 'page'])->name('manager.page');
+    // Manager-accessible report routes (appear when manager has report permissions)
+    Route::get('/manager/laporan/penjualan', [OwnerController::class, 'sales'])->name('manager.reports.sales')->middleware('feature.access:owner.sales');
+    Route::get('/manager/laporan/keuangan', [OwnerController::class, 'finance'])->name('manager.reports.finance')->middleware('feature.access:owner.finance');
+    Route::get('/manager/laporan/produk', [OwnerController::class, 'products'])->name('manager.reports.products')->middleware('feature.access:owner.products');
+    Route::get('/manager/laporan/bahan', [OwnerController::class, 'ingredients'])->name('manager.reports.ingredients')->middleware('feature.access:owner.ingredients');
 });
 
 Route::middleware(['simple.auth', 'user.level:5'])->group(function () {
@@ -84,15 +90,15 @@ Route::middleware(['simple.auth', 'user.level:4,5'])->group(function () {
     Route::patch('/admin/orders/{order}/status', fn () => abort(404))->name('admin.orders.status');
 });
 
-Route::middleware(['simple.auth', 'user.level:3'])->group(function () {
+Route::middleware(['simple.auth', 'user.level:3,4'])->group(function () {
     Route::get('/kasir', [CashierController::class, 'dashboard'])->name('cashier.dashboard');
-    Route::get('/kasir/pesanan', [CashierController::class, 'orders'])->name('cashier.orders');
-    Route::post('/kasir/pesanan/scan', [CashierController::class, 'scanOrder'])->name('cashier.orders.scan');
-    Route::post('/kasir/pesanan/menu-barcode', [CashierController::class, 'scanMenuBarcode'])->name('cashier.orders.menu-barcode');
-    Route::post('/kasir/pesanan/langsung', [CashierController::class, 'storeDirectOrder'])->name('cashier.orders.direct-store');
-    Route::get('/kasir/live-orders', [CashierController::class, 'liveOrders'])->name('cashier.orders.live');
-    Route::get('/kasir/riwayat', [CashierController::class, 'history'])->name('cashier.history');
-    Route::patch('/kasir/orders/{order}/status', [CashierController::class, 'updateOrderStatus'])->name('cashier.orders.status');
+    Route::get('/kasir/pesanan', [CashierController::class, 'orders'])->name('cashier.orders')->middleware('feature.access:cashier.orders');
+    Route::post('/kasir/pesanan/scan', [CashierController::class, 'scanOrder'])->name('cashier.orders.scan')->middleware('feature.access:cashier.orders');
+    Route::post('/kasir/pesanan/menu-barcode', [CashierController::class, 'scanMenuBarcode'])->name('cashier.orders.menu-barcode')->middleware('feature.access:cashier.orders');
+    Route::post('/kasir/pesanan/langsung', [CashierController::class, 'storeDirectOrder'])->name('cashier.orders.direct-store')->middleware('feature.access:cashier.orders');
+    Route::get('/kasir/live-orders', [CashierController::class, 'liveOrders'])->name('cashier.orders.live')->middleware('feature.access:cashier.orders');
+    Route::get('/kasir/riwayat', [CashierController::class, 'history'])->name('cashier.history')->middleware('feature.access:cashier.history');
+    Route::patch('/kasir/orders/{order}/status', [CashierController::class, 'updateOrderStatus'])->name('cashier.orders.status')->middleware('feature.access:cashier.order_status');
 });
 
 Route::middleware(['simple.auth', 'user.level:0'])->group(function () {

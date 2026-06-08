@@ -13,6 +13,7 @@ use App\Models\Order;
 use App\Models\Package;
 use App\Models\User;
 use App\Support\ActivityRecorder;
+use App\Support\AccessControl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -65,6 +66,10 @@ class ManagerController extends Controller
         ];
 
         abort_unless(isset($pages[$section]), 404);
+
+        if ($section !== 'access' && ! AccessControl::allowed((int) session('auth_level'), AccessControl::managerFeatureForSection($section))) {
+            abort(403);
+        }
 
         $data = ['page' => $pages[$section], 'section' => $section];
 
@@ -227,6 +232,12 @@ class ManagerController extends Controller
                 ->latest()
                 ->paginate(10, ['*'], 'data_page')
                 ->withQueryString();
+        }
+
+        if ($section === 'access') {
+            $data['roles'] = AccessControl::roles();
+            $data['features'] = AccessControl::features();
+            $data['permissions'] = AccessControl::permissions();
         }
 
         $views = [
@@ -469,6 +480,29 @@ class ManagerController extends Controller
         return redirect()
             ->route('manager.page', 'menus')
             ->with('success', 'Menu berhasil diperbarui.');
+    }
+
+    public function updateAccess(Request $request): RedirectResponse
+    {
+        $selectedPermissions = $request->input('permissions', []);
+        $featureKeys = array_keys(AccessControl::features());
+        $cleanSelected = [];
+
+        foreach (AccessControl::roles() as $level => $roleName) {
+            $values = $selectedPermissions[$level] ?? [];
+
+            if (! is_array($values)) {
+                $values = [];
+            }
+
+            $cleanSelected[$level] = array_values(array_filter($values, fn ($featureKey) => in_array($featureKey, $featureKeys, true)));
+        }
+
+        AccessControl::sync($cleanSelected);
+
+        return redirect()
+            ->route('manager.page', 'access')
+            ->with('success', 'Hak akses berhasil diperbarui.');
     }
 
     public function updateStock(Request $request, MenuItem $menu): RedirectResponse

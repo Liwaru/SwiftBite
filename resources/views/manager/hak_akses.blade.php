@@ -70,26 +70,21 @@
         <div class="content-with-sidebar">
             <main>
                 @php
-                    $roles = ['cashier' => 'Cashier', 'manager' => 'Manager', 'owner' => 'Owner'];
-                    $accessRows = [
-                        ['group' => 'Cashier', 'name' => 'Pesanan', 'cashier' => true, 'manager' => false, 'owner' => false],
-                        ['group' => 'Cashier', 'name' => 'Riwayat Transaksi', 'cashier' => true, 'manager' => false, 'owner' => false],
-                        ['group' => 'Cashier', 'name' => 'Ubah Status Pesanan', 'cashier' => true, 'manager' => false, 'owner' => false],
-                        ['group' => 'Manager', 'name' => 'Data User', 'cashier' => false, 'manager' => true, 'owner' => false],
-                        ['group' => 'Manager', 'name' => 'Data Menu', 'cashier' => false, 'manager' => true, 'owner' => false],
-                        ['group' => 'Manager', 'name' => 'Data Paket Promo', 'cashier' => false, 'manager' => true, 'owner' => false],
-                        ['group' => 'Manager', 'name' => 'Data Bahan', 'cashier' => false, 'manager' => true, 'owner' => false],
-                        ['group' => 'Manager', 'name' => 'Data Meja', 'cashier' => false, 'manager' => true, 'owner' => false],
-                        ['group' => 'Manager', 'name' => 'Stok Produk', 'cashier' => false, 'manager' => true, 'owner' => false],
-                        ['group' => 'Manager', 'name' => 'Hak Akses', 'cashier' => false, 'manager' => true, 'owner' => false],
-                        ['group' => 'Manager', 'name' => 'Database', 'cashier' => false, 'manager' => true, 'owner' => false],
-                        ['group' => 'Manager', 'name' => 'Catatan Aktivitas', 'cashier' => false, 'manager' => true, 'owner' => false],
-                        ['group' => 'Owner', 'name' => 'Laporan Penjualan', 'cashier' => false, 'manager' => false, 'owner' => true],
-                        ['group' => 'Owner', 'name' => 'Laporan Keuangan', 'cashier' => false, 'manager' => false, 'owner' => true],
-                        ['group' => 'Owner', 'name' => 'Laporan Produk', 'cashier' => false, 'manager' => false, 'owner' => true],
-                        ['group' => 'Owner', 'name' => 'Laporan Bahan', 'cashier' => false, 'manager' => false, 'owner' => true],
-                        ['group' => 'Owner', 'name' => 'Export PDF, Excel, dan Print', 'cashier' => false, 'manager' => false, 'owner' => true],
+                    $roles = $roles ?? [];
+                    $features = $features ?? [];
+                    $permissions = $permissions ?? [];
+
+                    // Show only menu-like features in the access matrix.
+                    // Exclude non-menu actions such as export/print or internal actions.
+                    $menuFeatureKeys = [
+                        'cashier.orders', 'cashier.history',
+                        'manager.users', 'manager.menus', 'manager.ingredients', 'manager.tables', 'manager.stock', 'manager.access', 'manager.database', 'manager.activity',
+                        'owner.sales', 'owner.finance', 'owner.products', 'owner.ingredients',
                     ];
+
+                    $features = array_filter($features, function ($feature, $key) use ($menuFeatureKeys) {
+                        return in_array($key, $menuFeatureKeys, true);
+                    }, ARRAY_FILTER_USE_BOTH);
                 @endphp
 
                 <section class="hero-card">
@@ -101,46 +96,55 @@
                 </section>
 
                 <section class="table-card access-panel">
-                    <div class="table-header">
-                        <div>
-                            <div class="table-title">Hak Akses Fitur</div>
-                            <div class="table-subtitle">Tanda centang menunjukkan role yang boleh membuka atau menjalankan fitur tersebut.</div>
+                    <form action="{{ route('manager.access.update') }}" method="post">
+                        @csrf
+                        <div class="table-header">
+                            <div>
+                                <div class="table-title">Hak Akses Fitur</div>
+                                <div class="table-subtitle">Tanda centang menunjukkan role yang boleh membuka atau menjalankan fitur tersebut.</div>
+                            </div>
+                            <button type="submit" class="button button-primary">Simpan Perubahan</button>
                         </div>
-                    </div>
 
-                    <div class="table-wrap">
-                        <table class="access-table">
-                            <thead>
-                                <tr>
-                                    <th>Fitur Menu</th>
-                                    @foreach ($roles as $role)
-                                        <th>{{ $role }}</th>
-                                    @endforeach
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($accessRows as $row)
+                        <div class="table-wrap">
+                            <table class="access-table">
+                                <thead>
                                     <tr>
-                                        <td>
-                                            <div class="access-menu-name">
-                                                <span class="access-menu-title">{{ $row['name'] }}</span>
-                                                <span class="access-menu-group">{{ $row['group'] }}</span>
-                                            </div>
-                                        </td>
-                                        @foreach (array_keys($roles) as $roleKey)
-                                            <td>
-                                                @if ($row[$roleKey])
-                                                    <span class="access-check" aria-label="Boleh">&#10003;</span>
-                                                @else
-                                                    <span class="access-empty" aria-label="Tidak boleh">-</span>
-                                                @endif
-                                            </td>
+                                        <th>Fitur Menu</th>
+                                        @foreach ($roles as $level => $roleName)
+                                            <th>{{ $roleName }}</th>
                                         @endforeach
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    @foreach ($features as $featureKey => $feature)
+                                        <tr>
+                                            <td>
+                                                <div class="access-menu-name">
+                                                    <span class="access-menu-title">{{ $feature['name'] }}</span>
+                                                    <span class="access-menu-group">{{ $feature['group'] }}</span>
+                                                </div>
+                                            </td>
+                                            @foreach ($roles as $level => $roleName)
+                                                <td>
+                                                    <label class="sr-only" for="permission_{{ $featureKey }}_{{ $level }}">
+                                                        {{ $feature['name'] }} untuk {{ $roleName }}
+                                                    </label>
+                                                    <input
+                                                        type="checkbox"
+                                                        id="permission_{{ $featureKey }}_{{ $level }}"
+                                                        name="permissions[{{ $level }}][]"
+                                                        value="{{ $featureKey }}"
+                                                        {{ isset($permissions[$level][$featureKey]) && $permissions[$level][$featureKey] ? 'checked' : '' }}
+                                                    />
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
 
                     <p class="access-note">
                         Hak akses mengikuti level role terbaru: Customer 0, Waiter 1, Baker 2, Cashier 3, Manager 4, dan Owner 5. Halaman ini menampilkan fokus akses untuk role yang dikelola di area manager.

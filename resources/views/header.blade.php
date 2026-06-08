@@ -834,6 +834,10 @@
     };
 @endphp
 
+@php
+    $can = fn (string $feature): bool => \App\Support\AccessControl::allowed($authLevel, $feature);
+@endphp
+
 <header class="mobile-appbar">
     <a class="mobile-appbar-brand" href="{{ $dashboardRoute }}" aria-label="Buka dashboard">
         <span class="mobile-appbar-logo">
@@ -898,8 +902,9 @@
             </a>
         @endif
 
-        @if ($authLevel === 3)
-            <a class="sidebar-link {{ request()->routeIs('cashier.orders') ? 'active' : '' }}" href="{{ route('cashier.orders') }}" title="Pesanan">
+        @if ($authLevel === 3 || $authLevel === 4)
+            @if ($authLevel === 3 || ($authLevel === 4 && $can('cashier.orders')))
+                <a class="sidebar-link {{ request()->routeIs('cashier.orders') ? 'active' : '' }}" href="{{ route('cashier.orders') }}" title="Pesanan">
                 <span class="sidebar-icon">
                     <svg viewBox="0 0 24 24" fill="none">
                         <path d="M5 4h14v16H5V4Z" />
@@ -909,7 +914,9 @@
                 </span>
                 <span class="sidebar-label">Pesanan</span>
             </a>
-            <a class="sidebar-link {{ request()->routeIs('cashier.history') ? 'active' : '' }}" href="{{ route('cashier.history') }}" title="Riwayat Transaksi">
+            @endif
+            @if ($authLevel === 3 || ($authLevel === 4 && $can('cashier.history')))
+                <a class="sidebar-link {{ request()->routeIs('cashier.history') ? 'active' : '' }}" href="{{ route('cashier.history') }}" title="Riwayat Transaksi">
                 <span class="sidebar-icon">
                     <svg viewBox="0 0 24 24" fill="none">
                         <path d="M12 8v5l3 2" />
@@ -919,6 +926,7 @@
                 </span>
                 <span class="sidebar-label">Riwayat Transaksi</span>
             </a>
+            @endif
         @endif
 
         @if ($authLevel === 4)
@@ -962,10 +970,39 @@
                 ];
 
                 $dataMasterSections = array_keys($dataMasterMenus);
-                $dataMasterOpen = request()->routeIs('manager.page') && in_array(request()->route('section'), $dataMasterSections, true);
-            @endphp
+                $filteredDataMasterMenus = [];
+                foreach ($dataMasterMenus as $section => $menu) {
+                    if (\App\Support\AccessControl::allowed($authLevel, \App\Support\AccessControl::managerFeatureForSection($section))) {
+                        $filteredDataMasterMenus[$section] = $menu;
+                    }
+                }
 
-            <details class="sidebar-group" @open($dataMasterOpen)>
+                $managerMenus = [
+                    'access' => [
+                        'label' => 'Hak Akses',
+                        'icon' => '<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4Z" /><path d="M9 12l2 2 4-4" />',
+                    ],
+                    'database' => [
+                        'label' => 'Database',
+                        'icon' => '<path d="M4 7c0 2 3.58 4 8 4s8-2 8-4-3.58-4-8-4-8 2-8 4Z" /><path d="M4 7v10c0 2 3.58 4 8 4s8-2 8-4V7" /><path d="M4 12c0 2 3.58 4 8 4s8-2 8-4" />',
+                    ],
+                    'activity' => [
+                        'label' => 'Catatan Aktivitas',
+                        'icon' => '<path d="M5 4h14v16H5V4Z" /><path d="M8 8h8M8 12h8M8 16h5" /><path d="M17 20l3 2" />',
+                    ],
+                ];
+
+                $filteredManagerMenus = [];
+                foreach ($managerMenus as $section => $menu) {
+                    if ($section === 'access' || \App\Support\AccessControl::allowed($authLevel, \App\Support\AccessControl::managerFeatureForSection($section))) {
+                        $filteredManagerMenus[$section] = $menu;
+                    }
+                }
+
+                $dataMasterOpen = request()->routeIs('manager.page') && in_array(request()->route('section'), array_keys($filteredDataMasterMenus), true);
+            @endphp
+            @if (count($filteredDataMasterMenus))
+                <details class="sidebar-group" @open($dataMasterOpen)>
                 <summary class="sidebar-link sidebar-group-toggle">
                     <span class="sidebar-icon">
                         <svg viewBox="0 0 24 24" fill="none">
@@ -980,7 +1017,7 @@
                 </summary>
 
                 <div class="sidebar-subnav">
-                    @foreach ($dataMasterMenus as $section => $menu)
+                    @foreach ($filteredDataMasterMenus as $section => $menu)
                         <a class="sidebar-link {{ request()->routeIs('manager.page') && request()->route('section') === $section ? 'active' : '' }}" href="{{ route('manager.page', $section) }}" title="{{ $menu['label'] }}">
                             <span class="sidebar-icon">
                                 <svg viewBox="0 0 24 24" fill="none">
@@ -992,8 +1029,9 @@
                     @endforeach
                 </div>
             </details>
+            @endif
 
-            @foreach ($managerMenus as $section => $menu)
+            @foreach ($filteredManagerMenus as $section => $menu)
                 <a class="sidebar-link {{ request()->routeIs('manager.page') && request()->route('section') === $section ? 'active' : '' }}" href="{{ route('manager.page', $section) }}" title="{{ $menu['label'] }}">
                     <span class="sidebar-icon">
                         <svg viewBox="0 0 24 24" fill="none">
@@ -1003,6 +1041,55 @@
                     <span class="sidebar-label">{{ $menu['label'] }}</span>
                 </a>
             @endforeach
+
+            @php
+                $reportCandidates = [
+                    'sales' => ['label' => 'Penjualan', 'route' => 'manager.reports.sales', 'feature' => 'owner.sales', 'icon' => '<path d="M4 19V5" /><path d="M8 17V9" /><path d="M12 17V7" /><path d="M16 17v-5" /><path d="M20 17V4" />'],
+                    'finance' => ['label' => 'Keuangan', 'route' => 'manager.reports.finance', 'feature' => 'owner.finance', 'icon' => '<path d="M4 7h16v12H4V7Z" /><path d="M8 7V5h8v2" /><path d="M8 13h.01M12 13h.01M16 13h.01" />'],
+                    'products' => ['label' => 'Produk', 'route' => 'manager.reports.products', 'feature' => 'owner.products', 'icon' => '<path d="M5 4h14v16H5V4Z" /><path d="M8 8h8M8 12h8M8 16h5" />'],
+                    'ingredients' => ['label' => 'Bahan', 'route' => 'manager.reports.ingredients', 'feature' => 'owner.ingredients', 'icon' => '<path d="M6 4h12l-1 16H7L6 4Z" /><path d="M9 8h6M9 12h6M9 16h4" />'],
+                ];
+
+                $availableReports = [];
+                foreach ($reportCandidates as $key => $rep) {
+                    if (\App\Support\AccessControl::allowed($authLevel, $rep['feature'])) {
+                        $availableReports[$key] = $rep;
+                    }
+                }
+
+                $reportOpen = request()->routeIs('manager.reports.sales', 'manager.reports.finance', 'manager.reports.products', 'manager.reports.ingredients');
+            @endphp
+
+            @if (count($availableReports))
+                <details class="sidebar-group" @open($reportOpen)>
+                    <summary class="sidebar-link sidebar-group-toggle">
+                        <span class="sidebar-icon">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M4 19V5" />
+                                <path d="M8 17V9" />
+                                <path d="M12 17V7" />
+                                <path d="M16 17v-5" />
+                                <path d="M20 17V4" />
+                            </svg>
+                        </span>
+                        <span class="sidebar-label">Laporan</span>
+                        <span class="sidebar-caret">▼</span>
+                    </summary>
+
+                    <div class="sidebar-subnav">
+                        @foreach ($availableReports as $rep)
+                            <a class="sidebar-link {{ request()->routeIs($rep['route']) ? 'active' : '' }}" href="{{ route($rep['route']) }}" title="{{ $rep['label'] }}">
+                                <span class="sidebar-icon">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        {!! $rep['icon'] !!}
+                                    </svg>
+                                </span>
+                                <span class="sidebar-label">{{ $rep['label'] }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                </details>
+            @endif
         @endif
 
         @if ($authLevel === 5)
