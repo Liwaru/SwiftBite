@@ -1461,6 +1461,7 @@
             let _qrRawStream = null;
             let _qrScanRaf = null;
             let _barcodeDetector = null;
+            let _qrEscHandler = null;
 
             function ensureHtml5Qr() {
                 return new Promise((resolve, reject) => {
@@ -1486,11 +1487,13 @@
                     return;
                 }
 
-                const html = '\n<div id="qrScannerModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:11000;">\n  <div style="width:360px;max-width:92%;background:#fff;padding:12px;border-radius:8px;box-sizing:border-box;text-align:center;">\n    <div id="qrReader" style="width:100%;height:260px;margin-bottom:8px;"></div>\n    <div id="qrStatus" style="font-size:13px;color:#333;margin-bottom:8px;">Menunggu...</div>\n    <div style="display:flex;gap:8px;justify-content:center;">\n      <button type="button" id="qrTestBtn" style="padding:8px 12px;border-radius:6px;background:#eee;border:1px solid #ccc;">Test Kamera</button>\n      <button type="button" id="qrCloseBtn" style="padding:8px 12px;border-radius:6px;">Tutup</button>\n    </div>\n  </div>\n</div>';
+                const html = '\n<div id="qrScannerModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:11000;">\n  <div style="width:360px;max-width:92%;background:#fff;padding:12px;border-radius:8px;box-sizing:border-box;text-align:center;">\n    <div id="qrReader" style="width:100%;height:260px;margin-bottom:8px;"></div>\n    <div id="qrStatus" style="font-size:13px;color:#333;margin-bottom:8px;">Menunggu...</div>\n    <div style="display:flex;gap:8px;justify-content:center;">\n      <button type="button" id="qrCloseBtn" style="padding:8px 12px;border-radius:6px;">Tutup</button>\n    </div>\n  </div>\n</div>';
 
                 document.body.insertAdjacentHTML('beforeend', html);
+                const modalEl = document.getElementById('qrScannerModal');
                 document.getElementById('qrCloseBtn')?.addEventListener('click', closeQrScanner);
-                document.getElementById('qrTestBtn')?.addEventListener('click', () => { showRawCameraStream().catch(e=>console.error(e)); });
+                // close when clicking on backdrop
+                modalEl?.addEventListener('click', (ev) => { if (ev.target === modalEl) closeQrScanner(); });
             }
 
             async function openQrScanner(targetId) {
@@ -1498,6 +1501,15 @@
                 const modal = document.getElementById('qrScannerModal');
                 if (!modal) return;
                 modal.style.display = 'flex';
+                // show raw camera immediately to prompt permission and display preview
+                try { showRawCameraStream().catch(()=>{}); } catch(e) {}
+                // add escape key handler to close modal and stop camera
+                try {
+                    if (!_qrEscHandler) {
+                        _qrEscHandler = function (ev) { if (ev.key === 'Escape') closeQrScanner(); };
+                        document.addEventListener('keydown', _qrEscHandler);
+                    }
+                } catch(e) {}
                 _qrScannerTarget = document.getElementById(targetId) || null;
 
                 try {
@@ -1524,7 +1536,9 @@
                         }
                     } else {
                         // fallback to html5-qrcode library
-                        try {
+                            try {
+                            // cleanup resources before starting html5qr
+                            cleanupQrResources();
                             if (!_html5QrScanner) _html5QrScanner = new Html5Qrcode('qrReader');
                             const cameras = await Html5Qrcode.getCameras();
                             const cameraId = (cameras && cameras.length) ? cameras[0].id : null;
@@ -1546,6 +1560,13 @@
                 } catch (e) {
                     console.error('QR scanner init error', e);
                 }
+                // ensure at least a raw preview is shown if other flows didn't start
+                try {
+                    const hasPreview = !!document.getElementById('qrPreview') || !!_qrRawStream || (!!_html5QrScanner && typeof _html5QrScanner.getState === 'function');
+                    if (!hasPreview) {
+                        showRawCameraStream().catch(()=>{});
+                    }
+                } catch(e) {}
             }
 
             function closeQrScanner() {
@@ -1558,11 +1579,12 @@
                     });
                 }
 
-                // stop any raw preview/scanner
-                try { stopCameraPreviewAndScan(); } catch(e) {}
+                // stop any preview/scanner and cleanup resources
+                try { cleanupQrResources(); } catch(e) {}
 
                 _html5QrScanner = null;
                 _qrScannerTarget = null;
+                try { if (_qrEscHandler) { document.removeEventListener('keydown', _qrEscHandler); _qrEscHandler = null; } } catch(e) {}
             }
 
             function setQrStatus(text) {
@@ -1580,7 +1602,11 @@
             async function showRawCameraStream() {
                 try {
                     setQrStatus('Menampilkan kamera langsung...');
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                    let stream = _qrRawStream || null;
+                    if (!stream) {
+                        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                        _qrRawStream = stream;
+                    }
                     const readerEl = document.getElementById('qrReader');
                     if (!readerEl) return;
                     readerEl.innerHTML = '';
@@ -1604,8 +1630,8 @@
             async function startCameraPreviewAndScan() {
                 // start raw camera and attach to video, then use BarcodeDetector to scan
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                    _qrRawStream = stream;
+                    const stream = _qrRawStream || await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                    _qrRawStream = _qrRawStream || stream;
                     const readerEl = document.getElementById('qrReader');
                     if (!readerEl) return;
                     readerEl.innerHTML = '';
@@ -1656,7 +1682,33 @@
                     try { _qrRawStream.getTracks().forEach(t => t.stop()); } catch (e) {}
                     _qrRawStream = null;
                 }
-                const v = document.getElementById('qrPreview'); if (v && v.parentNode) v.parentNode.removeChild(v);
+                const v = document.getElementById('qrPreview'); if (v) { try { v.pause(); v.srcObject = null; } catch(e){} if (v.parentNode) v.parentNode.removeChild(v); }
+            }
+
+            function cleanupQrResources() {
+                try {
+                    if (_qrScanRaf) { cancelAnimationFrame(_qrScanRaf); _qrScanRaf = null; }
+                } catch(e) {}
+                try {
+                    if (_qrRawStream) { _qrRawStream.getTracks().forEach(t => t.stop()); _qrRawStream = null; }
+                } catch(e) {}
+                try {
+                    if (_html5QrScanner) {
+                        try { _html5QrScanner.stop().catch(()=>{}); } catch(e) {}
+                        try { _html5QrScanner.clear(); } catch(e) {}
+                        _html5QrScanner = null;
+                    }
+                } catch(e) {}
+                try {
+                    // stop any video elements inside reader
+                    const videos = document.querySelectorAll('#qrReader video');
+                    videos.forEach((vv) => {
+                        try { if (vv.srcObject && vv.srcObject.getTracks) { vv.srcObject.getTracks().forEach(t=>t.stop()); } } catch(e) {}
+                        try { vv.pause(); vv.srcObject = null; } catch(e) {}
+                        try { if (vv.parentNode) vv.parentNode.removeChild(vv); } catch(e) {}
+                    });
+                    const v = document.getElementById('qrPreview'); if (v) { try { v.pause(); v.srcObject = null; } catch(e){} if (v.parentNode) v.parentNode.removeChild(v); }
+                } catch(e) {}
             }
 
             async function debugCameraInfo() {
