@@ -23,12 +23,12 @@ Route::middleware('simple.auth')->group(function () {
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 });
 
-Route::middleware(['simple.auth', 'user.level:1'])->group(function () {
+Route::middleware(['simple.auth', 'user.level:1,4'])->group(function () {
     Route::get('/waiter', [WaiterController::class, 'dashboard'])->name('waiter.dashboard')->middleware('feature.access:waiter.orders');
     Route::patch('/waiter/orders/{order}/complete', [WaiterController::class, 'complete'])->name('waiter.orders.complete')->middleware('feature.access:waiter.orders');
 });
 
-Route::middleware(['simple.auth', 'user.level:2'])->group(function () {
+Route::middleware(['simple.auth', 'user.level:2,4'])->group(function () {
     Route::get('/baker', [ChefController::class, 'dashboard'])->name('baker.dashboard')->middleware('feature.access:chef.orders');
     Route::get('/baker/orders', [ChefController::class, 'orders'])->name('baker.orders')->middleware('feature.access:chef.orders');
     Route::patch('/baker/orders/{order}/ready', [ChefController::class, 'markReady'])->name('baker.orders.ready')->middleware('feature.access:chef.orders');

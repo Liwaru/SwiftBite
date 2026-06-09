@@ -888,7 +888,7 @@
             </a>
         @endif
 
-        @if ($authLevel === 1)
+        @if ($authLevel === 1 || ($authLevel === 4 && $can('waiter.orders')))
             <a class="sidebar-link {{ request()->routeIs('waiter.dashboard') ? 'active' : '' }}" href="{{ route('waiter.dashboard') }}" title="Pesanan Antar">
                 <span class="sidebar-icon">
                     <svg viewBox="0 0 24 24" fill="none">
@@ -900,6 +900,34 @@
                 </span>
                 <span class="sidebar-label">Pesanan Antar</span>
             </a>
+        @endif
+
+        @if ($authLevel === 2 || ($authLevel === 4 && ($can('chef.orders') || $can('chef.ingredients'))))
+            @if ($authLevel === 2 || ($authLevel === 4 && $can('chef.orders')))
+                <a class="sidebar-link {{ request()->routeIs('baker.orders') ? 'active' : '' }}" href="{{ route('baker.orders') }}" title="Pesanan Dapur">
+                    <span class="sidebar-icon">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M6 13.8V21h12v-7.2" />
+                            <path d="M2 13.8l10-10 10 10" />
+                            <path d="M12 3v1" />
+                        </svg>
+                    </span>
+                    <span class="sidebar-label">Pesanan Dapur</span>
+                </a>
+            @endif
+            @if ($authLevel === 2 || ($authLevel === 4 && $can('chef.ingredients')))
+                <a class="sidebar-link {{ request()->routeIs('baker.ingredients') ? 'active' : '' }}" href="{{ route('baker.ingredients') }}" title="Bahan Dapur">
+                    <span class="sidebar-icon">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M11 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v7" />
+                            <path d="M16 20l2 2 4-4" />
+                            <path d="M9 7h6" />
+                            <path d="M9 11h3" />
+                        </svg>
+                    </span>
+                    <span class="sidebar-label">Bahan Dapur</span>
+                </a>
+            @endif
         @endif
 
         @if ($authLevel === 3 || $authLevel === 4)
@@ -939,6 +967,10 @@
                     'menus' => [
                         'label' => 'Data Menu',
                         'icon' => '<path d="M5 4h14v16H5V4Z" /><path d="M9 8h6M9 12h6M9 16h3" /><path d="M7 8h.01M7 12h.01M7 16h.01" />',
+                    ],
+                    'packages' => [
+                        'label' => 'Data Paket Promo',
+                        'icon' => '<path d="M21 8l-2-2H5L3 8v10h18V8Z" /><path d="M3 8h18" /><path d="M10 12l2 2 4-4" />',
                     ],
                     'ingredients' => [
                         'label' => 'Data Bahan',

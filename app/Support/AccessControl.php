@@ -114,6 +114,7 @@ class AccessControl
         return match ($section) {
             'users' => 'manager.users',
             'menus' => 'manager.menus',
+            'packages' => 'manager.packages',
             'ingredients' => 'manager.ingredients',
             'tables' => 'manager.tables',
             'stock' => 'manager.stock',

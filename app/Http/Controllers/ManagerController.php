@@ -57,6 +57,7 @@ class ManagerController extends Controller
         $pages = [
             'users' => ['title' => 'Data User', 'description' => 'Kelola akun pengguna dan role di SwiftBite.'],
             'menus' => ['title' => 'Data Menu', 'description' => 'Kelola menu makanan dan minuman.'],
+            'packages' => ['title' => 'Data Paket Promo', 'description' => 'Kelola paket promo dan bundling.'],
             'ingredients' => ['title' => 'Data Bahan', 'description' => 'Kelola bahan baku bakery dan status stok.'],
             'tables' => ['title' => 'Data Meja', 'description' => 'Kelola meja dan QR ordering.'],
             'stock' => ['title' => 'Stok Produk', 'description' => 'Pantau stok makanan dan minuman.'],
@@ -243,6 +244,7 @@ class ManagerController extends Controller
         $views = [
             'users' => 'manager.data_user',
             'menus' => 'manager.data_menu',
+            'packages' => 'manager.data_menu',
             'ingredients' => 'manager.data_bahan',
             'tables' => 'manager.data_meja',
             'stock' => 'manager.stok_produk',
