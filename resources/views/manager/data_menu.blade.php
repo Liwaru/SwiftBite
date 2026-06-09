@@ -318,7 +318,12 @@
 
                                     <div class="field-group js-create-barcode-field" @if ($createInputMode !== 'barcode') hidden @endif>
                                         <label for="createMenuBarcode">Barcode</label>
-                                        <input id="createMenuBarcode" type="text" name="barcode" value="{{ old('barcode') }}" maxlength="80" inputmode="numeric" autocomplete="off" placeholder="Scan barcode produk">
+                                        <div class="barcode-input-wrap">
+                                            <input id="createMenuBarcode" type="text" name="barcode" value="{{ old('barcode') }}" maxlength="80" inputmode="numeric" autocomplete="off" placeholder="Scan barcode produk">
+                                            <button type="button" class="qr-open-btn js-open-qr" data-target="createMenuBarcode" aria-label="Buka scanner QR">
+                                                <i class="bi bi-qr-code" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div class="field-group">
@@ -611,7 +616,12 @@
 
                                     <div class="field-group">
                                         <label for="editMenuBarcode">Barcode</label>
-                                        <input id="editMenuBarcode" type="text" name="barcode" maxlength="80" inputmode="numeric" class="js-edit-menu-barcode" placeholder="Opsional">
+                                        <div class="barcode-input-wrap">
+                                            <input id="editMenuBarcode" type="text" name="barcode" maxlength="80" inputmode="numeric" class="js-edit-menu-barcode" placeholder="Opsional">
+                                            <button type="button" class="qr-open-btn js-open-qr" data-target="editMenuBarcode" aria-label="Buka scanner QR">
+                                                <i class="bi bi-qr-code" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div class="field-group">

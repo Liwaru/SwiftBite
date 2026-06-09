@@ -208,7 +208,12 @@
                                     <div class="stock-mode-panel" data-stock-panel="barcode" hidden>
                                         <div class="field-group">
                                             <label for="stockBarcodeInput">Scan / Input Barcode</label>
-                                            <input id="stockBarcodeInput" type="text" class="js-stock-barcode-input" maxlength="80" inputmode="numeric" autocomplete="off" placeholder="Scan barcode produk">
+                                            <div class="barcode-input-wrap">
+                                                <input id="stockBarcodeInput" type="text" class="js-stock-barcode-input" maxlength="80" inputmode="numeric" autocomplete="off" placeholder="Scan barcode produk">
+                                                <button type="button" class="qr-open-btn js-open-qr" data-target="stockBarcodeInput" aria-label="Buka scanner QR">
+                                                    <i class="bi bi-qr-code" aria-hidden="true"></i>
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div class="stock-scan-status js-stock-scan-status">

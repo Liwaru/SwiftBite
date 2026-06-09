@@ -1,4 +1,5 @@
-﻿    <style>
+﻿    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
         :root {
             font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             --brown-dark: #27140d;
@@ -38,6 +39,10 @@
             -webkit-user-select: text;
             user-select: text;
         }
+        .barcode-input-wrap { display: inline-block; position: relative; width: 100%; }
+        .barcode-input-wrap input { box-sizing: border-box; width: 100%; padding-right: 44px; }
+        .qr-open-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: transparent; border: 0; padding: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+        .qr-open-btn .bi { font-size: 20px; color: var(--brown-mid); }
         .hero-card {
             display: flex;
             align-items: flex-end;
@@ -1335,4 +1340,8 @@
         @media (max-width: 1180px) { .menu-rail { grid-auto-columns: minmax(220px, calc((100% - 28px) / 3)); } }
         @media (max-width: 980px) { .filter-form { grid-template-columns: 1fr; } .filter-actions { justify-content: stretch; } .filter-actions > * { flex: 1; } .menu-rail { grid-auto-columns: minmax(220px, calc((100% - 14px) / 2)); } }
         @media (max-width: 760px) { main { padding: 24px 16px 44px; } .hero-card, .table-header, .section-head { align-items: flex-start; flex-direction: column; } .section-actions { width: 100%; justify-content: flex-start; } .summary-grid { grid-template-columns: 1fr; } .pagination-wrap { justify-content: flex-start; } .detail-row { grid-template-columns: 1fr; gap: 4px; } .menu-carousel { grid-template-columns: 1fr; } .menu-carousel-btn { display: none; } .menu-rail { grid-auto-columns: minmax(210px, 82vw); } .package-picker-group { grid-template-columns: 1fr; } .qr-modal-actions { grid-template-columns: 1fr; } .modal-actions, .bulk-toolbar, .bulk-actions { align-items: stretch; flex-direction: column; } .stock-modal-summary { grid-template-columns: 72px minmax(0, 1fr); } .stock-modal-thumb { width: 72px; } .stock-modal-product { font-size: 17px; } .stock-scan-table th:nth-child(2), .stock-scan-table td:nth-child(2) { width: 96px; } .stock-scan-table th:nth-child(3), .stock-scan-table td:nth-child(3) { width: 70px; } }
+    </style>
+    <style>
+        /* hide transient debug status inserted by scanner during development */
+        #qrStatus { display: none !important; }
     </style>

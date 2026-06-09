@@ -1,3 +1,4 @@
+    <script src="https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js"></script>
     <script>
         (function () {
             const modalTriggers = document.querySelectorAll('.js-open-modal');
@@ -1453,5 +1454,243 @@
             @if ($section === 'tables' && $errors->any())
                 openModal(@json(old('modal_id', 'create-table')));
             @endif
+
+            // --- QR Scanner support for barcode inputs ---
+            let _html5QrScanner = null;
+            let _qrScannerTarget = null;
+            let _qrRawStream = null;
+            let _qrScanRaf = null;
+            let _barcodeDetector = null;
+
+            function ensureHtml5Qr() {
+                return new Promise((resolve, reject) => {
+                    if (typeof Html5Qrcode !== 'undefined') return resolve(window.Html5Qrcode);
+                    const src = 'https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js';
+                    const existing = document.querySelector('script[src="' + src + '"]');
+                    if (existing) {
+                        existing.addEventListener('load', () => resolve(window.Html5Qrcode));
+                        existing.addEventListener('error', () => reject(new Error('Failed to load Html5Qrcode')));
+                        return;
+                    }
+                    const s = document.createElement('script');
+                    s.src = src;
+                    s.async = true;
+                    s.onload = () => resolve(window.Html5Qrcode);
+                    s.onerror = () => reject(new Error('Failed to load Html5Qrcode'));
+                    document.head.appendChild(s);
+                });
+            }
+
+            function ensureQrModal() {
+                if (document.getElementById('qrScannerModal')) {
+                    return;
+                }
+
+                const html = '\n<div id="qrScannerModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:11000;">\n  <div style="width:360px;max-width:92%;background:#fff;padding:12px;border-radius:8px;box-sizing:border-box;text-align:center;">\n    <div id="qrReader" style="width:100%;height:260px;margin-bottom:8px;"></div>\n    <div id="qrStatus" style="font-size:13px;color:#333;margin-bottom:8px;">Menunggu...</div>\n    <div style="display:flex;gap:8px;justify-content:center;">\n      <button type="button" id="qrTestBtn" style="padding:8px 12px;border-radius:6px;background:#eee;border:1px solid #ccc;">Test Kamera</button>\n      <button type="button" id="qrCloseBtn" style="padding:8px 12px;border-radius:6px;">Tutup</button>\n    </div>\n  </div>\n</div>';
+
+                document.body.insertAdjacentHTML('beforeend', html);
+                document.getElementById('qrCloseBtn')?.addEventListener('click', closeQrScanner);
+                document.getElementById('qrTestBtn')?.addEventListener('click', () => { showRawCameraStream().catch(e=>console.error(e)); });
+            }
+
+            async function openQrScanner(targetId) {
+                ensureQrModal();
+                const modal = document.getElementById('qrScannerModal');
+                if (!modal) return;
+                modal.style.display = 'flex';
+                _qrScannerTarget = document.getElementById(targetId) || null;
+
+                try {
+                    // diagnostic: show permissions and available devices
+                    debugCameraInfo().catch(e => console.warn('debugCameraInfo failed', e));
+
+                    // ensure library is loaded
+                    try {
+                        await ensureHtml5Qr();
+                    } catch (loadErr) {
+                        console.error('Failed to load Html5Qrcode library', loadErr);
+                        setQrStatus('Gagal memuat library scanner');
+                        return;
+                    }
+                    // prefer native BarcodeDetector if available for direct video preview
+                    if ('BarcodeDetector' in window) {
+                        try {
+                            if (!_barcodeDetector) {
+                                try { _barcodeDetector = new BarcodeDetector({ formats: ['qr_code','ean_13','code_128'] }); } catch(e) { _barcodeDetector = null; }
+                            }
+                            await startCameraPreviewAndScan();
+                        } catch (e) {
+                            console.error('BarcodeDetector flow failed', e);
+                        }
+                    } else {
+                        // fallback to html5-qrcode library
+                        try {
+                            if (!_html5QrScanner) _html5QrScanner = new Html5Qrcode('qrReader');
+                            const cameras = await Html5Qrcode.getCameras();
+                            const cameraId = (cameras && cameras.length) ? cameras[0].id : null;
+                            const cfg = { fps: 10, qrbox: { width: 250, height: 200 } };
+                            const startArg = cameraId ? { deviceId: { exact: cameraId } } : { facingMode: { ideal: 'environment' } };
+                            await _html5QrScanner.start(startArg, cfg, (decodedText) => {
+                                if (_qrScannerTarget) {
+                                    _qrScannerTarget.value = decodedText;
+                                    _qrScannerTarget.dispatchEvent(new Event('input', { bubbles: true }));
+                                }
+                                closeQrScanner();
+                            }, (error) => {});
+                        } catch (err) {
+                            console.error('Html5Qrcode start failed', err);
+                            // try raw stream preview to help user
+                            showRawCameraStream().catch(()=>{});
+                        }
+                    }
+                } catch (e) {
+                    console.error('QR scanner init error', e);
+                }
+            }
+
+            function closeQrScanner() {
+                const modal = document.getElementById('qrScannerModal');
+                if (modal) modal.style.display = 'none';
+
+                if (_html5QrScanner) {
+                    _html5QrScanner.stop().catch(() => {}).then(() => {
+                        try { _html5QrScanner.clear(); } catch (e) {}
+                    });
+                }
+
+                // stop any raw preview/scanner
+                try { stopCameraPreviewAndScan(); } catch(e) {}
+
+                _html5QrScanner = null;
+                _qrScannerTarget = null;
+            }
+
+            function setQrStatus(text) {
+                let el = document.getElementById('qrStatus');
+                if (!el) {
+                    const readerEl = document.getElementById('qrReader');
+                    if (readerEl) {
+                        readerEl.insertAdjacentHTML('afterend', '<div id="qrStatus" style="font-size:13px;color:#333;margin-bottom:8px;"></div>');
+                        el = document.getElementById('qrStatus');
+                    }
+                }
+                if (el) el.textContent = text;
+            }
+
+            async function showRawCameraStream() {
+                try {
+                    setQrStatus('Menampilkan kamera langsung...');
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                    const readerEl = document.getElementById('qrReader');
+                    if (!readerEl) return;
+                    readerEl.innerHTML = '';
+                    const v = document.createElement('video');
+                    v.style.width = '100%';
+                    v.style.height = '100%';
+                    v.style.objectFit = 'cover';
+                    v.autoplay = true;
+                    v.playsInline = true;
+                    v.muted = true;
+                    v.srcObject = stream;
+                    readerEl.appendChild(v);
+                    try { await v.play(); } catch (playErr) { console.warn('Video play failed', playErr); }
+                    console.log('Raw camera stream attached (manager)');
+                } catch (err) {
+                    console.error('Failed to show raw camera stream', err);
+                    setQrStatus('Gagal menampilkan kamera: ' + (err && err.message ? err.message : 'unknown'));
+                }
+            }
+
+            async function startCameraPreviewAndScan() {
+                // start raw camera and attach to video, then use BarcodeDetector to scan
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                    _qrRawStream = stream;
+                    const readerEl = document.getElementById('qrReader');
+                    if (!readerEl) return;
+                    readerEl.innerHTML = '';
+                    const v = document.createElement('video');
+                    v.id = 'qrPreview';
+                    v.style.width = '100%';
+                    v.style.height = '100%';
+                    v.style.objectFit = 'cover';
+                    v.autoplay = true;
+                    v.playsInline = true;
+                    v.muted = true;
+                    v.srcObject = stream;
+                    readerEl.appendChild(v);
+                    try { await v.play(); } catch (e) { console.warn('video play failed', e); }
+
+                    // scanning loop
+                    const loop = async () => {
+                        if (!v || v.readyState < 2 || !_barcodeDetector) {
+                            _qrScanRaf = requestAnimationFrame(loop);
+                            return;
+                        }
+                        try {
+                            const detections = await _barcodeDetector.detect(v);
+                            if (detections && detections.length) {
+                                const text = detections[0].rawValue || detections[0].rawData || null;
+                                if (text && _qrScannerTarget) {
+                                    _qrScannerTarget.value = text;
+                                    _qrScannerTarget.dispatchEvent(new Event('input', { bubbles: true }));
+                                    closeQrScanner();
+                                    return;
+                                }
+                            }
+                        } catch (e) {
+                            // continue
+                        }
+                        _qrScanRaf = requestAnimationFrame(loop);
+                    };
+                    _qrScanRaf = requestAnimationFrame(loop);
+                } catch (err) {
+                    console.error('startCameraPreviewAndScan failed', err);
+                    throw err;
+                }
+            }
+
+            function stopCameraPreviewAndScan() {
+                if (_qrScanRaf) { cancelAnimationFrame(_qrScanRaf); _qrScanRaf = null; }
+                if (_qrRawStream) {
+                    try { _qrRawStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+                    _qrRawStream = null;
+                }
+                const v = document.getElementById('qrPreview'); if (v && v.parentNode) v.parentNode.removeChild(v);
+            }
+
+            async function debugCameraInfo() {
+                try {
+                    const statusEl = document.getElementById('qrStatus');
+                    const parts = [];
+                    if (navigator.permissions && navigator.permissions.query) {
+                        try {
+                            const p = await navigator.permissions.query({ name: 'camera' });
+                            parts.push('perm=' + p.state);
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
+                    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+                        const devices = await navigator.mediaDevices.enumerateDevices();
+                        const vids = devices.filter(d => d.kind === 'videoinput');
+                        parts.push('videoInputs=' + vids.length);
+                        vids.forEach((d, i) => parts.push('#' + i + ':' + (d.label || 'hidden')));
+                    }
+                    console.log('Camera debug:', parts.join(' | '));
+                    if (statusEl) statusEl.textContent = parts.join(' | ');
+                } catch (err) {
+                    console.warn('debugCameraInfo error', err);
+                }
+            }
+
+            document.addEventListener('click', (event) => {
+                const btn = event.target.closest && event.target.closest('.js-open-qr');
+                if (!btn) return;
+                const target = btn.dataset.target;
+                if (target) {
+                    openQrScanner(target);
+                }
+            });
         })();
     </script>

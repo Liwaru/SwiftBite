@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard Kasir</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
         :root {
             --sidebar-brown: #5a321f;
@@ -15,6 +16,10 @@
             font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
         body { margin: 0; background: #ffffff; color: #2b1c15; }
+        .barcode-input-wrap { display: inline-block; position: relative; width: 100%; }
+        .barcode-input-wrap input { box-sizing: border-box; width: 100%; padding-right: 44px; }
+        .qr-open-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: transparent; border: 0; padding: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+        .qr-open-btn .bi { font-size: 20px; color: #6b3d00; }
         .app-shell .content-with-sidebar { background: #ffffff !important; }
         main { width: 100%; max-width: none; min-width: 0; box-sizing: border-box; padding: clamp(22px, 2.4vw, 34px) clamp(16px, 2.3vw, 30px) 56px; }
         h1, h2, h3, p { margin: 0; }
@@ -301,7 +306,12 @@
 
                         <div class="pos-mode-panel" data-pos-panel="scan">
                             <form class="barcode-order-form" id="barcodeOrderForm">
-                                <input type="search" id="barcodeOrderInput" placeholder="Scan barcode produk" autocomplete="off" inputmode="numeric" aria-label="Scan barcode produk">
+                                <div class="barcode-input-wrap">
+                                    <input type="search" id="barcodeOrderInput" placeholder="Scan barcode produk" autocomplete="off" inputmode="numeric" aria-label="Scan barcode produk">
+                                    <button type="button" class="qr-open-btn js-open-qr" data-target="barcodeOrderInput" aria-label="Buka scanner QR">
+                                        <i class="bi bi-qr-code" aria-hidden="true"></i>
+                                    </button>
+                                </div>
                                 <button type="submit">Scan</button>
                             </form>
                             <p class="scan-feedback" id="barcodeOrderFeedback">Arahkan scanner ke barcode produk.</p>
@@ -830,4 +840,186 @@
         </script>
     @endif
 </body>
+<script src="https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js"></script>
+<script>
+    (function () {
+        let _html5QrScanner = null;
+        let _qrScannerTarget = null;
+        let _qrRawStream = null;
+        let _qrScanRaf = null;
+        let _barcodeDetector = null;
+
+        function ensureQrModal() {
+            if (document.getElementById('qrScannerModal')) return;
+
+            const html = '\n<div id="qrScannerModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:11000;">\n  <div style="width:360px;max-width:92%;background:#fff;padding:12px;border-radius:8px;box-sizing:border-box;text-align:center;">\n    <div id="qrReader" style="width:100%;height:260px;margin-bottom:8px;"></div>\n    <div id="qrStatus" style="font-size:13px;color:#333;margin-bottom:8px;">Menunggu...</div>\n    <div style="display:flex;gap:8px;justify-content:center;">\n      <button type="button" id="qrTestBtn" style="padding:8px 12px;border-radius:6px;background:#eee;border:1px solid #ccc;">Test Kamera</button>\n      <button type="button" id="qrCloseBtn" style="padding:8px 12px;border-radius:6px;">Tutup</button>\n    </div>\n  </div>\n</div>';
+
+            document.body.insertAdjacentHTML('beforeend', html);
+            document.getElementById('qrCloseBtn')?.addEventListener('click', closeQrScanner);
+            document.getElementById('qrTestBtn')?.addEventListener('click', () => { showRawCameraStream().catch(e=>console.error(e)); });
+        }
+
+        function openQrScanner(targetId) {
+            ensureQrModal();
+            const modal = document.getElementById('qrScannerModal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            _qrScannerTarget = document.getElementById(targetId) || null;
+
+            // diagnostic info
+            debugCameraInfo().catch(e => console.warn('debugCameraInfo failed', e));
+
+            try {
+                // prefer native BarcodeDetector if available
+                if ('BarcodeDetector' in window) {
+                    try {
+                        if (!_barcodeDetector) {
+                            try { _barcodeDetector = new BarcodeDetector({ formats: ['qr_code','ean_13','code_128'] }); } catch(e) { _barcodeDetector = null; }
+                        }
+                        await startCameraPreviewAndScan();
+                    } catch (e) {
+                        console.error('BarcodeDetector flow failed', e);
+                        // fallback to html5-qrcode
+                    }
+                }
+
+                if (!_html5QrScanner && typeof Html5Qrcode !== 'undefined') {
+                    try {
+                        _html5QrScanner = new Html5Qrcode('qrReader');
+                        const cameras = await Html5Qrcode.getCameras();
+                        const cameraId = (cameras && cameras.length) ? cameras[0].id : null;
+                        const cfg = { fps: 10, qrbox: { width: 250, height: 200 } };
+                        const startArg = cameraId ? { deviceId: { exact: cameraId } } : { facingMode: { ideal: 'environment' } };
+                        await _html5QrScanner.start(startArg, cfg, (decodedText) => {
+                            if (_qrScannerTarget) {
+                                _qrScannerTarget.value = decodedText;
+                                _qrScannerTarget.dispatchEvent(new Event('input', { bubbles: true }));
+                            }
+                            closeQrScanner();
+                        }, (err) => {});
+                    } catch (err) {
+                        console.error('Html5Qrcode start failed', err);
+                        showRawCameraStream().catch(()=>{});
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function closeQrScanner() {
+            const modal = document.getElementById('qrScannerModal');
+            if (modal) modal.style.display = 'none';
+            if (_html5QrScanner) {
+                _html5QrScanner.stop().catch(()=>{}).then(()=>{ try{ _html5QrScanner.clear(); }catch(e){} });
+            }
+            _html5QrScanner = null;
+            _qrScannerTarget = null;
+            try { stopCameraPreviewAndScan(); } catch(e) {}
+        }
+
+        function setQrStatus(text) {
+            const el = document.getElementById('qrStatus');
+            if (el) el.textContent = text;
+        }
+
+        async function showRawCameraStream() {
+            try {
+                setQrStatus('Menampilkan kamera langsung...');
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                _qrRawStream = stream;
+                const readerEl = document.getElementById('qrReader');
+                if (!readerEl) return;
+                readerEl.innerHTML = '';
+                const v = document.createElement('video');
+                v.style.width = '100%';
+                v.style.height = '100%';
+                v.style.objectFit = 'cover';
+                v.autoplay = true;
+                v.playsInline = true;
+                v.muted = true;
+                v.srcObject = stream;
+                readerEl.appendChild(v);
+                try { await v.play(); } catch (playErr) { console.warn('Video play failed', playErr); }
+                console.log('Raw camera stream attached (cashier)');
+            } catch (err) {
+                console.error('Failed to show raw camera stream (cashier)', err);
+                setQrStatus('Gagal menampilkan kamera: ' + (err && err.message ? err.message : 'unknown'));
+            }
+        }
+
+        async function startCameraPreviewAndScan() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                _qrRawStream = stream;
+                const readerEl = document.getElementById('qrReader');
+                if (!readerEl) return;
+                readerEl.innerHTML = '';
+                const v = document.createElement('video');
+                v.id = 'qrPreview';
+                v.style.width = '100%';
+                v.style.height = '100%';
+                v.style.objectFit = 'cover';
+                v.autoplay = true;
+                v.playsInline = true;
+                v.muted = true;
+                v.srcObject = stream;
+                readerEl.appendChild(v);
+                try { await v.play(); } catch (e) { console.warn('video play failed', e); }
+
+                const loop = async () => {
+                    if (!v || v.readyState < 2 || !_barcodeDetector) { _qrScanRaf = requestAnimationFrame(loop); return; }
+                    try {
+                        const detections = await _barcodeDetector.detect(v);
+                        if (detections && detections.length) {
+                            const text = detections[0].rawValue || null;
+                            if (text && _qrScannerTarget) {
+                                _qrScannerTarget.value = text;
+                                _qrScannerTarget.dispatchEvent(new Event('input', { bubbles: true }));
+                                closeQrScanner();
+                                return;
+                            }
+                        }
+                    } catch (e) {}
+                    _qrScanRaf = requestAnimationFrame(loop);
+                };
+                _qrScanRaf = requestAnimationFrame(loop);
+            } catch (err) {
+                console.error('startCameraPreviewAndScan failed', err);
+                throw err;
+            }
+        }
+
+        function stopCameraPreviewAndScan() {
+            if (_qrScanRaf) { cancelAnimationFrame(_qrScanRaf); _qrScanRaf = null; }
+            if (_qrRawStream) { try { _qrRawStream.getTracks().forEach(t => t.stop()); } catch(e) {} _qrRawStream = null; }
+            const v = document.getElementById('qrPreview'); if (v && v.parentNode) v.parentNode.removeChild(v);
+        }
+
+        async function debugCameraInfo() {
+            try {
+                const statusEl = document.getElementById('qrStatus');
+                const parts = [];
+                if (navigator.permissions && navigator.permissions.query) {
+                    try { const p = await navigator.permissions.query({ name: 'camera' }); parts.push('perm=' + p.state); } catch(e) {}
+                }
+                if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const vids = devices.filter(d => d.kind === 'videoinput');
+                    parts.push('videoInputs=' + vids.length);
+                    vids.forEach((d,i) => parts.push('#' + i + ':' + (d.label || 'hidden')));
+                }
+                console.log('Camera debug:', parts.join(' | '));
+                if (statusEl) statusEl.textContent = parts.join(' | ');
+            } catch(err) { console.warn('debugCameraInfo error', err); }
+        }
+
+        document.addEventListener('click', (event) => {
+            const btn = event.target.closest && event.target.closest('.js-open-qr');
+            if (!btn) return;
+            const target = btn.dataset.target;
+            if (target) openQrScanner(target);
+        });
+    })();
+</script>
 </html>
