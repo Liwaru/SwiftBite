@@ -15,7 +15,9 @@
             <section class="hero-card">
                 <div class="eyebrow">Baker SwiftBite</div>
                 <h1 class="hero-title">Dashboard Baker</h1>
-                <p class="hero-subtitle">Pantau pesanan roti yang sedang dibuat dan kondisi bahan baku bakery.</p>
+                <button type="button" id="enableBakerVoice" style="margin-top:12px;">
+    Aktifkan Suara Pesanan
+</button>
             </section>
 
             <section class="stats">
@@ -27,42 +29,13 @@
 
             <section class="grid">
                 <div class="panel">
-                    <h2>Pesanan Untuk Dibuat</h2>
-                    @if ($processingOrders->isEmpty())
-                        <p class="empty-state">Belum ada pesanan yang sedang diproses.</p>
-                    @else
-                        <div class="list-stack">
-                            @foreach ($processingOrders as $order)
-                                @php
-                                    $flowStep = match ($order->status) {
-                                        'diproses' => 2,
-                                        'siap_diantar' => 3,
-                                        'menunggu_pembayaran', 'selesai' => 4,
-                                        default => 1,
-                                    };
-                                    $flowSteps = [1 => 'Cashier', 2 => 'Baker', 3 => 'Waiter', 4 => 'Selesai'];
-                                @endphp
-                                <div class="order-card">
-                                    <div>{{ $order->kode_pesanan }} - {{ $order->diningTable?->nama_meja ?? 'Tanpa meja' }}</div>
-                                    <div class="order-meta">
-                                        @foreach ($order->items as $item)
-                                            {{ $item->qty }}x {{ $item->menuItem?->nama_menu ?? 'Menu' }}@if (! $loop->last), @endif
-                                        @endforeach
-                                    </div>
-                                    <div class="flow-track" aria-label="Alur pesanan">
-                                        @foreach ($flowSteps as $step => $label)
-                                            <span class="flow-step {{ $flowStep > $step ? 'done' : '' }} {{ $flowStep === $step ? 'current' : '' }}">{{ $label }}</span>
-                                        @endforeach
-                                    </div>
-                                    <form class="ready-form" method="post" action="{{ route('baker.orders.ready', $order) }}">
-                                        @csrf
-                                        @method('patch')
-                                        <button type="submit">Siap Diantar</button>
-                                    </form>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
+    <h2>Pesanan Untuk Dibuat</h2>
+
+    <div id="bakerLiveOrders">
+        @include('chef.partials.live-orders', ['processingOrders' => $processingOrders])
+    </div>
+</div>
+                        
                 </div>
 
                 <div class="panel">
@@ -84,5 +57,95 @@
             </section>
         </main>
     </div>
+<script>
+    const bakerLiveOrdersUrl = @json(route('baker.orders.live'));
+    const bakerLiveOrders = document.getElementById('bakerLiveOrders');
+    const bakerProcessedStat = document.querySelector('.stat-card strong');
+    const enableBakerVoice = document.getElementById('enableBakerVoice');
+
+    let bakerVoiceEnabled = localStorage.getItem('baker_voice_enabled') === '1';
+    let latestBakerOrderId = Math.max(
+        0,
+        ...Array.from(document.querySelectorAll('[data-order-id]'))
+            .map(card => Number(card.dataset.orderId || 0))
+    );
+
+    function setVoiceButtonState() {
+        if (!enableBakerVoice) return;
+
+        if (bakerVoiceEnabled) {
+            enableBakerVoice.textContent = 'Suara Pesanan Aktif';
+        } else {
+            enableBakerVoice.textContent = 'Aktifkan Suara Pesanan';
+        }
+    }
+
+    function speakText(text) {
+        if (!bakerVoiceEnabled) return;
+        if (!('speechSynthesis' in window)) return;
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'id-ID';
+        utterance.rate = 1;
+        utterance.pitch = 1;
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function speakBakerOrder(order) {
+        const tableName = order.table || 'Kasir Langsung';
+        const itemNames = (order.items || []).slice(0, 3).join(', ');
+        speakText('Pesanan baru dari ' + tableName + '. ' + itemNames + '.');
+    }
+
+    enableBakerVoice?.addEventListener('click', () => {
+        bakerVoiceEnabled = true;
+        localStorage.setItem('baker_voice_enabled', '1');
+        setVoiceButtonState();
+
+        const utterance = new SpeechSynthesisUtterance('Suara pesanan Baker aktif.');
+        utterance.lang = 'id-ID';
+        utterance.rate = 1;
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    });
+
+    async function refreshBakerOrders() {
+        try {
+            const response = await fetch(bakerLiveOrdersUrl, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+            console.log('LIVE BAKER:', data.latest_order_id, latestBakerOrderId, data.orders);
+
+            if (Number(data.latest_order_id) > latestBakerOrderId) {
+                const newOrder = (data.orders || []).find(order => Number(order.id) === Number(data.latest_order_id));
+                if (newOrder) speakBakerOrder(newOrder);
+                latestBakerOrderId = Number(data.latest_order_id);
+            }
+
+            if (bakerLiveOrders && data.html) {
+                bakerLiveOrders.innerHTML = data.html;
+            }
+
+            if (bakerProcessedStat) {
+                bakerProcessedStat.textContent = data.count;
+            }
+        } catch (error) {
+            console.log('Gagal refresh pesanan baker', error);
+        }
+    }
+
+    setVoiceButtonState();
+    setInterval(refreshBakerOrders, 5000);
+</script>
 </body>
 </html>

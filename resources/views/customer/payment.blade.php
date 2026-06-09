@@ -34,11 +34,13 @@
 }
 
 .voice-note-btn.is-listening {
-    background: #ffe2dc;
-    color: #dc2626;
-    transform: scale(1.1);
+    background: #6f452b;
+    color: #fff8ed;
+    transform: scale(1.08);
+    box-shadow: 0 0 0 4px rgba(111, 69, 43, .18);
 }
-        :root {
+
+:root {
             --brown-dark: #2b1a12;
             --brown: #6f452b;
             --cream: #fff6e8;
@@ -336,7 +338,7 @@
 
 .customer-note-card textarea {
     width: 100%;
-    min-height: 52pxs;
+    min-height: 52px;
     resize: vertical;
     border: 1px solid #d8b893;
     border-radius: 8px;
@@ -510,7 +512,6 @@
         setActiveMethod(selectedMethod, selectedType);
         const voiceNoteBtn = document.getElementById('voiceNoteBtn');
 const customerNote = document.getElementById('customerNote');
-
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 if (!SpeechRecognition && voiceNoteBtn) {
@@ -524,45 +525,46 @@ if (!SpeechRecognition && voiceNoteBtn) {
     recognition.lang = 'id-ID';
     recognition.continuous = false;
     recognition.interimResults = false;
-    
-recognition.onend = () => {
-    isListening = false;
-    voiceNoteBtn.classList.remove('is-listening');
-    clearTimeout(stopTimer);
-};
+
     voiceNoteBtn.addEventListener('click', () => {
-          if (isListening) return;
+        if (isListening) return;
+
         try {
             recognition.start();
-
-clearTimeout(stopTimer);
-
-stopTimer = setTimeout(() => {
-    try {
-        recognition.abort(); // lebih paksa daripada stop()
-    } catch (e) {}
-}, 5000);
-
         } catch (e) {
-            alert('Voice to text sedang aktif. Tunggu sebentar.');
+            return;
         }
     });
+
+    recognition.onstart = () => {
+        isListening = true;
+        voiceNoteBtn.classList.add('is-listening');
+
+        clearTimeout(stopTimer);
+        stopTimer = setTimeout(() => {
+            try {
+                recognition.abort();
+            } catch (e) {}
+        }, 5000);
+    };
 
     recognition.onresult = (event) => {
         const text = event.results[0][0].transcript;
         const oldText = customerNote.value.trim();
 
         customerNote.value = oldText ? oldText + ' ' + text : text;
-
         customerNote.dispatchEvent(new Event('input', { bubbles: true }));
         customerNote.dispatchEvent(new Event('change', { bubbles: true }));
     };
 
     recognition.onerror = () => {
-        alert('Gagal menangkap suara. Coba klik mic lagi.');
+        try {
+            recognition.abort();
+        } catch (e) {}
     };
 
     recognition.onend = () => {
+        isListening = false;
         voiceNoteBtn.classList.remove('is-listening');
         clearTimeout(stopTimer);
     };

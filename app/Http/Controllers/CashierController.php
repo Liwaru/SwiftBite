@@ -28,7 +28,7 @@ class CashierController extends Controller
     {
         $status = $this->normalizeStatus($request->query('status', 'aktif'));
         $orders = $this->ordersForStatus($status)
-            ->paginate(5)
+            ->paginate(3)
             ->withQueryString();
         $stats = $this->todayStats();
         $mode = 'orders';
@@ -199,21 +199,25 @@ class CashierController extends Controller
             ->with('success', 'Pesanan kasir langsung #' . $order->kode_pesanan . ' berhasil dibuat.');
     }
 
-    public function liveOrders(Request $request)
-    {
-        $status = $this->normalizeStatus($request->query('status', 'aktif'));
-        $orders = $this->ordersForStatus($status)
-            ->paginate(5)
-            ->withQueryString();
-        $stats = $this->todayStats();
+public function liveOrders(Request $request)
+{
+    $status = $this->normalizeStatus($request->query('status', 'aktif'));
 
-        return response()->json([
-            'orders_html' => view('cashier.partials.order-list', compact('orders', 'status'))->render(),
-            'stats' => $stats,
-            'latest_order_id' => (int) ($orders->getCollection()->max('id_order') ?? 0),
-            'updated_at' => now()->format('H:i:s'),
-        ]);
-    }
+    $orders = $this->ordersForStatus($status)
+        ->paginate(3)
+        ->withQueryString();
+
+    $orders->setPath(route('cashier.orders'));
+
+    $stats = $this->todayStats();
+
+    return response()->json([
+        'orders_html' => view('cashier.partials.order-list', compact('orders', 'status'))->render(),
+        'stats' => $stats,
+        'latest_order_id' => (int) ($orders->getCollection()->max('id_order') ?? 0),
+        'updated_at' => now()->format('H:i:s'),
+    ]);
+}
 
     public function history(Request $request): View
     {

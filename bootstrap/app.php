@@ -20,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'user.level' => \App\Http\Middleware\EnsureUserLevel::class,
             'feature.access' => \App\Http\Middleware\EnsureFeatureAccess::class,
         ]);
+
+        $middleware->web(append: [
+    \App\Http\Middleware\SetLocale::class,
+]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

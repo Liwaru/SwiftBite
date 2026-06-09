@@ -1,5 +1,21 @@
     <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
     <script>
+
+        document.addEventListener('click', function (event) {
+    const button = event.target.closest('.js-generate-barcode');
+
+    if (!button) return;
+
+    const targetId = button.dataset.target;
+    const input = document.getElementById(targetId);
+
+    if (!input) return;
+
+    const randomNumber = Math.floor(100000000000 + Math.random() * 900000000000);
+
+    input.value = randomNumber;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+});
         (function () {
             const modalTriggers = document.querySelectorAll('.js-open-modal');
             const closeButtons = document.querySelectorAll('.js-close-modal');
@@ -370,6 +386,8 @@
                 const priceInput = document.querySelector('.js-edit-package-price');
                 const statusInput = document.querySelector('.js-edit-package-status');
                 const permanentInput = document.querySelector('.js-edit-package-permanent');
+                const startsTimeInput = document.querySelector('.js-edit-package-starts-time');
+const endsTimeInput = document.querySelector('.js-edit-package-ends-time');
                 const startsAtInput = document.querySelector('.js-edit-package-starts-at');
                 const endsAtInput = document.querySelector('.js-edit-package-ends-at');
                 const fileInput = document.querySelector('.js-edit-package-photo');
@@ -415,6 +433,14 @@
                 if (endsAtInput) {
                     endsAtInput.value = trigger.dataset.endsAt || '';
                 }
+
+                if (startsTimeInput) {
+    startsTimeInput.value = trigger.dataset.startsTime || '';
+}
+
+if (endsTimeInput) {
+    endsTimeInput.value = trigger.dataset.endsTime || '';
+}
 
                 if (permanentInput) {
                     permanentInput.checked = !trigger.dataset.startsAt && !trigger.dataset.endsAt;
@@ -580,7 +606,7 @@
                 }
 
                 period.hidden = permanentInput.checked;
-                period.querySelectorAll('input[type="date"]').forEach((input) => {
+                period.querySelectorAll('input[type="date"], input[type="time"]').forEach((input) => {
                     input.disabled = permanentInput.checked;
 
                     if (permanentInput.checked) {
@@ -1428,11 +1454,11 @@
                 }
             });
 
-            @if ($section === 'users' && $errors->any())
+           @if (($section ?? null) === 'users' && $errors->any())
                 openModal(@json(old('modal_id', 'create-user')));
             @endif
 
-            @if ($section === 'menus' && $errors->any())
+            @if (($section ?? null) === 'menus' && $errors->any())
                 @if (old('modal_id') === 'create-package')
                     openModal('create-package');
                 @elseif (old('modal_id') === 'edit-package')
@@ -1443,15 +1469,15 @@
                 @endif
             @endif
 
-            @if ($section === 'stock' && $errors->any())
+            @if (($section ?? null) === 'stock' && $errors->any())
                 openModal('stock-menu');
             @endif
 
-            @if ($section === 'ingredients' && $errors->any())
+            @if (($section ?? null) === 'ingredients' && $errors->any())
                 openModal(@json(old('modal_id', 'create-ingredient')));
             @endif
 
-            @if ($section === 'tables' && $errors->any())
+            @if (($section ?? null) === 'tables' && $errors->any()))
                 openModal(@json(old('modal_id', 'create-table')));
             @endif
 

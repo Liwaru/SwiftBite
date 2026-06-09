@@ -85,7 +85,9 @@
                                                     <td>{{ $log->created_at?->format('d M Y H:i') }}</td>
                                                     <td><span class="pill">{{ $log->role }}</span></td>
                                                     <td>{{ $log->user_name ?: '-' }}</td>
-                                                    <td>{{ $log->activity }}</td>
+                                                    <td>
+    {{ preg_replace('/#ORD-[A-Z0-9\-]+/i', '', $log->activity) }}
+</td>
                                                 </tr>
                                             @empty
                                                 <tr><td colspan="4" class="empty-state">Belum ada catatan aktivitas.</td></tr>

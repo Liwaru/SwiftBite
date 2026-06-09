@@ -1,20 +1,22 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\Ingredient;
+use App\Models\IngredientOut;
 use App\Models\DiningTable;
+use App\Models\IngredientIn;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\DataChange;
 use App\Models\MenuItem;
-use App\Models\Ingredient;
 use App\Models\IngredientUsage;
 use App\Models\Order;
 use App\Models\Package;
 use App\Models\User;
 use App\Support\ActivityRecorder;
 use App\Support\AccessControl;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -22,7 +24,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\View\View;
 
 class ManagerController extends Controller
 {
@@ -30,6 +31,90 @@ class ManagerController extends Controller
 
     private array $resetTables = ['order_details', 'orders', 'ingredient_usages', 'ingredients', 'package_items', 'packages', 'menus', 'categories', 'tables'];
 
+
+public function ingredientOut()
+{
+    $ingredients = Ingredient::orderBy('nama_bahan')->get();
+
+    $ingredientOuts = IngredientOut::with('ingredient')
+        ->latest()
+        ->paginate(10);
+
+    return view('manager.inventory.out', compact('ingredients', 'ingredientOuts'));
+}
+
+public function storeIngredientOut(Request $request)
+{
+    $validated = $request->validate([
+        'id_bahan' => ['required', 'exists:ingredients,id_bahan'],
+        'qty' => ['required', 'numeric', 'min:0.01'],
+        'reason' => ['required', 'string', 'max:100'],
+        'note' => ['nullable', 'string', 'max:255'],
+    ]);
+
+    $ingredient = Ingredient::where('id_bahan', $validated['id_bahan'])->firstOrFail();
+
+    if ($validated['qty'] > $ingredient->stok) {
+        return back()
+            ->withErrors(['qty' => 'Jumlah keluar tidak boleh lebih besar dari stok saat ini.'])
+            ->withInput();
+    }
+
+    $ingredient->stok = $ingredient->stok - $validated['qty'];
+    $ingredient->save();
+
+    IngredientOut::create([
+        'id_bahan' => $ingredient->id_bahan,
+        'qty' => $validated['qty'],
+        'reason' => $validated['reason'],
+        'note' => $validated['note'] ?? null,
+        'actor_name' => session('auth_name', 'Manager'),
+    ]);
+
+    return back()->with('success', 'Barang keluar berhasil disimpan dan stok bahan sudah diperbarui.');
+}
+
+    public function ingredientIn(): View
+{
+    $section = 'ingredient-in';
+
+    $ingredients = Ingredient::orderBy('nama_bahan')->get();
+
+    $ingredientIns = IngredientIn::with('ingredient')
+        ->latest()
+        ->paginate(10);
+
+    return view('manager.inventory.in', compact('section', 'ingredients', 'ingredientIns'));
+}
+
+public function storeIngredientIn(Request $request)
+{
+    $validated = $request->validate([
+        'id_bahan' => ['required', 'exists:ingredients,id_bahan'],
+        'qty' => ['required', 'numeric', 'min:0.01'],
+        'note' => ['nullable', 'string', 'max:255'],
+    ]);
+
+    $ingredient = Ingredient::where('id_bahan', $validated['id_bahan'])->firstOrFail();
+
+    $hargaSatuan = $ingredient->harga_satuan ?? 0;
+    $totalHarga = $hargaSatuan * $validated['qty'];
+
+    $ingredient->stok = $ingredient->stok + $validated['qty'];
+    $ingredient->save();
+
+    IngredientIn::create([
+        'id_bahan' => $ingredient->id_bahan,
+        'qty' => $validated['qty'],
+        'harga_satuan' => $hargaSatuan,
+        'total_harga' => $totalHarga,
+        'note' => $validated['note'] ?? null,
+        'actor_name' => session('auth_name', 'Manager'),
+    ]);
+
+    return back()->with('success', 'Barang masuk berhasil disimpan dan stok bahan sudah diperbarui.');
+}
+    
     public function dashboard(): View
     {
         $todayOrders = Order::whereDate('created_at', today());
@@ -131,10 +216,13 @@ class ManagerController extends Controller
         }
 
         if ($section === 'menus') {
-            $menuItems = MenuItem::with('categoryModel')
-                ->withSum('orderItems as total_sold', 'qty')
-                ->orderBy('nama_menu')
-                ->get();
+            $menuItems = MenuItem::with([
+        'categoryModel',
+        'recipes.ingredient'
+    ])
+    ->withSum('orderItems as total_sold', 'qty')
+    ->orderBy('nama_menu')
+    ->get();
 
             $data['foodMenuItems'] = $menuItems
                 ->filter(fn (MenuItem $menu) => $menu->category === 'Makanan')
@@ -1028,7 +1116,10 @@ class ManagerController extends Controller
         ];
     }
 
-    private function packageSnapshot(Package $package): array
+
+    
+
+private function packageSnapshot(Package $package): array
     {
         return [
             'id_paket' => $package->id_paket,
@@ -1278,4 +1369,5 @@ class ManagerController extends Controller
             ],
         );
     }
+    
 }

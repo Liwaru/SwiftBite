@@ -10,9 +10,79 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 
 class ChefController extends Controller
 {
+
+    public function finishCooking(Order $order): RedirectResponse
+{
+    if ($order->status !== 'diproses') {
+        return back()->withErrors([
+            'order' => 'Pesanan ini tidak sedang diproses.',
+        ]);
+    }
+
+    $order->load([
+        'items.menuItem.recipes.ingredient',
+    ]);
+
+    try {
+        DB::transaction(function () use ($order) {
+            foreach ($order->items as $item) {
+                $menu = $item->menuItem;
+
+                if (! $menu) {
+                    continue;
+                }
+
+                foreach ($menu->recipes as $recipe) {
+                    $ingredient = $recipe->ingredient;
+
+                    if (! $ingredient) {
+                        continue;
+                    }
+
+                    $usedQty = (float) $recipe->qty * (int) $item->qty;
+
+                    if ($usedQty <= 0) {
+                        continue;
+                    }
+
+                    if ((float) $ingredient->stok < $usedQty) {
+                        throw ValidationException::withMessages([
+                            'stok' => 'Stok bahan ' . $ingredient->nama_bahan . ' tidak cukup untuk pesanan ini.',
+                        ]);
+                    }
+
+                    $ingredient->decrement('stok', $usedQty);
+
+                    IngredientUsage::create([
+                        'id_bahan' => $ingredient->id_bahan,
+                        'qty' => $usedQty,
+                        'note' => 'Pesanan ' . $order->kode_pesanan . ' - ' . $menu->nama_menu,
+                        'actor_name' => session('auth_name'),
+                    ]);
+                }
+            }
+
+            $order->update([
+                'status' => 'siap_diantar',
+            ]);
+        });
+    } catch (ValidationException $exception) {
+        throw $exception;
+    }
+
+    ActivityRecorder::activity(
+        'Baker',
+        'Menyelesaikan masakan untuk pesanan #' . $order->kode_pesanan . ' dan mengurangi bahan sesuai resep.'
+    );
+
+    return back()->with('success', 'Pesanan selesai dimasak. Bahan berhasil dikurangi sesuai resep.');
+}
+
+
     public function dashboard(): View
     {
         $processingOrders = Order::with(['diningTable', 'items.menuItem'])
@@ -94,4 +164,28 @@ class ChefController extends Controller
             ->route('baker.ingredients')
             ->with('success', 'Penggunaan bahan berhasil dicatat.');
     }
-}
+    
+public function liveOrders()
+{
+    $processingOrders = Order::with(['diningTable', 'items.menuItem'])
+        ->where('status', 'diproses')
+        ->latest()
+        ->limit(6)
+        ->get();
+
+    return response()->json([
+        'html' => view('chef.partials.live-orders', compact('processingOrders'))->render(),
+        'count' => $processingOrders->count(),
+        'latest_order_id' => (int) ($processingOrders->max('id_order') ?? 0),
+        'orders' => $processingOrders->map(function ($order) {
+            return [
+                'id' => (int) $order->id_order,
+                'table' => $order->diningTable?->nama_meja ?? 'Kasir Langsung',
+                'items' => $order->items
+                    ->map(fn ($item) => $item->menuItem?->nama_menu ?? 'Menu')
+                    ->values()
+                    ->all(),
+            ];
+        })->values(),
+    ]);
+}}

@@ -29,6 +29,13 @@ Route::middleware(['simple.auth', 'user.level:1,4'])->group(function () {
 });
 
 Route::middleware(['simple.auth', 'user.level:2,4'])->group(function () {
+    Route::get('/baker/live-orders', [ChefController::class, 'liveOrders'])
+    ->name('baker.orders.live')
+    ->middleware('feature.access:chef.orders');
+
+Route::patch('/baker/orders/{order}/finish-cooking', [ChefController::class, 'finishCooking'])
+    ->name('baker.orders.finish-cooking')
+    ->middleware('feature.access:chef.orders');
     Route::get('/baker', [ChefController::class, 'dashboard'])->name('baker.dashboard')->middleware('feature.access:chef.orders');
     Route::get('/baker/orders', [ChefController::class, 'orders'])->name('baker.orders')->middleware('feature.access:chef.orders');
     Route::patch('/baker/orders/{order}/ready', [ChefController::class, 'markReady'])->name('baker.orders.ready')->middleware('feature.access:chef.orders');
@@ -64,9 +71,26 @@ Route::middleware(['simple.auth', 'user.level:4'])->group(function () {
     Route::post('/manager/database/backup', [ManagerController::class, 'backupDatabase'])->name('manager.database.backup');
     Route::post('/manager/database/import', [ManagerController::class, 'importDatabase'])->name('manager.database.import');
     Route::delete('/manager/database/reset', [ManagerController::class, 'resetDatabase'])->name('manager.database.reset');
-    Route::post('/manager/activity/data/{change}/restore', [ManagerController::class, 'restoreDataChange'])->name('manager.activity.restore');
-    Route::get('/manager/{section}', [ManagerController::class, 'page'])->name('manager.page');
-    // Manager-accessible report routes (appear when manager has report permissions)
+Route::post('/manager/activity/data/{change}/restore', [ManagerController::class, 'restoreDataChange'])
+    ->name('manager.activity.restore');
+
+Route::get('/manager/barang-masuk', [ManagerController::class, 'ingredientIn'])
+    ->name('manager.ingredient-in');
+
+Route::post('/manager/barang-masuk', [ManagerController::class, 'storeIngredientIn'])
+    ->name('manager.ingredient-in.store');
+
+Route::get('/manager/barang-keluar', [ManagerController::class, 'ingredientOut'])
+    ->name('manager.ingredient-out');
+
+    Route::get('/manager/barang-keluar', [ManagerController::class, 'ingredientOut'])
+    ->name('manager.ingredient-out');
+
+Route::post('/manager/barang-keluar', [ManagerController::class, 'storeIngredientOut'])
+    ->name('manager.ingredient-out.store');
+
+Route::get('/manager/{section}', [ManagerController::class, 'page'])
+    ->name('manager.page');    // Manager-accessible report routes (appear when manager has report permissions)
     Route::get('/manager/laporan/penjualan', [OwnerController::class, 'sales'])->name('manager.reports.sales')->middleware('feature.access:owner.sales');
     Route::get('/manager/laporan/keuangan', [OwnerController::class, 'finance'])->name('manager.reports.finance')->middleware('feature.access:owner.finance');
     Route::get('/manager/laporan/produk', [OwnerController::class, 'products'])->name('manager.reports.products')->middleware('feature.access:owner.products');
@@ -114,3 +138,23 @@ Route::post('/menu/{token}/orders/{order}/midtrans-sync', [CustomerMenuControlle
 Route::get('/menu/{token}/orders/{order}/qris', [CustomerMenuController::class, 'qris'])->name('customer.orders.qris');
 Route::get('/menu/{token}/orders/{order}/qris/status', [CustomerMenuController::class, 'qrisStatus'])->name('customer.orders.qris.status');
 Route::get('/menu/{token}/orders/{order}', [CustomerMenuController::class, 'receipt'])->name('customer.orders.show');
+
+Route::get('/baker/live-orders', [ChefController::class, 'liveOrders'])
+    ->name('baker.orders.live');
+
+    Route::get('/baker/live-orders', [ChefController::class, 'liveOrders'])
+    ->name('baker.orders.live');
+    
+    Route::patch('/baker/orders/{order}/finish-cooking', [ChefController::class, 'finishCooking'])
+    ->name('baker.orders.finish-cooking');
+
+    Route::get('/language/{locale}', function ($locale) {
+    if (! in_array($locale, ['id', 'en'])) {
+        abort(404);
+    }
+
+    session(['locale' => $locale]);
+
+    return back();
+})->name('language.switch');
+

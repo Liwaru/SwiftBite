@@ -62,4 +62,8 @@ class MenuItem extends Model
     {
         return $this->status === 'tersedia';
     }
+    public function recipes()
+{
+    return $this->hasMany(MenuRecipe::class, 'id_menu', 'id_menu');
+}
 }

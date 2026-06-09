@@ -128,6 +128,7 @@
     .sidebar {
         position: fixed;
         inset: 0 auto 0 0;
+        height: 100vh;
         z-index: 1000;
         width: var(--swiftbite-sidebar-width);
         box-sizing: border-box;
@@ -167,6 +168,39 @@
         color: inherit;
         text-decoration: none;
     }
+    .language-menu summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.language-menu summary::-webkit-details-marker {
+    display: none;
+}
+
+.language-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 10px 10px 40px;
+}
+
+.language-option {
+    text-decoration: none;
+    color: #352016;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-weight: 700;
+}
+
+.language-option:hover {
+    background: #f4e3cd;
+}
+
+.language-option.active {
+    border: 2px solid #6f452b;
+    background: #fff6e8;
+}
 
     .sidebar-logo {
         flex: 0 0 48px;
@@ -180,6 +214,123 @@
         font-size: 15px;
         font-weight: 900;
     }
+
+.language-dropdown {
+    position: relative;
+}
+
+.language-dropdown::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 100%;
+    width: 14px;
+    height: 100%;
+}
+
+.language-panel {
+    position: absolute;
+    top: -6px;
+    left: calc(100% + 10px);
+    min-width: 190px;
+    display: none;
+    padding: 10px;
+    border-radius: 14px;
+    background: #fff6e8;
+    border: 1px solid #e1ad73;
+    box-shadow: 0 18px 38px rgba(39,20,13,.24);
+    z-index: 80;
+}
+
+.language-dropdown:hover .language-panel,
+.language-dropdown:focus-within .language-panel {
+    display: block;
+}
+
+.language-panel-title {
+    padding: 4px 8px 10px;
+    color: #7a5a46;
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.language-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    text-decoration: none;
+    color: #352016;
+    padding: 11px 12px;
+    border-radius: 11px;
+    border: 1.5px solid transparent;
+    font-weight: 900;
+}
+
+.language-option:hover {
+    background: #f4e3cd;
+}
+
+.language-option.active {
+    border-color: #6f452b;
+    background: #fffaf2;
+}
+
+.language-check {
+    opacity: 0;
+    color: #6f452b;
+    font-weight: 900;
+}
+
+.language-option.active .language-check {
+    opacity: 1;
+}
+
+
+.language-panel {
+    position: absolute;
+    top: 0;
+    left: calc(100% + 8px);
+    min-width: 160px;
+    background: #fff6e8;
+    border: 1px solid #e1ad73;
+    border-radius: 8px;
+    box-shadow: 0 12px 30px rgba(39,20,13,.18);
+    display: none;
+    padding: 8px;
+    z-index: 50;
+}
+.language-dropdown:hover .language-panel{
+    display:block;
+}
+.sidebar {
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+.sidebar-footer,
+.sidebar-account {
+    overflow: visible;
+}
+
+.language-option{
+    display:block;
+    text-decoration:none;
+    color:#352016;
+    padding:10px 12px;
+    border-radius:8px;
+    font-weight:700;
+}
+
+.language-option:hover{
+    background:#f4e3cd;
+}
+
+.language-option.active{
+    border:2px solid #6f452b;
+    background:#fff6e8;
+}
 
     .sidebar-brand-text {
         min-width: 0;
@@ -241,13 +392,32 @@
         border-radius: 2px;
     }
 
-    .sidebar-nav {
-        display: grid;
-        gap: 10px;
-        flex: 0 0 auto;
-    }
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 
-    .sidebar-link {
+    flex: 1 1 auto;
+    min-height: 0;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    padding-right: 4px;
+    padding-bottom: 12px;
+}
+
+.sidebar-link,
+.sidebar-group {
+    flex: 0 0 auto;
+}
+
+.sidebar-subnav {
+    flex: 0 0 auto;
+}
+
+
+.sidebar-link {
         display: flex;
         align-items: center;
         gap: 13px;
@@ -340,9 +510,12 @@
         transition: none;
     }
 
-    .sidebar-group[open] .sidebar-subnav {
-        display: grid;
-    }
+.sidebar-group[open] .sidebar-subnav {
+    display: flex;
+    flex-direction: column;
+}
+
+
 
     .app-shell:not(.sidebar-collapsed) .sidebar-group[open] .sidebar-subnav {
         display: grid;
@@ -456,20 +629,20 @@
         font-weight: 800;
     }
 
-    .account-menu {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: calc(100% + 10px);
-        z-index: 3;
-        display: none;
-        overflow: hidden;
-        border: 1px solid #e1ad73;
-        border-radius: 8px;
-        background: #fff6e8;
-        box-shadow: 0 18px 38px rgba(39, 20, 13, .24);
-        color: #2b1c15;
-    }
+.account-menu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(100% + 10px);
+    z-index: 30;
+    display: none;
+    overflow: visible;
+    border: 1px solid #e1ad73;
+    border-radius: 8px;
+    background: #fff6e8;
+    box-shadow: 0 18px 38px rgba(39, 20, 13, .24);
+    color: #2b1c15;
+}
 
     .sidebar-account.open .account-menu {
         display: block;
@@ -1063,6 +1236,47 @@
             </details>
             @endif
 
+<details class="sidebar-group">
+    <summary class="sidebar-link sidebar-group-toggle">
+        <span class="sidebar-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+                <path d="M4 7h16v13H4V7Z" />
+                <path d="M8 7V5h8v2" />
+                <path d="M9 12h6" />
+                <path d="M9 16h6" />
+            </svg>
+        </span>
+
+        <span class="sidebar-label">Barang</span>
+        <span class="sidebar-caret">▼</span>
+    </summary>
+
+    <div class="sidebar-subnav">
+        <a class="sidebar-link {{ request()->routeIs('manager.ingredient-in') ? 'active' : '' }}"
+           href="{{ route('manager.ingredient-in') }}">
+            <span class="sidebar-icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M12 5v12" />
+                    <path d="M7 10l5-5 5 5" />
+                    <path d="M5 19h14" />
+                </svg>
+            </span>
+            <span class="sidebar-label">Barang Masuk</span>
+        </a>
+
+        <a class="sidebar-link {{ request()->routeIs('manager.ingredient-out') ? 'active' : '' }}"
+           href="{{ route('manager.ingredient-out') }}">
+            <span class="sidebar-icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M12 19V7" />
+                    <path d="M7 14l5 5 5-5" />
+                    <path d="M5 5h14" />
+                </svg>
+            </span>
+            <span class="sidebar-label">Barang Keluar</span>
+        </a>
+    </div>
+</details>
             @foreach ($filteredManagerMenus as $section => $menu)
                 <a class="sidebar-link {{ request()->routeIs('manager.page') && request()->route('section') === $section ? 'active' : '' }}" href="{{ route('manager.page', $section) }}" title="{{ $menu['label'] }}">
                     <span class="sidebar-icon">
@@ -1187,23 +1401,62 @@
                 </div>
                 <div class="account-menu-main">
                     <a class="account-menu-link" href="{{ route('profile.show') }}">
-                        <svg class="account-menu-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
-                            <path d="M20 21a8 8 0 0 0-16 0" />
-                            <path d="M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" />
-                        </svg>
-                        <span>Profil</span>
-                    </a>
-                    <form method="post" action="{{ route('logout') }}" class="account-menu-logout">
-                        @csrf
-                        <button type="submit" class="account-menu-btn">
-                            <svg class="account-menu-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
-                                <path d="M10 17l5-5-5-5" />
-                                <path d="M15 12H3" />
-                                <path d="M21 4v16" />
-                            </svg>
-                            <span>Logout</span>
-                        </button>
-                    </form>
+    <svg class="account-menu-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
+        <path d="M20 21a8 8 0 0 0-16 0" />
+        <path d="M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" />
+    </svg>
+    <span>{{ __('manager.profil') }}</span>
+</a>
+
+<div class="language-dropdown">
+    <button
+        type="button"
+        class="account-menu-link language-toggle"
+    >
+        <svg class="account-menu-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
+            <path d="M4 5h16" />
+            <path d="M4 19h16" />
+            <path d="M12 5a10 10 0 0 1 0 14" />
+            <path d="M12 5a10 10 0 0 0 0 14" />
+            <path d="M4 12h16" />
+        </svg>
+
+        <span>{{ __('manager.bahasa') }}</span>
+
+        <span style="margin-left:auto;">›</span>
+    </button>
+
+<div class="language-panel">
+    <div class="language-panel-title">Pilih Bahasa</div>
+
+    <a
+        href="{{ route('language.switch','id') }}"
+        class="language-option {{ app()->getLocale() === 'id' ? 'active' : '' }}"
+    >
+        <span>Indonesia</span>
+        <span class="language-check">✓</span>
+    </a>
+
+    <a
+        href="{{ route('language.switch','en') }}"
+        class="language-option {{ app()->getLocale() === 'en' ? 'active' : '' }}"
+    >
+        <span>English</span>
+        <span class="language-check">✓</span>
+    </a>
+</div>
+</div>
+<form method="post" action="{{ route('logout') }}" class="account-menu-logout">
+    @csrf
+    <button type="submit" class="account-menu-btn">
+        <svg class="account-menu-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
+            <path d="M10 17l5-5-5-5" />
+            <path d="M15 12H3" />
+            <path d="M21 4v16" />
+        </svg>
+        <span>{{ __('manager.logout') }}</span>
+    </button>
+</form>
                 </div>
             </div>
         </div>

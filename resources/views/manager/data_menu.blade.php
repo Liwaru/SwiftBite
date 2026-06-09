@@ -7,6 +7,130 @@
     <title>{{ $page['title'] }}</title>
     @include('manager.partials.page_styles')
 </head>
+<style>
+
+    .barcode-generate-btn {
+    width: 100%;
+    margin-top: 8px;
+    border: 1px dashed rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff7ed;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.barcode-generate-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+.menu-card-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.recipe-dialog {
+    max-width: 520px;
+}
+
+.recipe-body {
+    padding: 18px;
+}
+
+.recipe-section-title {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 12px 12px 0 0;
+    background: rgba(255,255,255,.12);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.recipe-list {
+    border: 1px solid rgba(255,255,255,.12);
+    border-top: 0;
+    border-radius: 0 0 12px 12px;
+    overflow: hidden;
+}
+
+.recipe-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px;
+    border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.recipe-row:first-child {
+    border-top: none;
+}
+
+.recipe-ingredient {
+    font-weight: 500;
+}
+
+.recipe-amount {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.recipe-empty {
+    padding: 14px;
+    text-align: center;
+}
+
+.recipe-photo {
+    width: 260px;
+    height: 165px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f6eadb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px auto;
+    font-size: 42px;
+    font-weight: 800;
+    color: #7a4528;
+}
+
+.recipe-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.recipe-table th:last-child,
+.recipe-table td:last-child {
+    text-align: right;
+}
+
+.recipe-table td {
+    word-break: break-word;
+}
+
+@media (max-width: 576px) {
+    .recipe-dialog {
+        max-width: calc(100% - 24px);
+    }
+
+    .recipe-photo {
+        height: 130px;
+    }
+
+    .recipe-table {
+        font-size: 13px;
+    }
+
+    .recipe-table th,
+    .recipe-table td {
+        padding: 10px;
+    }
+}
+
+</style>
 <body>
     <div class="app-shell">
         @include('header')
@@ -157,21 +281,25 @@
 
                                                         <div class="menu-card-actions">
                                                             <button
-                                                                type="button"
-                                                                class="row-action js-open-modal js-edit-package"
-                                                                data-modal="edit-package"
-                                                                data-action="{{ route('manager.packages.update', $package) }}"
-                                                                data-name="{{ $package->nama_paket }}"
-                                                                data-description="{{ $package->deskripsi }}"
-                                                                data-price="{{ (int) $package->harga }}"
-                                                                data-status="{{ $package->status }}"
-                                                                data-starts-at="{{ $package->starts_at?->toDateString() }}"
-                                                                data-ends-at="{{ $package->ends_at?->toDateString() }}"
-                                                                data-photo="{{ $package->foto ? asset($package->foto) : '' }}"
-                                                                data-items='@json($package->items->mapWithKeys(fn ($item) => [$item->id_menu => $item->qty]))'
-                                                                data-choices='@json($package->choices->mapWithKeys(fn ($choice) => [$choice->category => $choice->qty]))'
-                                                            >Edit</button>
-                                                            <form method="POST" action="{{ route('manager.packages.destroy', $package) }}" class="package-delete-form" onsubmit="return confirm('Hapus paket ini?')">
+<button
+    type="button"
+    class="row-action js-open-modal js-edit-package"
+    data-modal="edit-package"
+    data-action="{{ route('manager.packages.update', $package) }}"
+    data-name="{{ $package->nama_paket }}"
+    data-description="{{ $package->deskripsi }}"
+    data-price="{{ (int) $package->harga }}"
+    data-status="{{ $package->status }}"
+    data-starts-at="{{ $package->starts_at?->toDateString() }}"
+    data-starts-time="{{ $package->starts_time }}"
+    data-ends-at="{{ $package->ends_at?->toDateString() }}"
+    data-ends-time="{{ $package->ends_time }}"
+    data-photo="{{ $package->foto ? asset($package->foto) : '' }}"
+    data-items='@json($package->items->mapWithKeys(fn ($item) => [$item->id_menu => $item->qty]))'
+    data-choices='@json($package->choices->mapWithKeys(fn ($choice) => [$choice->category => $choice->qty]))'
+>
+    Edit
+</button>                                                            <form method="POST" action="{{ route('manager.packages.destroy', $package) }}" class="package-delete-form" onsubmit="return confirm('Hapus paket ini?')">
                                                                 @csrf
                                                                 @method('delete')
                                                                 <button type="submit" class="row-action">Hapus</button>
@@ -250,20 +378,37 @@
                                                         </div>
 
                                                         <div class="menu-card-actions">
-                                                            <button
-                                                                type="button"
-                                                                class="row-action js-open-modal js-edit-menu"
-                                                                data-modal="edit-menu"
-                                                                data-action="{{ route('manager.menus.update', $menu) }}"
-                                                                data-name="{{ $menu->nama_menu }}"
-                                                                data-barcode="{{ $menu->barcode }}"
-                                                                data-description="{{ $menu->deskripsi }}"
-                                                                data-price="{{ (int) $menu->harga }}"
-                                                                data-status="{{ $menu->status }}"
-                                                                data-photo="{{ $menu->foto ? asset($menu->foto) : '' }}"
-                                                            >Edit</button>
-                                                            <button type="button" class="row-action js-single-delete-menu" data-menu-id="{{ $menu->getKey() }}">Hapus</button>
-                                                        </div>
+    <button
+        type="button"
+        class="row-action js-open-modal js-edit-menu"
+        data-modal="edit-menu"
+        data-action="{{ route('manager.menus.update', $menu) }}"
+        data-name="{{ $menu->nama_menu }}"
+        data-barcode="{{ $menu->barcode }}"
+        data-description="{{ $menu->deskripsi }}"
+        data-price="{{ (int) $menu->harga }}"
+        data-status="{{ $menu->status }}"
+        data-photo="{{ $menu->foto ? asset($menu->foto) : '' }}"
+    >
+        Edit
+    </button>
+
+    <button
+        type="button"
+        class="row-action js-open-modal"
+        data-modal="recipe-menu-{{ $menu->getKey() }}"
+    >
+        Resep
+    </button>
+
+    <button
+        type="button"
+        class="row-action js-single-delete-menu"
+        data-menu-id="{{ $menu->getKey() }}"
+    >
+        Hapus
+    </button>
+</div>
                                                     </article>
                                                 @endforeach
                                             </div>
@@ -317,15 +462,29 @@
                                     </div>
 
                                     <div class="field-group js-create-barcode-field" @if ($createInputMode !== 'barcode') hidden @endif>
-                                        <label for="createMenuBarcode">Barcode</label>
-                                        <div class="barcode-input-wrap">
-                                            <input id="createMenuBarcode" type="text" name="barcode" value="{{ old('barcode') }}" maxlength="80" inputmode="numeric" autocomplete="off" placeholder="Scan barcode produk">
-                                            <button type="button" class="qr-open-btn js-open-qr" data-target="createMenuBarcode" aria-label="Buka scanner QR">
-                                                <i class="bi bi-qr-code" aria-hidden="true"></i>
-                                            </button>
-                                        </div>
-                                    </div>
+    <label for="createMenuBarcode">Barcode</label>
 
+    <div class="barcode-input-wrap">
+        <input
+            id="createMenuBarcode"
+            type="text"
+            name="barcode"
+            value="{{ old('barcode') }}"
+            maxlength="80"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="Scan barcode produk"
+        >
+
+        <button type="button" class="qr-open-btn js-open-qr" data-target="createMenuBarcode" aria-label="Buka scanner QR">
+            <i class="bi bi-qr-code" aria-hidden="true"></i>
+        </button>
+    </div>
+
+    <button type="button" class="barcode-generate-btn js-generate-barcode" data-target="createMenuBarcode">
+        Buat Barcode Otomatis
+    </button>
+</div>
                                     <div class="field-group">
                                         <label for="createMenuName">Nama <span class="js-menu-category-label">Makanan</span></label>
                                         <input id="createMenuName" type="text" name="name" value="{{ old('name') }}" maxlength="20" placeholder="Maksimal 20 karakter" required>
@@ -423,155 +582,175 @@
                                             </label>
                                         </div>
                                     </div>
+<div class="field-group">
+    <label for="createPackagePrice">Harga Paket</label>
+    <input id="createPackagePrice" type="number" name="price" value="{{ old('price') }}" min="0" max="500000" step="1000" placeholder="Contoh: 25000" required>
+</div>
 
-                                    <div class="field-group">
-                                        <label for="createPackagePrice">Harga Paket</label>
-                                        <input id="createPackagePrice" type="number" name="price" value="{{ old('price') }}" min="0" max="500000" step="1000" placeholder="Contoh: 25000" required>
-                                    </div>
+<div class="field-group package-permanent-row">
+    <input type="hidden" name="is_permanent" value="0">
+    <label class="package-toggle-line">
+        <input type="checkbox" name="is_permanent" value="1" class="js-package-permanent" @checked(old('is_permanent', '1'))>
+        Tampilkan selalu
+    </label>
+</div>
 
-                                    <div class="field-group package-permanent-row">
-                                        <input type="hidden" name="is_permanent" value="0">
-                                        <label class="package-toggle-line">
-                                            <input type="checkbox" name="is_permanent" value="1" class="js-package-permanent" @checked(old('is_permanent', '1'))>
-                                            Tampilkan selalu
-                                        </label>
-                                    </div>
+<div class="package-choice-grid js-package-period" hidden>
+    <label>
+        Tanggal Mulai
+        <input type="date" name="starts_at" value="{{ old('starts_at') }}">
+    </label>
 
-                                    <div class="package-choice-grid js-package-period" hidden>
-                                        <label>
-                                            Tanggal Mulai
-                                            <input type="date" name="starts_at" value="{{ old('starts_at') }}">
-                                        </label>
-                                        <label>
-                                            Tanggal Berakhir
-                                            <input type="date" name="ends_at" value="{{ old('ends_at') }}">
-                                        </label>
-                                    </div>
+    <label>
+        Jam Mulai
+        <input type="time" name="starts_time" value="{{ old('starts_time') }}">
+    </label>
 
-                                    <div class="modal-actions">
-                                        <button type="button" class="ghost-btn js-close-modal">Batal</button>
-                                        <button type="submit" class="submit-btn">Simpan Paket</button>
-                                    </div>
-                                </form>
-                            </div>
+    <label>
+        Tanggal Berakhir
+        <input type="date" name="ends_at" value="{{ old('ends_at') }}">
+    </label>
+
+    <label>
+        Jam Berakhir
+        <input type="time" name="ends_time" value="{{ old('ends_time') }}">
+    </label>
+</div>
+
+<div class="modal-actions">
+    <button type="button" class="ghost-btn js-close-modal">Batal</button>
+    <button type="submit" class="submit-btn">Simpan Paket</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="modal-shell" id="modal-edit-package" aria-hidden="true">
+    <div class="modal-dialog menu-create-dialog package-create-dialog" role="dialog" aria-modal="true" aria-labelledby="modalEditPackageTitle">
+        <div class="modal-header">
+            <div>
+                <div class="modal-title" id="modalEditPackageTitle">Edit Paket Promo</div>
+                <div class="modal-subtitle">Perbarui gambar, nama, isi paket, harga, dan status.</div>
+            </div>
+            <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
+        </div>
+
+        <form method="POST" action="#" class="modal-form package-form js-package-edit-form" enctype="multipart/form-data">
+            @csrf
+            @method('patch')
+            <input type="hidden" name="modal_id" value="edit-package">
+
+            <div class="field-group">
+                <label for="editPackagePhoto">Gambar Paket</label>
+                <input id="editPackagePhoto" type="file" name="photo" class="js-edit-package-photo" accept="image/png,image/jpeg,image/webp">
+            </div>
+
+            <div class="field-group">
+                <label for="editPackageName">Nama Paket</label>
+                <input id="editPackageName" type="text" name="name" class="js-edit-package-name" maxlength="40" required>
+            </div>
+
+            <div class="field-group">
+                <label for="editPackageDescription">Deskripsi Paket</label>
+                <textarea id="editPackageDescription" name="description" class="js-edit-package-description" maxlength="300" rows="3" placeholder="Opsional, maksimal 300 karakter"></textarea>
+            </div>
+
+            <div class="package-builder js-package-builder">
+                <div class="package-selected-head">
+                    <span>Isi Tetap Dari Manager</span>
+                    <span class="package-selected-count js-package-selected-count">0 Menu</span>
+                </div>
+                <div class="package-selected-list js-package-selected-list">
+                    <span class="package-selected-empty">Belum ada menu dipilih.</span>
+                </div>
+                <button type="button" class="package-add-menu-btn js-package-picker-toggle">+ Tambah Menu</button>
+
+                <div class="package-picker js-package-picker-panel">
+                    <input type="search" class="package-search js-package-search" placeholder="Cari menu..." aria-label="Cari menu paket">
+                    @foreach ($availablePackageMenuItems->groupBy(fn ($menu) => $menu->category) as $category => $items)
+                        <div class="package-picker-group">
+                            <div class="package-picker-title">{{ $category }}</div>
+                            @foreach ($items as $menu)
+                                <label class="package-picker-row" for="editPackageCheck{{ $menu->getKey() }}" data-menu-name="{{ strtolower($menu->nama_menu) }}" data-menu-category="{{ strtolower($menu->category) }}">
+                                    <input id="editPackageCheck{{ $menu->getKey() }}" type="checkbox" class="js-package-check" data-menu-id="{{ $menu->getKey() }}">
+                                    <span class="package-picker-info">
+                                        <strong>{{ $menu->nama_menu }}</strong>
+                                        <em>{{ $menu->category }} - Rp{{ number_format($menu->harga, 0, ',', '.') }}</em>
+                                    </span>
+                                    <input type="number" name="items[{{ $menu->getKey() }}]" class="package-qty js-package-qty js-edit-package-qty" data-menu-id="{{ $menu->getKey() }}" data-menu-name="{{ $menu->nama_menu }}" value="0" min="0" max="99" aria-label="Jumlah {{ $menu->nama_menu }}">
+                                </label>
+                            @endforeach
                         </div>
+                    @endforeach
+                </div>
+            </div>
 
-                        <div class="modal-shell" id="modal-edit-package" aria-hidden="true">
-                            <div class="modal-dialog menu-create-dialog package-create-dialog" role="dialog" aria-modal="true" aria-labelledby="modalEditPackageTitle">
-                                <div class="modal-header">
-                                    <div>
-                                        <div class="modal-title" id="modalEditPackageTitle">Edit Paket Promo</div>
-                                        <div class="modal-subtitle">Perbarui gambar, nama, isi paket, harga, dan status.</div>
-                                    </div>
-                                    <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
-                                </div>
+            <div class="package-choice-box">
+                <div class="package-selected-head">
+                    <span>Pilihan Bebas Yang Diizinkan Manager</span>
+                </div>
+                <div class="package-choice-grid">
+                    <label>
+                        Minuman bebas
+                        <input type="number" name="choice_categories[Minuman]" class="js-edit-package-choice" data-category="Minuman" value="0" min="0" max="20">
+                    </label>
+                    <label>
+                        Makanan bebas
+                        <input type="number" name="choice_categories[Makanan]" class="js-edit-package-choice" data-category="Makanan" value="0" min="0" max="20">
+                    </label>
+                </div>
+            </div>
 
-                                <form method="POST" action="#" class="modal-form package-form js-package-edit-form" enctype="multipart/form-data">
-                                    @csrf
-                                    @method('patch')
-                                    <input type="hidden" name="modal_id" value="edit-package">
+            <div class="field-group">
+                <label for="editPackagePrice">Harga Paket</label>
+                <input id="editPackagePrice" type="number" name="price" class="js-edit-package-price" min="0" max="500000" step="1000" required>
+            </div>
 
-                                    <div class="field-group">
-                                        <label for="editPackagePhoto">Gambar Paket</label>
-                                        <input id="editPackagePhoto" type="file" name="photo" class="js-edit-package-photo" accept="image/png,image/jpeg,image/webp">
-                                    </div>
+            <div class="field-group package-permanent-row">
+                <input type="hidden" name="is_permanent" value="0">
+                <label class="package-toggle-line">
+                    <input type="checkbox" name="is_permanent" value="1" class="js-package-permanent js-edit-package-permanent">
+                    Tampilkan selalu
+                </label>
+            </div>
 
-                                    <div class="field-group">
-                                        <label for="editPackageName">Nama Paket</label>
-                                        <input id="editPackageName" type="text" name="name" class="js-edit-package-name" maxlength="40" required>
-                                    </div>
+            <div class="package-choice-grid js-package-period" hidden>
+                <label>
+                    Tanggal Mulai
+                    <input type="date" name="starts_at" class="js-edit-package-starts-at">
+                </label>
 
-                                    <div class="field-group">
-                                        <label for="editPackageDescription">Deskripsi Paket</label>
-                                        <textarea id="editPackageDescription" name="description" class="js-edit-package-description" maxlength="300" rows="3" placeholder="Opsional, maksimal 300 karakter"></textarea>
-                                    </div>
+                <label>
+                    Jam Mulai
+                    <input type="time" name="starts_time" class="js-edit-package-starts-time">
+                </label>
 
-                                    <div class="package-builder js-package-builder">
-                                        <div class="package-selected-head">
-                                            <span>Isi Tetap Dari Manager</span>
-                                            <span class="package-selected-count js-package-selected-count">0 Menu</span>
-                                        </div>
-                                        <div class="package-selected-list js-package-selected-list">
-                                            <span class="package-selected-empty">Belum ada menu dipilih.</span>
-                                        </div>
-                                        <button type="button" class="package-add-menu-btn js-package-picker-toggle">+ Tambah Menu</button>
+                <label>
+                    Tanggal Berakhir
+                    <input type="date" name="ends_at" class="js-edit-package-ends-at">
+                </label>
 
-                                        <div class="package-picker js-package-picker-panel">
-                                            <input type="search" class="package-search js-package-search" placeholder="Cari menu..." aria-label="Cari menu paket">
-                                        @foreach ($availablePackageMenuItems->groupBy(fn ($menu) => $menu->category) as $category => $items)
-                                            <div class="package-picker-group">
-                                                <div class="package-picker-title">{{ $category }}</div>
-                                                @foreach ($items as $menu)
-                                                    <label class="package-picker-row" for="editPackageCheck{{ $menu->getKey() }}" data-menu-name="{{ strtolower($menu->nama_menu) }}" data-menu-category="{{ strtolower($menu->category) }}">
-                                                        <input id="editPackageCheck{{ $menu->getKey() }}" type="checkbox" class="js-package-check" data-menu-id="{{ $menu->getKey() }}">
-                                                        <span class="package-picker-info">
-                                                            <strong>{{ $menu->nama_menu }}</strong>
-                                                            <em>{{ $menu->category }} � Rp{{ number_format($menu->harga, 0, ',', '.') }}</em>
-                                                        </span>
-                                                        <input type="number" name="items[{{ $menu->getKey() }}]" class="package-qty js-package-qty js-edit-package-qty" data-menu-id="{{ $menu->getKey() }}" data-menu-name="{{ $menu->nama_menu }}" value="0" min="0" max="99" aria-label="Jumlah {{ $menu->nama_menu }}">
-                                                    </label>
-                                                @endforeach
-                                            </div>
-                                        @endforeach
-                                        </div>
-                                    </div>
+                <label>
+                    Jam Berakhir
+                    <input type="time" name="ends_time" class="js-edit-package-ends-time">
+                </label>
+            </div>
 
-                                    <div class="package-choice-box">
-                                        <div class="package-selected-head">
-                                            <span>Pilihan Bebas Yang Diizinkan Manager</span>
-                                        </div>
-                                        <div class="package-choice-grid">
-                                            <label>
-                                                Minuman bebas
-                                                <input type="number" name="choice_categories[Minuman]" class="js-edit-package-choice" data-category="Minuman" value="0" min="0" max="20">
-                                            </label>
-                                            <label>
-                                                Makanan bebas
-                                                <input type="number" name="choice_categories[Makanan]" class="js-edit-package-choice" data-category="Makanan" value="0" min="0" max="20">
-                                            </label>
-                                        </div>
-                                    </div>
+            <div class="field-group">
+                <label for="editPackageStatus">Status</label>
+                <select id="editPackageStatus" name="status" class="js-edit-package-status" required>
+                    <option value="tersedia">Aktif</option>
+                    <option value="habis">Nonaktif</option>
+                </select>
+            </div>
 
-                                    <div class="field-group">
-                                        <label for="editPackagePrice">Harga Paket</label>
-                                        <input id="editPackagePrice" type="number" name="price" class="js-edit-package-price" min="0" max="500000" step="1000" required>
-                                    </div>
-
-                                    <div class="field-group package-permanent-row">
-                                        <input type="hidden" name="is_permanent" value="0">
-                                        <label class="package-toggle-line">
-                                            <input type="checkbox" name="is_permanent" value="1" class="js-package-permanent js-edit-package-permanent">
-                                            Tampilkan selalu
-                                        </label>
-                                    </div>
-
-                                    <div class="package-choice-grid js-package-period" hidden>
-                                        <label>
-                                            Tanggal Mulai
-                                            <input type="date" name="starts_at" class="js-edit-package-starts-at">
-                                        </label>
-                                        <label>
-                                            Tanggal Berakhir
-                                            <input type="date" name="ends_at" class="js-edit-package-ends-at">
-                                        </label>
-                                    </div>
-
-                                    <div class="field-group">
-                                        <label for="editPackageStatus">Status</label>
-                                        <select id="editPackageStatus" name="status" class="js-edit-package-status" required>
-                                            <option value="tersedia">Aktif</option>
-                                            <option value="habis">Nonaktif</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="modal-actions">
-                                        <button type="button" class="ghost-btn js-close-modal">Batal</button>
-                                        <button type="submit" class="submit-btn">Simpan Perubahan</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-
+            <div class="modal-actions">
+                <button type="button" class="ghost-btn js-close-modal">Batal</button>
+                <button type="submit" class="submit-btn">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
                         <form method="POST" action="{{ route('manager.menus.destroy') }}" class="js-single-delete-form" hidden>
                             @csrf
                             @method('delete')
@@ -690,69 +869,64 @@
                             </div>
                         </div>
 
-                        @foreach ($foodMenuItems->concat($drinkMenuItems) as $menu)
-                            @php
-                                $initial = strtoupper(substr($menu->nama_menu, 0, 1));
-                                $statusLabel = $menu->status === 'tersedia' ? 'Aktif' : 'Nonaktif';
-                                $totalSold = (int) ($menu->total_sold ?? 0);
-                            @endphp
+@foreach ($foodMenuItems->concat($drinkMenuItems) as $menu)
+    @php
+        $initial = strtoupper(substr($menu->nama_menu, 0, 1));
+    @endphp
 
-                            <div class="modal-shell" id="modal-detail-menu-{{ $menu->getKey() }}" aria-hidden="true">
-                                <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalDetailMenuTitle{{ $menu->getKey() }}">
-                                    <div class="modal-header">
-                                        <div>
-                                            <div class="modal-title" id="modalDetailMenuTitle{{ $menu->getKey() }}">Detail Menu</div>
-                                            <div class="modal-subtitle">Informasi lengkap menu {{ $menu->nama_menu }}.</div>
-                                        </div>
-                                        <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
-                                    </div>
+    <div class="modal-shell" id="modal-recipe-menu-{{ $menu->getKey() }}" aria-hidden="true">
+        <div class="modal-dialog recipe-dialog" role="dialog" aria-modal="true" aria-labelledby="modalRecipeMenuTitle{{ $menu->getKey() }}">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="modalRecipeMenuTitle{{ $menu->getKey() }}">
+                        Resep {{ $menu->nama_menu }}
+                    </div>
+                    <div class="modal-subtitle">
+                        Daftar bahan dan takaran untuk pembuatan menu ini.
+                    </div>
+                </div>
+                <button type="button" class="modal-close js-close-modal" aria-label="Tutup modal">&times;</button>
+            </div>
 
-                                    <div class="detail-list">
-                                        <div class="menu-detail-thumb">{{ $initial }}</div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Nama Menu</div>
-                                            <div class="detail-value">{{ $menu->nama_menu }}</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Kategori</div>
-                                            <div class="detail-value">{{ $menu->category }}</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Barcode</div>
-                                            <div class="detail-value">{{ $menu->barcode ?: '-' }}</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Harga</div>
-                                            <div class="detail-value">Rp{{ number_format($menu->harga, 0, ',', '.') }}</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Stok Produk</div>
-                                            <div class="detail-value">{{ $menu->stok }}</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Total Terjual</div>
-                                            <div class="detail-value">{{ $totalSold }}</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Status</div>
-                                            <div class="detail-value">{{ $statusLabel }}</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Deskripsi</div>
-                                            <div class="detail-value">{{ $menu->deskripsi ?: '-' }}</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Tanggal Dibuat</div>
-                                            <div class="detail-value">{{ $menu->created_at?->format('d M Y H:i') ?? '-' }}</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Tanggal Diperbarui</div>
-                                            <div class="detail-value">{{ $menu->updated_at?->format('d M Y H:i') ?? '-' }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
+            <div class="recipe-body">
+                <div class="recipe-photo">
+                    @if ($menu->foto)
+                        <img src="{{ asset($menu->foto) }}" alt="{{ $menu->nama_menu }}">
+                    @else
+                        <span>{{ $initial }}</span>
+                    @endif
+                </div>
+
+                <div class="recipe-section-title">
+    Bahan untuk 1 Porsi
+</div>
+
+<div class="recipe-list">
+    @forelse ($menu->recipes as $recipe)
+        <div class="recipe-row">
+            <div class="recipe-ingredient">
+                {{ $recipe->ingredient?->nama_bahan ?? '-' }}
+            </div>
+
+            <div class="recipe-amount">
+                {{ rtrim(rtrim(number_format($recipe->qty, 2, ',', '.'), '0'), ',') }}
+                {{ $recipe->satuan }}
+            </div>
+        </div>
+    @empty
+        <div class="recipe-empty">
+            Belum ada resep untuk menu ini.
+        </div>
+    @endforelse
+</div>
+
+                <div class="modal-actions">
+                    <button type="button" class="ghost-btn js-close-modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
                     </div>
             </main>
         </div>
