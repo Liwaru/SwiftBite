@@ -853,7 +853,7 @@
         function ensureQrModal() {
             if (document.getElementById('qrScannerModal')) return;
 
-            const html = '\n<div id="qrScannerModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:11000;">\n  <div style="width:360px;max-width:92%;background:#fff;padding:12px;border-radius:8px;box-sizing:border-box;text-align:center;">\n    <div id="qrReader" style="width:100%;height:260px;margin-bottom:8px;"></div>\n    <div id="qrStatus" style="font-size:13px;color:#333;margin-bottom:8px;">Menunggu...</div>\n    <div style="display:flex;gap:8px;justify-content:center;">\n      <button type="button" id="qrCloseBtn" style="padding:8px 12px;border-radius:6px;">Tutup</button>\n    </div>\n  </div>\n</div>';
+            const html = '\n<div id="qrScannerModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:11000;">\n  <div style="width:360px;max-width:92%;background:#fff;padding:12px;border-radius:8px;box-sizing:border-box;text-align:center;">\n    <div id="qrReader" style="width:100%;height:260px;margin-bottom:8px;"></div>\n    <div style="display:flex;gap:8px;justify-content:center;">\n      <button type="button" id="qrCloseBtn" style="padding:8px 12px;border-radius:6px;">Tutup</button>\n    </div>\n  </div>\n</div>';
 
             document.body.insertAdjacentHTML('beforeend', html);
             const modalEl = document.getElementById('qrScannerModal');
@@ -877,8 +877,7 @@
             } catch(e) {}
             _qrScannerTarget = document.getElementById(targetId) || null;
 
-            // diagnostic info
-            debugCameraInfo().catch(e => console.warn('debugCameraInfo failed', e));
+            // diagnostic info removed
 
             try {
                 // prefer native BarcodeDetector if available
@@ -934,14 +933,10 @@
             try { if (_qrEscHandler) { document.removeEventListener('keydown', _qrEscHandler); _qrEscHandler = null; } } catch(e) {}
         }
 
-        function setQrStatus(text) {
-            const el = document.getElementById('qrStatus');
-            if (el) el.textContent = text;
-        }
+        // debug status removed
 
         async function showRawCameraStream() {
             try {
-                setQrStatus('Menampilkan kamera langsung...');
                 let stream = _qrRawStream || null;
                 if (!stream) {
                     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -963,7 +958,6 @@
                 console.log('Raw camera stream attached (cashier)');
             } catch (err) {
                 console.error('Failed to show raw camera stream (cashier)', err);
-                setQrStatus('Gagal menampilkan kamera: ' + (err && err.message ? err.message : 'unknown'));
             }
         }
 
@@ -1036,23 +1030,7 @@
             } catch(e) {}
         }
 
-        async function debugCameraInfo() {
-            try {
-                const statusEl = document.getElementById('qrStatus');
-                const parts = [];
-                if (navigator.permissions && navigator.permissions.query) {
-                    try { const p = await navigator.permissions.query({ name: 'camera' }); parts.push('perm=' + p.state); } catch(e) {}
-                }
-                if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-                    const devices = await navigator.mediaDevices.enumerateDevices();
-                    const vids = devices.filter(d => d.kind === 'videoinput');
-                    parts.push('videoInputs=' + vids.length);
-                    vids.forEach((d,i) => parts.push('#' + i + ':' + (d.label || 'hidden')));
-                }
-                console.log('Camera debug:', parts.join(' | '));
-                if (statusEl) statusEl.textContent = parts.join(' | ');
-            } catch(err) { console.warn('debugCameraInfo error', err); }
-        }
+        // debugCameraInfo removed
 
         document.addEventListener('click', (event) => {
             const btn = event.target.closest && event.target.closest('.js-open-qr');

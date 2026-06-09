@@ -1343,5 +1343,5 @@
     </style>
     <style>
         /* hide transient debug status inserted by scanner during development */
-        #qrStatus { display: none !important; }
+        /* qrStatus removed */
     </style>
