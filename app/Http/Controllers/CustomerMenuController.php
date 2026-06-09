@@ -303,14 +303,16 @@ class CustomerMenuController extends Controller
         abort_unless((int) $order->id_meja === (int) $table->id_meja, 404);
 
         $validated = $request->validate([
-            'payment_method' => ['required', 'in:cash,qris,gopay,ovo,dana,shopeepay'],
-        ]);
+    'payment_method' => ['required', 'in:cash,qris,gopay,ovo,dana,shopeepay'],
+    'customer_note' => ['nullable', 'string', 'max:500'],
+]);
 
         if ($validated['payment_method'] === 'cash') {
             $order->update([
-                'metode_pembayaran' => 'cash',
-                'payment_status' => 'belum_dibayar',
-            ]);
+    'metode_pembayaran' => 'cash',
+    'payment_status' => 'belum_dibayar',
+    'notes' => $validated['customer_note'] ?? null,
+]);
 
             ActivityRecorder::activity('Customer', 'Memilih pembayaran tunai untuk pesanan #' . $order->kode_pesanan);
 
@@ -321,9 +323,10 @@ class CustomerMenuController extends Controller
 
         if ($validated['payment_method'] === 'qris') {
             $order->update([
-                'metode_pembayaran' => 'qris',
-                'payment_status' => 'diproses',
-            ]);
+    'metode_pembayaran' => 'qris',
+    'payment_status' => 'diproses',
+    'notes' => $validated['customer_note'] ?? null,
+]);
 
             $result = $this->createMidtransQris($order);
 
@@ -352,6 +355,7 @@ class CustomerMenuController extends Controller
 
         $validated = $request->validate([
             'payment_method' => ['required', 'in:gopay,ovo,dana,shopeepay'],
+             'customer_note' => ['nullable', 'string', 'max:500'],
             'account_number' => ['required', 'string', 'max:30', 'regex:/^[0-9+\-\s]+$/'],
         ]);
 

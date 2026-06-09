@@ -1,4 +1,4 @@
-    <script src="https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
     <script>
         (function () {
             const modalTriggers = document.querySelectorAll('.js-open-modal');
@@ -1455,258 +1455,638 @@
                 openModal(@json(old('modal_id', 'create-table')));
             @endif
 
-            // --- QR Scanner support for barcode inputs ---
-            let _html5QrScanner = null;
-            let _qrScannerTarget = null;
-            let _qrRawStream = null;
-            let _qrScanRaf = null;
+            // Barcode / QR Scanner
+            let _qrScanner       = null;   // Html5Qrcode instance
+            let _qrScannerTarget = null;   // <input> to fill
+            let _qrCameras       = [];     // available cameras list
+            let _qrActiveCamIdx  = 0;      // index into _qrCameras
+            let _qrEscHandler    = null;
+            let _qrScannerReady  = false;
+            let _qrRawStream     = null;
+            let _qrPreviewVideo  = null;
+            let _qrScanRaf       = null;
             let _barcodeDetector = null;
-            let _qrEscHandler = null;
+            let _qrHasResult     = false;
+            let _qrDecodeCanvas  = null;
+
+            // Inject scanner modal + styles once
+            function ensureQrModal() {
+                if (document.getElementById('qrScannerModal')) return;
+
+                // Inline styles for the scanner UI
+                const style = document.createElement('style');
+                style.textContent = [
+                    '#qrScannerModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;',
+                    'background:rgba(0,0,0,.72);z-index:11000;backdrop-filter:blur(4px);}',
+                    '#qrScannerBox{width:360px;max-width:94vw;background:#1a1a1a;border-radius:16px;',
+                    'overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.6);}',
+                    '#qrScannerHeader{display:flex;align-items:center;justify-content:space-between;',
+                    'padding:14px 16px;background:#111;}',
+                    '#qrScannerTitle{font-family:inherit;font-size:15px;font-weight:600;color:#fff;letter-spacing:.01em;}',
+                    '#qrScannerCloseBtn{background:rgba(255,255,255,.08);border:none;color:#fff;width:30px;height:30px;',
+                    'border-radius:50%;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center;',
+                    'justify-content:center;transition:background .15s;}',
+                    '#qrScannerCloseBtn:hover{background:rgba(255,255,255,.18);}',
+                    '#qrViewport{position:relative;width:100%;height:280px;background:#000;overflow:hidden;}',
+                    '#qrReader{width:100%;height:100%;}',
+                    '#qrReader video{width:100%!important;height:100%!important;object-fit:cover!important;}',
+                    /* suppress html5-qrcode default UI chrome without hiding the camera/video */
+                    '#qrReader img{display:none!important;}',
+                    '#qrReader__dashboard,#qrReader__scan_region img{display:none!important;}',
+                    '#qrScannerFooter{padding:12px 16px;background:#111;display:flex;align-items:center;',
+                    'justify-content:space-between;gap:10px;}',
+                    '#qrStatusMsg{font-size:13px;color:#9ca3af;flex:1;text-align:left;',
+                    'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
+                    '#qrStatusMsg.ok{color:#34d399;}',
+                    '#qrStatusMsg.err{color:#f87171;}',
+                    '#qrSwitchCamBtn{background:rgba(255,255,255,.08);border:none;color:#fff;',
+                    'padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px;white-space:nowrap;',
+                    'transition:background .15s;display:none;}',
+                    '#qrSwitchCamBtn:hover{background:rgba(255,255,255,.18);}',
+                    '#qrPreview{width:100%;height:100%;object-fit:cover;}',
+                ].join('');
+                document.head.appendChild(style);
+
+                // Modal markup
+                const wrap = document.createElement('div');
+                wrap.id = 'qrScannerModal';
+                wrap.innerHTML = [
+                    '<div id="qrScannerBox">',
+                    '  <div id="qrScannerHeader">',
+                    '    <span id="qrScannerTitle">Scan Barcode / QR</span>',
+                    '    <button type="button" id="qrScannerCloseBtn" aria-label="Tutup scanner">&times;</button>',
+                    '  </div>',
+                    '  <div id="qrViewport">',
+                    '    <div id="qrReader"></div>',
+                    '  </div>',
+                    '  <div id="qrScannerFooter">',
+                    '    <span id="qrStatusMsg">Menginisialisasi kamera...</span>',
+                    '    <button type="button" id="qrSwitchCamBtn">&#x21C4; Ganti Kamera</button>',
+                    '  </div>',
+                    '</div>',
+                ].join('');
+                document.body.appendChild(wrap);
+
+                document.getElementById('qrScannerCloseBtn')?.addEventListener('click', closeQrScanner);
+                document.getElementById('qrSwitchCamBtn')?.addEventListener('click', switchCamera);
+                wrap.addEventListener('click', (ev) => { if (ev.target === wrap) closeQrScanner(); });
+            }
+
+            function setQrStatus(msg, type) {
+                const el = document.getElementById('qrStatusMsg');
+                if (!el) return;
+                el.textContent = msg;
+                el.className = type || '';
+            }
+
+            function fillQrTarget(decodedText) {
+    if (!decodedText || _qrHasResult) return;
+    _qrHasResult = true;
+
+    if (_qrScannerTarget) {
+        _qrScannerTarget.value = decodedText;
+        _qrScannerTarget.dispatchEvent(new Event('input', { bubbles: true }));
+        _qrScannerTarget.dispatchEvent(new Event('change', { bubbles: true }));
+
+        _qrScannerTarget.dispatchEvent(new KeyboardEvent('keydown', {
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: 13,
+            which: 13,
+            bubbles: true
+        }));
+    }
+
+    setQrStatus('Terdeteksi: ' + decodedText, 'ok');
+    setTimeout(async () => {
+    await closeQrScanner();
+    _qrHasResult = false;
+}, 800);
+}
+
+            function getBarcodeFormats() {
+                if (!window.Html5QrcodeSupportedFormats) {
+                    return null;
+                }
+
+                const formats = window.Html5QrcodeSupportedFormats;
+                return [
+                    formats.QR_CODE,
+                    formats.EAN_13,
+                    formats.EAN_8,
+                    formats.CODE_128,
+                    formats.CODE_39,
+                    formats.UPC_A,
+                    formats.UPC_E,
+                    formats.ITF,
+                    formats.DATA_MATRIX,
+                ].filter((format) => typeof format !== 'undefined');
+            }
+
+            function withTimeout(promise, ms) {
+                let timeoutId = null;
+                const timeout = new Promise((_, reject) => {
+                    timeoutId = setTimeout(() => reject(new Error('timeout')), ms);
+                });
+
+                return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+            }
+
+            function checksumEan13(code) {
+                if (!/^\d{13}$/.test(code)) return false;
+                let sum = 0;
+                for (let i = 0; i < 12; i++) {
+                    sum += Number(code[i]) * (i % 2 === 0 ? 1 : 3);
+                }
+                return (10 - (sum % 10)) % 10 === Number(code[12]);
+            }
+
+            function bestDigit(bits, patterns) {
+                let best = null;
+                let bestDistance = 8;
+
+                Object.entries(patterns).forEach(([digit, pattern]) => {
+                    let distance = 0;
+                    for (let i = 0; i < 7; i++) {
+                        if (bits[i] !== pattern[i]) distance++;
+                    }
+
+                    if (distance < bestDistance) {
+                        best = digit;
+                        bestDistance = distance;
+                    }
+                });
+
+                return bestDistance <= 1 ? { digit: best, distance: bestDistance } : null;
+            }
+
+            function bitDistance(a, b) {
+                if (a.length !== b.length) return Number.POSITIVE_INFINITY;
+                let distance = 0;
+                for (let i = 0; i < a.length; i++) {
+                    if (a[i] !== b[i]) distance++;
+                }
+                return distance;
+            }
+
+            function decodeEanBits(bits) {
+                const leftOdd = {
+                    0: '0001101', 1: '0011001', 2: '0010011', 3: '0111101', 4: '0100011',
+                    5: '0110001', 6: '0101111', 7: '0111011', 8: '0110111', 9: '0001011',
+                };
+                const leftEven = {
+                    0: '0100111', 1: '0110011', 2: '0011011', 3: '0100001', 4: '0011101',
+                    5: '0111001', 6: '0000101', 7: '0010001', 8: '0001001', 9: '0010111',
+                };
+                const right = {
+                    0: '1110010', 1: '1100110', 2: '1101100', 3: '1000010', 4: '1011100',
+                    5: '1001110', 6: '1010000', 7: '1000100', 8: '1001000', 9: '1110100',
+                };
+                const parityMap = {
+                    LLLLLL: '0', LLGLGG: '1', LLGGLG: '2', LLGGGL: '3', LGLLGG: '4',
+                    LGGLLG: '5', LGGGLL: '6', LGLGLG: '7', LGLGGL: '8', LGGLGL: '9',
+                };
+
+                const guardDistance = bitDistance(bits.slice(0, 3), '101')
+                    + bitDistance(bits.slice(45, 50), '01010')
+                    + bitDistance(bits.slice(92, 95), '101');
+                if (guardDistance > 2) {
+                    return null;
+                }
+
+                let leftDigits = '';
+                let parity = '';
+                let distance = guardDistance;
+                for (let i = 0; i < 6; i++) {
+                    const chunk = bits.slice(3 + i * 7, 10 + i * 7);
+                    const odd = bestDigit(chunk, leftOdd);
+                    const even = bestDigit(chunk, leftEven);
+
+                    if (!odd && !even) return null;
+                    if (!even || (odd && odd.distance <= even.distance)) {
+                        leftDigits += odd.digit;
+                        parity += 'L';
+                        distance += odd.distance;
+                    } else {
+                        leftDigits += even.digit;
+                        parity += 'G';
+                        distance += even.distance;
+                    }
+                }
+
+                const firstDigit = parityMap[parity];
+                if (typeof firstDigit === 'undefined') return null;
+
+                let rightDigits = '';
+                for (let i = 0; i < 6; i++) {
+                    const chunk = bits.slice(50 + i * 7, 57 + i * 7);
+                    const decoded = bestDigit(chunk, right);
+                    if (!decoded) return null;
+                    rightDigits += decoded.digit;
+                    distance += decoded.distance;
+                }
+
+                const code = firstDigit + leftDigits + rightDigits;
+                return checksumEan13(code) ? { code, distance } : null;
+            }
+
+            function otsuThreshold(values) {
+                const histogram = new Array(256).fill(0);
+                values.forEach((value) => { histogram[value]++; });
+
+                let total = values.length;
+                let sum = 0;
+                for (let i = 0; i < 256; i++) sum += i * histogram[i];
+
+                let sumB = 0;
+                let weightB = 0;
+                let maxVariance = 0;
+                let threshold = 128;
+
+                for (let i = 0; i < 256; i++) {
+                    weightB += histogram[i];
+                    if (!weightB) continue;
+
+                    const weightF = total - weightB;
+                    if (!weightF) break;
+
+                    sumB += i * histogram[i];
+                    const meanB = sumB / weightB;
+                    const meanF = (sum - sumB) / weightF;
+                    const variance = weightB * weightF * Math.pow(meanB - meanF, 2);
+
+                    if (variance > maxVariance) {
+                        maxVariance = variance;
+                        threshold = i;
+                    }
+                }
+
+                return threshold;
+            }
+
+            function scanEanFromVideo(video) {
+                if (!video || video.readyState < 2) return null;
+
+                const sourceWidth = video.videoWidth || 640;
+                const sourceHeight = video.videoHeight || 480;
+                const canvasWidth = 760;
+                const canvasHeight = Math.max(260, Math.round(sourceHeight * (canvasWidth / sourceWidth)));
+
+                if (!_qrDecodeCanvas) {
+                    _qrDecodeCanvas = document.createElement('canvas');
+                }
+
+                _qrDecodeCanvas.width = canvasWidth;
+                _qrDecodeCanvas.height = canvasHeight;
+                const ctx = _qrDecodeCanvas.getContext('2d', { willReadFrequently: true });
+                if (!ctx) return null;
+
+                ctx.drawImage(video, 0, 0, canvasWidth, canvasHeight);
+
+                const yStart = Math.round(canvasHeight * 0.28);
+                const yEnd = Math.round(canvasHeight * 0.78);
+                const rowStep = Math.max(4, Math.round(canvasHeight / 42));
+                const moduleWidths = [1.8, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.8, 4.1, 4.45, 4.8, 5.2, 5.65, 6.1, 6.6, 7.1, 7.7];
+                let best = null;
+
+                for (let y = yStart; y <= yEnd; y += rowStep) {
+                    const bandHeight = Math.min(5, canvasHeight - y);
+                    const data = ctx.getImageData(0, y, canvasWidth, bandHeight).data;
+                    const gray = new Array(canvasWidth);
+                    for (let x = 0; x < canvasWidth; x++) {
+                        let total = 0;
+                        for (let bandY = 0; bandY < bandHeight; bandY++) {
+                            const idx = (bandY * canvasWidth + x) * 4;
+                            total += data[idx] * 0.299 + data[idx + 1] * 0.587 + data[idx + 2] * 0.114;
+                        }
+                        gray[x] = Math.round(total / bandHeight);
+                    }
+
+                    const threshold = otsuThreshold(gray);
+                    for (const moduleWidth of moduleWidths) {
+                        const barcodeWidth = moduleWidth * 95;
+                        if (barcodeWidth >= canvasWidth) continue;
+
+                        const startStep = Math.max(1, Math.round(moduleWidth));
+                        for (let start = 0; start <= canvasWidth - barcodeWidth; start += startStep) {
+                            let bits = '';
+                            for (let i = 0; i < 95; i++) {
+                                const sampleX = Math.min(canvasWidth - 1, Math.max(0, Math.round(start + (i + 0.5) * moduleWidth)));
+                                bits += gray[sampleX] < threshold ? '1' : '0';
+                            }
+
+                            const decoded = decodeEanBits(bits);
+                            if (decoded && (!best || decoded.distance < best.distance)) {
+                                best = decoded;
+                                if (decoded.distance === 0) return decoded.code;
+                            }
+                        }
+                    }
+                }
+
+                return best?.code || null;
+            }
 
             function ensureHtml5Qr() {
                 return new Promise((resolve, reject) => {
                     if (typeof Html5Qrcode !== 'undefined') return resolve(window.Html5Qrcode);
-                    const src = 'https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js';
+                    const src = 'https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js';
                     const existing = document.querySelector('script[src="' + src + '"]');
                     if (existing) {
                         existing.addEventListener('load', () => resolve(window.Html5Qrcode));
-                        existing.addEventListener('error', () => reject(new Error('Failed to load Html5Qrcode')));
+                        existing.addEventListener('error', () => reject(new Error('Gagal memuat library scanner')));
                         return;
                     }
                     const s = document.createElement('script');
                     s.src = src;
                     s.async = true;
                     s.onload = () => resolve(window.Html5Qrcode);
-                    s.onerror = () => reject(new Error('Failed to load Html5Qrcode'));
+                    s.onerror = () => reject(new Error('Gagal memuat library scanner'));
                     document.head.appendChild(s);
                 });
             }
 
-            function ensureQrModal() {
-                if (document.getElementById('qrScannerModal')) {
-                    return;
+            async function startQrEngine(cameraId) {
+                await stopQrEngine();
+
+                if (!_qrScanner) {
+                    _qrScanner = new Html5Qrcode('qrReader', { verbose: false });
                 }
 
-                const html = '\n<div id="qrScannerModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:11000;">\n  <div style="width:360px;max-width:92%;background:#fff;padding:12px;border-radius:8px;box-sizing:border-box;text-align:center;">\n    <div id="qrReader" style="width:100%;height:260px;margin-bottom:8px;"></div>\n    <div style="display:flex;gap:8px;justify-content:center;">\n      <button type="button" id="qrCloseBtn" style="padding:8px 12px;border-radius:6px;">Tutup</button>\n    </div>\n  </div>\n</div>';
+                const config = {
+                    fps: 18,
+                    qrbox: (viewfinderWidth, viewfinderHeight) => {
+                        const width = Math.floor(viewfinderWidth * 0.9);
+                        const height = Math.floor(viewfinderHeight * 0.55);
+                        return {
+                            width: Math.max(240, Math.min(width, 420)),
+                            height: Math.max(180, Math.min(height, 300)),
+                        };
+                    },
+                    disableFlip: false,
+                    aspectRatio: 1.333334,
+                    experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+                };
+                const formatsToSupport = getBarcodeFormats();
+                if (formatsToSupport?.length) {
+                    config.formatsToSupport = formatsToSupport;
+                }
 
-                document.body.insertAdjacentHTML('beforeend', html);
-                const modalEl = document.getElementById('qrScannerModal');
-                document.getElementById('qrCloseBtn')?.addEventListener('click', closeQrScanner);
-                // close when clicking on backdrop
-                modalEl?.addEventListener('click', (ev) => { if (ev.target === modalEl) closeQrScanner(); });
+                const startArg = cameraId
+                    ? { deviceId: { exact: cameraId } }
+                    : { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } };
+
+                setQrStatus('Membuka kamera...');
+
+                await _qrScanner.start(
+                    startArg,
+                    config,
+                    (decodedText) => fillQrTarget(decodedText),
+                    () => { /* scan miss - ignore */ }
+                );
+
+                _qrScannerReady = true;
+                setQrStatus('Arahkan kamera ke barcode atau QR code');
+
+                const switchBtn = document.getElementById('qrSwitchCamBtn');
+                if (switchBtn) switchBtn.style.display = _qrCameras.length > 1 ? '' : 'none';
+            }
+            function stopRawPreview() {
+                if (_qrScanRaf) {
+                    cancelAnimationFrame(_qrScanRaf);
+                    _qrScanRaf = null;
+                }
+
+                if (_qrPreviewVideo) {
+                    try { _qrPreviewVideo.pause(); } catch (e) { /* ignore */ }
+                    try { _qrPreviewVideo.srcObject = null; } catch (e) { /* ignore */ }
+                    _qrPreviewVideo.remove();
+                    _qrPreviewVideo = null;
+                }
+
+                if (_qrRawStream) {
+                    try { _qrRawStream.getTracks().forEach((track) => track.stop()); } catch (e) { /* ignore */ }
+                    _qrRawStream = null;
+                }
             }
 
+            async function showRawPreview(scanWithDetector = false) {
+                stopRawPreview();
+
+                const readerEl = document.getElementById('qrReader');
+                if (!readerEl || !navigator.mediaDevices?.getUserMedia) {
+                    throw new Error('Kamera tidak didukung browser ini.');
+                }
+
+                _qrRawStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: 'environment' } },
+                    audio: false,
+                });
+
+                readerEl.innerHTML = '';
+                const video = document.createElement('video');
+                video.id = 'qrPreview';
+                video.autoplay = true;
+                video.playsInline = true;
+                video.muted = true;
+                video.srcObject = _qrRawStream;
+                readerEl.appendChild(video);
+                _qrPreviewVideo = video;
+
+                try { await video.play(); } catch (e) { /* browser may autoplay after metadata */ }
+
+                if (scanWithDetector) {
+                    const loop = async () => {
+                        if (!_qrPreviewVideo || _qrHasResult) return;
+
+                        if (_qrPreviewVideo.readyState >= 2) {
+                            if (_barcodeDetector) {
+                                try {
+                                    const detections = await _barcodeDetector.detect(_qrPreviewVideo);
+                                    const first = detections?.[0];
+                                    const decodedText = first?.rawValue || first?.rawData || '';
+                                    if (decodedText) {
+                                        fillQrTarget(decodedText);
+                                        return;
+                                    }
+                                } catch (e) {
+                                    // Some frames are unreadable while focus and exposure settle.
+                                }
+                            }
+
+                            const localCode =
+                                scanEanFromVideo(_qrPreviewVideo) ||
+                                scanEanFromVideo(_qrPreviewVideo) ||
+                                scanEanFromVideo(_qrPreviewVideo);
+
+                            if (localCode) {
+                                fillQrTarget(localCode);
+                                return;
+                            }
+                        }
+
+                        _qrScanRaf = requestAnimationFrame(loop);
+                    };
+
+                    _qrScanRaf = requestAnimationFrame(loop);
+                }
+            }
+
+            async function startRawCameraScanner() {
+                try {
+                    if ('BarcodeDetector' in window && !_barcodeDetector) {
+                        try {
+                            const wantedFormats = ['qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e', 'itf', 'data_matrix'];
+                            const supportedFormats = BarcodeDetector.getSupportedFormats
+                                ? await BarcodeDetector.getSupportedFormats()
+                                : wantedFormats;
+                            const formats = wantedFormats.filter((format) => supportedFormats.includes(format));
+                            _barcodeDetector = new BarcodeDetector({ formats: formats.length ? formats : wantedFormats });
+                        } catch (detectorErr) {
+                            console.warn('BarcodeDetector unavailable, using local EAN scanner.', detectorErr);
+                            _barcodeDetector = null;
+                        }
+                    }
+
+                    setQrStatus('Meminta izin kamera...');
+                    await showRawPreview(true);
+                    _qrScannerReady = true;
+                    const switchBtn = document.getElementById('qrSwitchCamBtn');
+                    if (switchBtn) switchBtn.style.display = 'none';
+
+                    setQrStatus('Tahan barcode 1 detik sampai terbaca...');
+                    if (_barcodeDetector) {
+                        return true;
+                    }
+
+                    await new Promise((resolve) => setTimeout(resolve, 1200));
+                    return _qrHasResult;
+                } catch (e) {
+                    console.error('Raw camera start failed:', e);
+                    stopRawPreview();
+                    throw e;
+                }
+            }
+
+            async function stopQrEngine() {
+                _qrScannerReady = false;
+                stopRawPreview();
+                if (_qrScanner) {
+                    try {
+                        const state = _qrScanner.getState ? _qrScanner.getState() : 0;
+                        // state 2 = SCANNING, state 3 = PAUSED
+                        if (state === 2 || state === 3) {
+                            await _qrScanner.stop();
+                        }
+                    } catch (e) { /* ignore */ }
+                    try { _qrScanner.clear(); } catch (e) { /* ignore */ }
+                    _qrScanner = null;
+                }
+            }
+            _qrHasResult = false;
             async function openQrScanner(targetId) {
                 ensureQrModal();
+
                 const modal = document.getElementById('qrScannerModal');
                 if (!modal) return;
                 modal.style.display = 'flex';
-                // show raw camera immediately to prompt permission and display preview
-                try { showRawCameraStream().catch(()=>{}); } catch(e) {}
-                // add escape key handler to close modal and stop camera
-                try {
-                    if (!_qrEscHandler) {
-                        _qrEscHandler = function (ev) { if (ev.key === 'Escape') closeQrScanner(); };
-                        document.addEventListener('keydown', _qrEscHandler);
-                    }
-                } catch(e) {}
+
                 _qrScannerTarget = document.getElementById(targetId) || null;
+                _qrHasResult = false;
+                setQrStatus('Menginisialisasi kamera...');
+
+                // Escape key to close
+                if (!_qrEscHandler) {
+                    _qrEscHandler = (ev) => { if (ev.key === 'Escape') closeQrScanner(); };
+                    document.addEventListener('keydown', _qrEscHandler);
+                }
 
                 try {
-                    // diagnostic: permissions/devices info removed in production
-
-                    // ensure library is loaded
-                    try {
-                        await ensureHtml5Qr();
-                    } catch (loadErr) {
-                        console.error('Failed to load Html5Qrcode library', loadErr);
-                        // failed to load library
+                    if (await startRawCameraScanner()) {
                         return;
                     }
-                    // prefer native BarcodeDetector if available for direct video preview
-                    if ('BarcodeDetector' in window) {
-                        try {
-                            if (!_barcodeDetector) {
-                                try { _barcodeDetector = new BarcodeDetector({ formats: ['qr_code','ean_13','code_128'] }); } catch(e) { _barcodeDetector = null; }
-                            }
-                            await startCameraPreviewAndScan();
-                        } catch (e) {
-                            console.error('BarcodeDetector flow failed', e);
-                        }
-                    } else {
-                        // fallback to html5-qrcode library
-                            try {
-                            // cleanup resources before starting html5qr
-                            cleanupQrResources();
-                            if (!_html5QrScanner) _html5QrScanner = new Html5Qrcode('qrReader');
-                            const cameras = await Html5Qrcode.getCameras();
-                            const cameraId = (cameras && cameras.length) ? cameras[0].id : null;
-                            const cfg = { fps: 10, qrbox: { width: 250, height: 200 } };
-                            const startArg = cameraId ? { deviceId: { exact: cameraId } } : { facingMode: { ideal: 'environment' } };
-                            await _html5QrScanner.start(startArg, cfg, (decodedText) => {
-                                if (_qrScannerTarget) {
-                                    _qrScannerTarget.value = decodedText;
-                                    _qrScannerTarget.dispatchEvent(new Event('input', { bubbles: true }));
-                                }
-                                closeQrScanner();
-                            }, (error) => {});
-                        } catch (err) {
-                            console.error('Html5Qrcode start failed', err);
-                            // try raw stream preview to help user
-                            showRawCameraStream().catch(()=>{});
-                        }
+                } catch (cameraErr) {
+                    if (cameraErr?.name === 'NotAllowedError' || cameraErr?.name === 'PermissionDeniedError') {
+                        setQrStatus('Izin kamera diblokir. Klik ikon kamera di address bar lalu Allow.', 'err');
+                        return;
                     }
-                } catch (e) {
-                    console.error('QR scanner init error', e);
+
+                    if (cameraErr?.name === 'NotFoundError' || cameraErr?.name === 'DevicesNotFoundError') {
+                        setQrStatus('Kamera tidak ditemukan di perangkat ini.', 'err');
+                        return;
+                    }
+
+                    setQrStatus('Kamera belum bisa dibuka. Cek izin kamera browser.', 'err');
+                    return;
                 }
-                // ensure at least a raw preview is shown if other flows didn't start
+
                 try {
-                    const hasPreview = !!document.getElementById('qrPreview') || !!_qrRawStream || (!!_html5QrScanner && typeof _html5QrScanner.getState === 'function');
-                    if (!hasPreview) {
-                        showRawCameraStream().catch(()=>{});
+                    await ensureHtml5Qr();
+                } catch (e) {
+                    setQrStatus('Gagal memuat library scanner.', 'err');
+                    return;
+                }
+
+                try {
+                    await startQrEngine(null);
+                } catch (err) {
+                    console.error('Scanner start failed:', err);
+                    try {
+                        setQrStatus('Mencari kamera...');
+                        _qrCameras = await withTimeout(Html5Qrcode.getCameras(), 1500);
+                        _qrActiveCamIdx = 0;
+                        if (_qrCameras.length > 1) {
+                            const backIdx = _qrCameras.findIndex((c) =>
+                                /back|rear|environment/i.test(c.label)
+                            );
+                            if (backIdx >= 0) _qrActiveCamIdx = backIdx;
+                        }
+                        const cameraId = _qrCameras.length ? _qrCameras[_qrActiveCamIdx].id : null;
+                        if (cameraId) {
+                            await startQrEngine(cameraId);
+                        } else {
+                            throw err;
+                        }
+                    } catch (cameraErr) {
+                        console.error('Scanner camera-id fallback failed:', cameraErr);
+                        await startQrEngine(null);
                     }
-                } catch(e) {}
+                }
             }
 
-            function closeQrScanner() {
+            async function closeQrScanner() {
                 const modal = document.getElementById('qrScannerModal');
                 if (modal) modal.style.display = 'none';
 
-                if (_html5QrScanner) {
-                    _html5QrScanner.stop().catch(() => {}).then(() => {
-                        try { _html5QrScanner.clear(); } catch (e) {}
-                    });
-                }
+                await stopQrEngine();
 
-                // stop any preview/scanner and cleanup resources
-                try { cleanupQrResources(); } catch(e) {}
-
-                _html5QrScanner = null;
                 _qrScannerTarget = null;
-                try { if (_qrEscHandler) { document.removeEventListener('keydown', _qrEscHandler); _qrEscHandler = null; } } catch(e) {}
-            }
+                _qrCameras = [];
 
-            // debug status removed in production
-
-            async function showRawCameraStream() {
-                try {
-                    let stream = _qrRawStream || null;
-                    if (!stream) {
-                        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                        _qrRawStream = stream;
-                    }
-                    const readerEl = document.getElementById('qrReader');
-                    if (!readerEl) return;
-                    readerEl.innerHTML = '';
-                    const v = document.createElement('video');
-                    v.style.width = '100%';
-                    v.style.height = '100%';
-                    v.style.objectFit = 'cover';
-                    v.autoplay = true;
-                    v.playsInline = true;
-                    v.muted = true;
-                    v.srcObject = stream;
-                    readerEl.appendChild(v);
-                    try { await v.play(); } catch (playErr) { console.warn('Video play failed', playErr); }
-                    console.log('Raw camera stream attached (manager)');
-                } catch (err) {
-                    console.error('Failed to show raw camera stream', err);
+                if (_qrEscHandler) {
+                    document.removeEventListener('keydown', _qrEscHandler);
+                    _qrEscHandler = null;
                 }
             }
 
-            async function startCameraPreviewAndScan() {
-                // start raw camera and attach to video, then use BarcodeDetector to scan
+            async function switchCamera() {
+                if (_qrCameras.length < 2) return;
+                _qrActiveCamIdx = (_qrActiveCamIdx + 1) % _qrCameras.length;
+                const cameraId = _qrCameras[_qrActiveCamIdx].id;
+                setQrStatus('Mengganti kamera...');
                 try {
-                    const stream = _qrRawStream || await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                    _qrRawStream = _qrRawStream || stream;
-                    const readerEl = document.getElementById('qrReader');
-                    if (!readerEl) return;
-                    readerEl.innerHTML = '';
-                    const v = document.createElement('video');
-                    v.id = 'qrPreview';
-                    v.style.width = '100%';
-                    v.style.height = '100%';
-                    v.style.objectFit = 'cover';
-                    v.autoplay = true;
-                    v.playsInline = true;
-                    v.muted = true;
-                    v.srcObject = stream;
-                    readerEl.appendChild(v);
-                    try { await v.play(); } catch (e) { console.warn('video play failed', e); }
-
-                    // scanning loop
-                    const loop = async () => {
-                        if (!v || v.readyState < 2 || !_barcodeDetector) {
-                            _qrScanRaf = requestAnimationFrame(loop);
-                            return;
-                        }
-                        try {
-                            const detections = await _barcodeDetector.detect(v);
-                            if (detections && detections.length) {
-                                const text = detections[0].rawValue || detections[0].rawData || null;
-                                if (text && _qrScannerTarget) {
-                                    _qrScannerTarget.value = text;
-                                    _qrScannerTarget.dispatchEvent(new Event('input', { bubbles: true }));
-                                    closeQrScanner();
-                                    return;
-                                }
-                            }
-                        } catch (e) {
-                            // continue
-                        }
-                        _qrScanRaf = requestAnimationFrame(loop);
-                    };
-                    _qrScanRaf = requestAnimationFrame(loop);
-                } catch (err) {
-                    console.error('startCameraPreviewAndScan failed', err);
-                    throw err;
+                    await startQrEngine(cameraId);
+                } catch (e) {
+                    setQrStatus('Gagal mengganti kamera.', 'err');
                 }
             }
 
-            function stopCameraPreviewAndScan() {
-                if (_qrScanRaf) { cancelAnimationFrame(_qrScanRaf); _qrScanRaf = null; }
-                if (_qrRawStream) {
-                    try { _qrRawStream.getTracks().forEach(t => t.stop()); } catch (e) {}
-                    _qrRawStream = null;
-                }
-                const v = document.getElementById('qrPreview'); if (v) { try { v.pause(); v.srcObject = null; } catch(e){} if (v.parentNode) v.parentNode.removeChild(v); }
-            }
-
-            function cleanupQrResources() {
-                try {
-                    if (_qrScanRaf) { cancelAnimationFrame(_qrScanRaf); _qrScanRaf = null; }
-                } catch(e) {}
-                try {
-                    if (_qrRawStream) { _qrRawStream.getTracks().forEach(t => t.stop()); _qrRawStream = null; }
-                } catch(e) {}
-                try {
-                    if (_html5QrScanner) {
-                        try { _html5QrScanner.stop().catch(()=>{}); } catch(e) {}
-                        try { _html5QrScanner.clear(); } catch(e) {}
-                        _html5QrScanner = null;
-                    }
-                } catch(e) {}
-                try {
-                    // stop any video elements inside reader
-                    const videos = document.querySelectorAll('#qrReader video');
-                    videos.forEach((vv) => {
-                        try { if (vv.srcObject && vv.srcObject.getTracks) { vv.srcObject.getTracks().forEach(t=>t.stop()); } } catch(e) {}
-                        try { vv.pause(); vv.srcObject = null; } catch(e) {}
-                        try { if (vv.parentNode) vv.parentNode.removeChild(vv); } catch(e) {}
-                    });
-                    const v = document.getElementById('qrPreview'); if (v) { try { v.pause(); v.srcObject = null; } catch(e){} if (v.parentNode) v.parentNode.removeChild(v); }
-                } catch(e) {}
-            }
-
-            // debugCameraInfo removed
-
+            // Delegate click on any .js-open-qr button
             document.addEventListener('click', (event) => {
                 const btn = event.target.closest && event.target.closest('.js-open-qr');
                 if (!btn) return;
                 const target = btn.dataset.target;
-                if (target) {
-                    openQrScanner(target);
-                }
+                if (target) openQrScanner(target);
             });
         })();
     </script>
