@@ -28,7 +28,18 @@ class WaiterController extends Controller
             'selesai_today' => Order::whereIn('status', ['menunggu_pembayaran', 'selesai'])->whereDate('updated_at', today())->count(),
         ];
 
-        return view('waiter.dashboard', compact('orders', 'status', 'perPage', 'stats'));
+        // Fetch logged-in user from custom session
+        $userId = $request->session()->get('auth_user_id');
+        $waiterUser = \App\Models\User::find($userId);
+
+        $todayAbsensi = null;
+        if ($waiterUser) {
+            $todayAbsensi = \App\Models\Absensi::where('id_user', $waiterUser->id_user)
+                ->where('tanggal', today()->toDateString())
+                ->first();
+        }
+
+        return view('waiter.dashboard', compact('orders', 'status', 'perPage', 'stats', 'todayAbsensi', 'waiterUser'));
     }
 
     public function complete(Order $order): RedirectResponse

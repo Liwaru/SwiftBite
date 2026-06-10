@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use App\Models\Absensi;
 
 class ManagerController extends Controller
 {
@@ -137,10 +138,18 @@ public function storeIngredientIn(Request $request)
         return view('manager.dashboard', compact('stats'));
     }
 
+    public function showAbsensi($id)
+{
+    $absensi = Absensi::findOrFail($id);
+
+    return view('manager.absensi.detail', compact('absensi'));
+}
+
     public function page(string $section): View
     {
         $pages = [
             'users' => ['title' => 'Data User', 'description' => 'Kelola akun pengguna dan role di SwiftBite.'],
+            'absensi'=> ['title' => 'Data Absensi', 'description' => 'Kelola data absensi karyawan dan catatan kehadiran.'],
             'menus' => ['title' => 'Data Menu', 'description' => 'Kelola menu makanan dan minuman.'],
             'packages' => ['title' => 'Data Paket Promo', 'description' => 'Kelola paket promo dan bundling.'],
             'ingredients' => ['title' => 'Data Bahan', 'description' => 'Kelola bahan baku bakery dan status stok.'],
@@ -158,6 +167,9 @@ public function storeIngredientIn(Request $request)
         }
 
         $data = ['page' => $pages[$section], 'section' => $section];
+        if ($section === 'absensi') {
+    $data['absensis'] = Absensi::latest()->paginate(10);
+}
 
         if ($section === 'users') {
             $roleOptions = [
@@ -331,6 +343,7 @@ public function storeIngredientIn(Request $request)
 
         $views = [
             'users' => 'manager.data_user',
+            'absensi' => 'manager.absensi',
             'menus' => 'manager.data_menu',
             'packages' => 'manager.data_menu',
             'ingredients' => 'manager.data_bahan',

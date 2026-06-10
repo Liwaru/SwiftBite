@@ -1030,6 +1030,22 @@
             @endif
         @endif
 
+        @if (in_array($authLevel, [1,2,3]))
+    <a class="sidebar-link {{ request()->routeIs('attendance.*') ? 'active' : '' }}"
+       href="{{ route('attendance.index') }}"
+       title="Absensi Karyawan">
+
+        <span class="sidebar-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+                <path d="M9 11l3 3L22 4" />
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+        </span>
+
+        <span class="sidebar-label">Absensi</span>
+    </a>
+@endif
+
         @if ($authLevel === 3 || $authLevel === 4)
             @if ($authLevel === 3 || ($authLevel === 4 && $can('cashier.orders')))
                 <a class="sidebar-link {{ request()->routeIs('cashier.orders') ? 'active' : '' }}" href="{{ route('cashier.orders') }}" title="Pesanan">
@@ -1064,6 +1080,16 @@
                         'label' => 'Data User',
                         'icon' => '<path d="M16 20v-2a4 4 0 0 0-8 0v2" /><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /><path d="M19 8v5M21.5 10.5h-5" />',
                     ],
+
+'absensi' => [
+    'label' => 'Data Absensi',
+    'icon' => '<path d="M8 2v4" />
+               <path d="M16 2v4" />
+               <rect x="3" y="4" width="18" height="18" rx="2" />
+               <path d="M3 10h18" />
+               <path d="M8 14h4" />
+               <path d="M8 18h8" />',
+],
                     'menus' => [
                         'label' => 'Data Menu',
                         'icon' => '<path d="M5 4h14v16H5V4Z" /><path d="M9 8h6M9 12h6M9 16h3" /><path d="M7 8h.01M7 12h.01M7 16h.01" />',

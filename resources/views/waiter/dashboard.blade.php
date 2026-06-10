@@ -5,7 +5,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Pesanan Antar</title>
+    
+    <!-- MediaPipe Hands & Drawing dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+
     <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
         :root {
             --brown: #5a321f;
             --brown-dark: #27140d;
@@ -128,6 +137,7 @@
         </header>
 
         <main>
+            <!-- 1. Hero Card: Pesanan Antar -->
             <section class="hero-card">
                 <h1 class="hero-title">Pesanan Antar</h1>
                 <p class="hero-subtitle">Lihat pesanan yang siap diantar dari baker dan tandai setelah sampai ke customer.</p>
@@ -137,6 +147,65 @@
                 <div class="notice">{{ session('success') }}</div>
             @endif
 
+            <!-- 2. Table Absensi (Moved to the Top) -->
+            <section class="panel" style="margin-bottom: 20px;">
+                <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-end; margin-bottom:12px;">
+                    <div>
+                        <h2 style="margin:0; font-size:20px; margin-bottom:6px;">Absensi</h2>
+                        <p class="muted" style="margin:0; color: rgba(255, 246, 232, .76); font-size: 13px;">Status absensi hari ini & verifikasi hand gesture 2 jari.</p>
+                    </div>
+                </div>
+
+                <table class="summary-table" style="margin-bottom: 0;">
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th>Tanggal</th>
+                            <th>Status Absensi</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="font-weight:900;">{{ $waiterUser->name ?? '-' }}</td>
+                            <td style="font-weight:900;">{{ \Carbon\Carbon::today()->toDateString() }}</td>
+                            <td style="font-weight:900;">
+                                @if (!$todayAbsensi)
+                                    <span class="badge" style="background:#ff4d4f; color:#fff; border-radius: 6px; padding: 4px 10px; font-size: 13px;">Belum Absen</span>
+                                @elseif (!$todayAbsensi->jam_keluar)
+                                    <span class="badge" style="background:#2f54eb; color:#fff; border-radius: 6px; padding: 4px 10px; font-size: 13px;">Sudah Check In ({{ \Carbon\Carbon::parse($todayAbsensi->jam_masuk)->format('H:i') }})</span>
+                                @else
+                                    <span class="badge" style="background:#52c41a; color:#fff; border-radius: 6px; padding: 4px 10px; font-size: 13px;">Sudah Check Out ({{ \Carbon\Carbon::parse($todayAbsensi->jam_keluar)->format('H:i') }})</span>
+                                @endif
+                            </td>
+                            <td style="text-align:center;">
+                                @if (!$todayAbsensi)
+                                    <button
+                                        type="button"
+                                        class="tab active"
+                                        style="cursor:pointer; width: 100%; max-width: 180px; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 900; background: var(--cream); color: var(--brown-dark); border: none;"
+                                        onclick="openAbsensiCamera('check-in')"
+                                    >Absen Masuk</button>
+                                @elseif (!$todayAbsensi->jam_keluar)
+                                    <button
+                                        type="button"
+                                        class="tab active"
+                                        style="cursor:pointer; width: 100%; max-width: 180px; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 900; background: #fa8c16; color: #fff; border: none;"
+                                        onclick="openAbsensiCamera('check-out')"
+                                    >Absen Keluar</button>
+                                @else
+                                    <span style="color:#52c41a; font-weight:900; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="color: #52c41a;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                        Absensi Selesai
+                                    </span>
+                                @endif
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 3. Table Siap Antar & List Menu yg Diantar (Moved Below Absensi) -->
             <section class="panel">
                 <table class="summary-table">
                     <thead>
@@ -265,6 +334,314 @@
                 window.location.replace(url.toString());
             }
         })();
+
+        let absensiStream = null;
+        let activeCamera = null;
+
+        function playSuccessBeep() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Beep 1
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.3);
+
+                // Beep 2 (slightly later and higher pitch)
+                setTimeout(() => {
+                    const osc2 = audioCtx.createOscillator();
+                    const gain2 = audioCtx.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(audioCtx.destination);
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(659.25, audioCtx.currentTime); // E5
+                    gain2.gain.setValueAtTime(0, audioCtx.currentTime);
+                    gain2.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.05);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                    osc2.start(audioCtx.currentTime);
+                    osc2.stop(audioCtx.currentTime + 0.3);
+                }, 100);
+
+            } catch (e) {
+                console.log('Web Audio API chime error:', e);
+            }
+        }
+
+        function openAbsensiCamera(action) {
+            if (!action) return;
+
+            const existing = document.getElementById('absensi-camera-modal');
+            if (existing) existing.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'absensi-camera-modal';
+            overlay.style.position = 'fixed';
+            overlay.style.inset = '0';
+            overlay.style.background = 'rgba(0,0,0,.6)';
+            overlay.style.zIndex = '9999';
+            overlay.style.display = 'grid';
+            overlay.style.placeItems = 'center';
+            overlay.innerHTML = `
+                <div style="width:min(92vw,520px); background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.35);">
+                    <div style="padding:14px 16px; background:linear-gradient(135deg, #9a6239, #27140d); color:#fff6e8; display:flex; justify-content:space-between; align-items:center;">
+                        <strong>Scan Absensi - ${action === 'check-in' ? 'Check In' : 'Check Out'}</strong>
+                        <button type="button" id="absensi-modal-close" style="border:0; background:rgba(255,246,232,.18); color:#fff6e8; border-radius:8px; padding:8px 10px; font-weight:900; cursor:pointer;">Tutup</button>
+                    </div>
+                    <div style="padding:16px; display:grid; gap:12px;">
+                        <div style="position:relative; width:100%; aspect-ratio: 4/3; border-radius:10px; overflow:hidden; background:#000;">
+                            <video id="absensi-video" autoplay playsinline style="width:100%; height:100%; object-fit: cover; display:block;"></video>
+                            <canvas id="absensi-canvas" style="position:absolute; inset:0; width:100%; height:100%; object-fit: cover; pointer-events:none;"></canvas>
+                            
+                            <!-- Loading overlay -->
+                            <div id="loading-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.7); display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; z-index: 10;">
+                                <div style="width:40px; height:40px; border:4px solid rgba(255,255,255,0.3); border-top-color:#9a6239; border-radius:50%; animation: spin 1s linear infinite; margin-bottom: 12px;"></div>
+                                <span style="font-weight: 800;">Menginisialisasi Kamera & AI...</span>
+                            </div>
+                        </div>
+
+                        <div style="padding: 12px; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
+                            <div style="font-size: 24px;">✌️</div>
+                            <div style="flex: 1;">
+                                <strong style="color: #d46b08; font-size: 13px; display: block;">Gesture 2 Jari Diperlukan</strong>
+                                <span style="color: #595959; font-size: 11px; display: block;">Tunjukkan jari telunjuk dan tengah secara tegak (peace sign), lalu lipat jari lainnya.</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 4px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 800; color: #2b1c15; margin-bottom: 6px;">
+                                <span id="gesture-status">Mencari tangan...</span>
+                                <span id="progress-percent">0%</span>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden;">
+                                <div id="gesture-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #9a6239, #52c41a); transition: width 0.1s ease; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+
+                        <details style="margin-top: 4px; border-top: 1px dashed #e8e8e8; padding-top: 8px;">
+                            <summary style="font-size: 12px; color: #8c8c8c; cursor: pointer; user-select: none;">Bypass / Simulasi (Untuk Pengujian)</summary>
+                            <div style="margin-top: 8px; display: flex; gap: 8px;">
+                                <button type="button" id="bypass-success-btn" style="flex: 1; border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 8px; font-size: 12px; cursor: pointer; font-weight: bold; border-color: #9a6239; color: #9a6239;">Simulasikan Gesture Berhasil</button>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            const closeBtn = overlay.querySelector('#absensi-modal-close');
+            closeBtn.addEventListener('click', () => closeAbsensiCamera());
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeAbsensiCamera();
+            });
+
+            const video = overlay.querySelector('#absensi-video');
+            const canvasElement = overlay.querySelector('#absensi-canvas');
+            const statusText = overlay.querySelector('#gesture-status');
+            const percentText = overlay.querySelector('#progress-percent');
+            const progressBar = overlay.querySelector('#gesture-progress-bar');
+            const bypassBtn = overlay.querySelector('#bypass-success-btn');
+
+            let progress = 0;
+            const progressTarget = 40; // 1.3 seconds at 30 fps
+            let absensiFinished = false;
+
+            async function triggerAbsensiSubmit() {
+                if (absensiFinished) return;
+                absensiFinished = true;
+
+                if (statusText) {
+                    statusText.textContent = 'Verifikasi Berhasil! Menyimpan...';
+                    statusText.style.color = '#52c41a';
+                }
+
+                playSuccessBeep();
+
+                try {
+                    const url = action === 'check-in'
+                        ? '{{ route('attendance.checkIn') }}'
+                        : '{{ route('attendance.checkOut') }}';
+
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ scan_value: 'Hand Gesture 2 Jari Verified' })
+                    });
+
+                    if (!res.ok) {
+                        const t = await res.text();
+                        alert('Gagal absensi: ' + t);
+                        closeAbsensiCamera();
+                        return;
+                    }
+
+                    const modalContent = overlay.querySelector('div > div:nth-child(2)');
+                    if (modalContent) {
+                        modalContent.innerHTML = `
+                            <div style="padding: 40px 20px; text-align: center;">
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: #edf5e8; display: grid; place-items: center; margin: 0 auto 20px; color: #355b28;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                </div>
+                                <h3 style="margin: 0 0 8px; color: #2b1c15; font-size: 20px; font-weight: 800;">Absensi Berhasil!</h3>
+                                <p style="margin: 0; color: #8c8c8c; font-size: 13px;">Halaman akan disegarkan secara otomatis.</p>
+                            </div>
+                        `;
+                    }
+
+                    setTimeout(() => {
+                        closeAbsensiCamera();
+                        window.location.reload();
+                    }, 1500);
+
+                } catch (e) {
+                    alert('Error: ' + (e?.message || e));
+                    closeAbsensiCamera();
+                }
+            }
+
+            bypassBtn.addEventListener('click', () => {
+                triggerAbsensiSubmit();
+            });
+
+            // Setup MediaPipe Hands
+            const hands = new Hands({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+            });
+
+            hands.setOptions({
+                maxNumHands: 1,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.6,
+                minTrackingConfidence: 0.6
+            });
+
+            hands.onResults((results) => {
+                const loadingOverlay = overlay.querySelector('#loading-overlay');
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
+
+                if (!canvasElement || !video) return;
+                const canvasCtx = canvasElement.getContext('2d');
+
+                // Match dimensions
+                if (canvasElement.width !== video.videoWidth) {
+                    canvasElement.width = video.videoWidth;
+                    canvasElement.height = video.videoHeight;
+                }
+
+                canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+                if (absensiFinished) return;
+
+                let gestureDetected = false;
+
+                if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                    const landmarks = results.multiHandLandmarks[0];
+
+                    // Draw connectors & landmarks
+                    if (window.drawConnectors && window.HAND_CONNECTIONS) {
+                        drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#9a6239', lineWidth: 4});
+                        drawLandmarks(canvasCtx, landmarks, {color: '#ffffff', lineWidth: 1, radius: 4});
+                        drawLandmarks(canvasCtx, landmarks, {color: '#27140d', lineWidth: 1, radius: 2});
+                    }
+
+                    // Check if fingers are extended (pointing upwards in camera coordinate space, y-value is smaller)
+                    const isIndexExtended = landmarks[8].y < landmarks[6].y;
+                    const isMiddleExtended = landmarks[12].y < landmarks[10].y;
+                    const isRingExtended = landmarks[16].y < landmarks[14].y;
+                    const isPinkyExtended = landmarks[20].y < landmarks[18].y;
+
+                    // Gesture: 2 fingers (Index & Middle raised, Ring & Pinky folded)
+                    const isTwoFingers = isIndexExtended && isMiddleExtended && !isRingExtended && !isPinkyExtended;
+
+                    if (isTwoFingers) {
+                        gestureDetected = true;
+                        if (window.drawLandmarks) {
+                            // Highlight index and middle tips with success color
+                            drawLandmarks(canvasCtx, [landmarks[8], landmarks[12]], {color: '#52c41a', lineWidth: 2, radius: 6});
+                        }
+                    }
+                }
+
+                if (gestureDetected) {
+                    progress++;
+                    const percentage = Math.min(Math.round((progress / progressTarget) * 100), 100);
+                    statusText.textContent = 'Tahan gesture 2 jari...';
+                    statusText.style.color = '#52c41a';
+                    percentText.textContent = percentage + '%';
+                    progressBar.style.width = percentage + '%';
+
+                    if (progress >= progressTarget) {
+                        triggerAbsensiSubmit();
+                    }
+                } else {
+                    progress = Math.max(0, progress - 1);
+                    const percentage = Math.min(Math.round((progress / progressTarget) * 100), 100);
+                    statusText.textContent = results.multiHandLandmarks && results.multiHandLandmarks.length > 0 
+                        ? 'Gunakan Gesture 2 Jari' 
+                        : 'Mencari tangan...';
+                    statusText.style.color = '#e76f51';
+                    percentText.textContent = percentage + '%';
+                    progressBar.style.width = percentage + '%';
+                }
+            });
+
+            // Start Camera
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 }, audio: false })
+                .then((stream) => {
+                    absensiStream = stream;
+                    video.srcObject = stream;
+                    video.play();
+
+                    activeCamera = new Camera(video, {
+                        onFrame: async () => {
+                            if (!absensiFinished) {
+                                await hands.send({ image: video });
+                            }
+                        },
+                        width: 640,
+                        height: 480
+                    });
+                    activeCamera.start();
+                })
+                .catch((e) => {
+                    console.error('Camera access error:', e);
+                    const loadingOverlay = overlay.querySelector('#loading-overlay');
+                    if (loadingOverlay) {
+                        loadingOverlay.innerHTML = `
+                            <span style="color:#ff4d4f; font-weight:800; padding:20px; text-align:center;">
+                                Kamera tidak tersedia atau izin ditolak. Silakan gunakan bypass di bawah untuk demo.
+                            </span>
+                        `;
+                    }
+                });
+        }
+
+        function closeAbsensiCamera() {
+            const modal = document.getElementById('absensi-camera-modal');
+            if (activeCamera) {
+                activeCamera.stop();
+                activeCamera = null;
+            }
+            if (absensiStream) {
+                absensiStream.getTracks().forEach(t => t.stop());
+                absensiStream = null;
+            }
+            if (modal) modal.remove();
+        }
     </script>
 </body>
 </html>

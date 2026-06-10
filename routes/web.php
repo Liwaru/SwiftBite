@@ -158,3 +158,38 @@ Route::get('/baker/live-orders', [ChefController::class, 'liveOrders'])
     return back();
 })->name('language.switch');
 
+Route::get('/manager/{section}', [ManagerController::class, 'page'])
+    ->name('manager.page');
+
+    Route::prefix('manager')
+    ->middleware('auth')
+    ->group(function () {
+
+        Route::get('/absensi', [AbsensiController::class, 'index'])
+            ->name('absensi.index');
+
+        Route::get('/absensi/create', [AbsensiController::class, 'create'])
+            ->name('absensi.create');
+
+        Route::post('/absensi/store', [AbsensiController::class, 'store'])
+            ->name('absensi.store');
+
+        Route::get('/absensi/edit/{id}', [AbsensiController::class, 'edit'])
+            ->name('absensi.edit');
+
+        Route::put('/absensi/update/{id}', [AbsensiController::class, 'update'])
+            ->name('absensi.update');
+
+        Route::delete('/absensi/delete/{id}', [AbsensiController::class, 'destroy'])
+            ->name('absensi.destroy');
+    });
+
+    Route::get('/manager/absensi/{id}', [ManagerController::class, 'showAbsensi']);
+
+    use App\Http\Controllers\AttendanceController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkIn');
+    Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkOut');
+});
