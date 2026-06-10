@@ -188,8 +188,10 @@ Route::get('/manager/{section}', [ManagerController::class, 'page'])
 
     use App\Http\Controllers\AttendanceController;
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
-    Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkIn');
-    Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkOut');
-});
+
+
+Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])
+    ->name('attendance.checkIn');
+
+Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])
+    ->name('attendance.checkOut');

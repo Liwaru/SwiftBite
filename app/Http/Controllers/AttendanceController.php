@@ -32,9 +32,9 @@ class AttendanceController extends Controller
                 'tanggal' => $tanggal,
             ],
             [
-                'jam_masuk' => now()->format('H:i:s'),
-                'status' => 'masuk',
-            ]
+    'jam_masuk' => now()->format('H:i:s'),
+    'status' => 'hadir',
+]
         );
 
         return response()->json([
@@ -67,9 +67,9 @@ class AttendanceController extends Controller
             ],
             [
                 'jam_keluar' => now()->format('H:i:s'),
-                'status' => 'keluar',
             ]
         );
+
 
         return response()->json([
             'ok' => true,
