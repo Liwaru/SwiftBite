@@ -59,27 +59,29 @@
             </div>
         </details>
 
-        @if ($canCashierAccept)
-            <form class="status" method="post" action="{{ route('cashier.orders.status', $order) }}">
-                @csrf
-                @method('patch')
-                <input type="hidden" name="status" value="diproses">
-                <button type="submit">Terima Pesanan & Kirim ke Baker</button>
-            </form>
-        @elseif ($canConfirmPayment)
-            <form class="status" method="post" action="{{ route('cashier.orders.status', $order) }}">
-                @csrf
-                @method('patch')
-                <input type="hidden" name="status" value="selesai">
-                <button type="submit">Konfirmasi Pembayaran & Selesai</button>
-            </form>
-        @elseif ($order->status === 'diproses')
-            <span class="status-done">Sedang dibuat oleh Baker</span>
-        @elseif ($order->status === 'siap_diantar')
-            <span class="status-done">Menunggu Waiter mengantar</span>
-        @else
-            <span class="status-done">Pesanan Selesai</span>
-        @endif
+@if ($order->status === 'menunggu')
+    <form class="status" method="post" action="{{ route('cashier.orders.status', $order) }}">
+        @csrf
+        @method('patch')
+        <input type="hidden" name="status" value="diproses">
+        <button type="submit">Terima Pesanan & Kirim ke Baker</button>
+    </form>
+@elseif ($order->status === 'menunggu_pembayaran')
+    <form class="status" method="post" action="{{ route('cashier.orders.status', $order) }}">
+        @csrf
+        @method('patch')
+        <input type="hidden" name="status" value="selesai">
+        <button type="submit">Konfirmasi Pembayaran & Selesai</button>
+    </form>
+@elseif ($order->status === 'diproses')
+    <span class="status-done">Sedang dibuat oleh Baker</span>
+@elseif ($order->status === 'siap_diantar')
+    <span class="status-done">Menunggu Waiter mengantar</span>
+@elseif ($order->status === 'selesai')
+    <span class="status-done">Pesanan Selesai</span>
+@else
+    <span class="status-done">Menunggu pembayaran</span>
+@endif
     </article>
 @empty
     <p class="muted empty">

@@ -1,4 +1,7 @@
 <style>
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
     :root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; --brown-dark: #27140d; --brown: #5a321f; --brown-light: #9a6239; --cream: #fff6e8; }
     body { margin: 0; background: #ffffff; color: #2b1c15; }
     .chef-shell { min-height: 100vh; background: #ffffff; }
@@ -65,6 +68,24 @@
     .success-banner { background: #e6ffd9; color: #2c642b; border: 1px solid #9ad28e; }
     .error-banner { background: #ffe8dd; color: #7a2414; border: 1px solid #e5a08d; }
     .empty-state { color: rgba(255, 246, 232, .76); font-weight: 800; line-height: 1.5; }
+    .attendance-panel { margin-bottom: 18px; }
+    .attendance-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-end; margin-bottom: 12px; }
+    .attendance-head h2 { margin: 0 0 6px; font-size: 20px; }
+    .attendance-table { width: 100%; min-width: 0; margin-bottom: 0; table-layout: fixed; border-collapse: collapse; border-radius: 8px; overflow: hidden; }
+    .attendance-table td { width: 50%; border-top: 0; padding: 11px 12px; vertical-align: middle; }
+    .attendance-table td:last-child { text-align: right; }
+    .attendance-status { display: inline-flex; justify-content: center; width: fit-content; max-width: 100%; border-radius: 6px; padding: 4px 10px; color: #fff; font-size: 13px; font-weight: 900; text-align: center; white-space: normal; }
+    .attendance-status.absent { background: #ff4d4f; }
+    .attendance-status.in { background: #2f54eb; }
+    .attendance-status.out { background: #52c41a; }
+    .attendance-status-note { display: block; margin-top: 7px; color: rgba(255, 246, 232, .68); font-size: 12px; font-weight: 800; }
+    .attendance-action { text-align: right; }
+    .attendance-button { width: 100%; max-width: 180px; border: 0; border-radius: 6px; padding: 8px 12px; font: inherit; font-size: 13px; font-weight: 900; cursor: pointer; }
+    .attendance-button:disabled { cursor: not-allowed; opacity: .58; }
+    .attendance-button.check-in { background: var(--cream); color: var(--brown-dark); }
+    .attendance-button.check-out { background: #fa8c16; color: #fff; }
+    .attendance-button.waiting { background: rgba(255, 246, 232, .2); color: rgba(255, 246, 232, .82); border: 1px solid rgba(255, 246, 232, .26); }
+    .attendance-finished { color: #52c41a; font-weight: 900; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
     @media (max-width: 980px) { .grid { grid-template-columns: minmax(0, 1fr) minmax(220px, .85fr); gap: 10px; } .action-form { grid-template-columns: 1fr; } }
     @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
     @media (max-width: 480px) {
@@ -74,5 +95,8 @@
         .stat-card { min-height: 72px; padding: 9px 6px; }
         .stat-card span { font-size: 10px; line-height: 1.15; }
         .stat-card strong { font-size: 22px; }
+        .attendance-table td { padding: 10px 12px; }
+        .attendance-status { justify-content: flex-start; }
+        .attendance-button { max-width: 132px; padding-inline: 10px; }
     }
 </style>

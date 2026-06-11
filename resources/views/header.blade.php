@@ -936,6 +936,7 @@
 
 @php
     $can = fn (string $feature): bool => \App\Support\AccessControl::allowed($authLevel, $feature);
+    $menuCan = fn (string $feature): bool => \App\Support\AccessControl::menuEnabled($authLevel, $feature);
 @endphp
 
 <header class="mobile-appbar">
@@ -988,7 +989,7 @@
             </a>
         @endif
 
-        @if ($authLevel === 1 || ($authLevel === 4 && $can('waiter.orders')))
+        @if ($authLevel === 1 || ($authLevel === 4 && $menuCan('waiter.orders')))
             <a class="sidebar-link {{ request()->routeIs('waiter.dashboard') ? 'active' : '' }}" href="{{ route('waiter.dashboard') }}" title="Pesanan Antar">
                 <span class="sidebar-icon">
                     <svg viewBox="0 0 24 24" fill="none">
@@ -1002,8 +1003,8 @@
             </a>
         @endif
 
-        @if ($authLevel === 2 || ($authLevel === 4 && ($can('chef.orders') || $can('chef.ingredients'))))
-            @if ($authLevel === 2 || ($authLevel === 4 && $can('chef.orders')))
+        @if ($authLevel === 2 || ($authLevel === 4 && ($menuCan('chef.orders') || $menuCan('chef.ingredients'))))
+            @if ($authLevel === 2 || ($authLevel === 4 && $menuCan('chef.orders')))
                 <a class="sidebar-link {{ request()->routeIs('baker.orders') ? 'active' : '' }}" href="{{ route('baker.orders') }}" title="Pesanan Dapur">
                     <span class="sidebar-icon">
                         <svg viewBox="0 0 24 24" fill="none">
@@ -1015,7 +1016,7 @@
                     <span class="sidebar-label">Pesanan Dapur</span>
                 </a>
             @endif
-            @if ($authLevel === 2 || ($authLevel === 4 && $can('chef.ingredients')))
+            @if ($authLevel === 2 || ($authLevel === 4 && $menuCan('chef.ingredients')))
                 <a class="sidebar-link {{ request()->routeIs('baker.ingredients') ? 'active' : '' }}" href="{{ route('baker.ingredients') }}" title="Bahan Dapur">
                     <span class="sidebar-icon">
                         <svg viewBox="0 0 24 24" fill="none">
@@ -1030,24 +1031,8 @@
             @endif
         @endif
 
-        @if (in_array($authLevel, [1,2,3]))
-    <a class="sidebar-link {{ request()->routeIs('attendance.*') ? 'active' : '' }}"
-       href="{{ route('attendance.index') }}"
-       title="Absensi Karyawan">
-
-        <span class="sidebar-icon">
-            <svg viewBox="0 0 24 24" fill="none">
-                <path d="M9 11l3 3L22 4" />
-                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-            </svg>
-        </span>
-
-        <span class="sidebar-label">Absensi</span>
-    </a>
-@endif
-
         @if ($authLevel === 3 || $authLevel === 4)
-            @if ($authLevel === 3 || ($authLevel === 4 && $can('cashier.orders')))
+            @if ($authLevel === 3 || ($authLevel === 4 && $menuCan('cashier.orders')))
                 <a class="sidebar-link {{ request()->routeIs('cashier.orders') ? 'active' : '' }}" href="{{ route('cashier.orders') }}" title="Pesanan">
                 <span class="sidebar-icon">
                     <svg viewBox="0 0 24 24" fill="none">
@@ -1059,7 +1044,7 @@
                 <span class="sidebar-label">Pesanan</span>
             </a>
             @endif
-            @if ($authLevel === 3 || ($authLevel === 4 && $can('cashier.history')))
+            @if ($authLevel === 3 || ($authLevel === 4 && $menuCan('cashier.history')))
                 <a class="sidebar-link {{ request()->routeIs('cashier.history') ? 'active' : '' }}" href="{{ route('cashier.history') }}" title="Riwayat Transaksi">
                 <span class="sidebar-icon">
                     <svg viewBox="0 0 24 24" fill="none">
@@ -1130,7 +1115,7 @@
                 $dataMasterSections = array_keys($dataMasterMenus);
                 $filteredDataMasterMenus = [];
                 foreach ($dataMasterMenus as $section => $menu) {
-                    if (\App\Support\AccessControl::allowed($authLevel, \App\Support\AccessControl::managerFeatureForSection($section))) {
+                    if (\App\Support\AccessControl::menuEnabled($authLevel, \App\Support\AccessControl::managerFeatureForSection($section))) {
                         $filteredDataMasterMenus[$section] = $menu;
                     }
                 }
@@ -1152,7 +1137,7 @@
 
                 $filteredManagerMenus = [];
                 foreach ($managerMenus as $section => $menu) {
-                    if ($section === 'access' || \App\Support\AccessControl::allowed($authLevel, \App\Support\AccessControl::managerFeatureForSection($section))) {
+                    if ($section === 'access' || \App\Support\AccessControl::menuEnabled($authLevel, \App\Support\AccessControl::managerFeatureForSection($section))) {
                         $filteredManagerMenus[$section] = $menu;
                     }
                 }
@@ -1189,6 +1174,7 @@
             </details>
             @endif
 
+@if ($menuCan('manager.ingredient_in') || $menuCan('manager.ingredient_out'))
 <details class="sidebar-group">
     <summary class="sidebar-link sidebar-group-toggle">
         <span class="sidebar-icon">
@@ -1205,6 +1191,7 @@
     </summary>
 
     <div class="sidebar-subnav">
+        @if ($menuCan('manager.ingredient_in'))
         <a class="sidebar-link {{ request()->routeIs('manager.ingredient-in') ? 'active' : '' }}"
            href="{{ route('manager.ingredient-in') }}">
             <span class="sidebar-icon">
@@ -1216,7 +1203,9 @@
             </span>
             <span class="sidebar-label">Barang Masuk</span>
         </a>
+        @endif
 
+        @if ($menuCan('manager.ingredient_out'))
         <a class="sidebar-link {{ request()->routeIs('manager.ingredient-out') ? 'active' : '' }}"
            href="{{ route('manager.ingredient-out') }}">
             <span class="sidebar-icon">
@@ -1228,8 +1217,10 @@
             </span>
             <span class="sidebar-label">Barang Keluar</span>
         </a>
+        @endif
     </div>
 </details>
+@endif
             @foreach ($filteredManagerMenus as $section => $menu)
                 <a class="sidebar-link {{ request()->routeIs('manager.page') && request()->route('section') === $section ? 'active' : '' }}" href="{{ route('manager.page', $section) }}" title="{{ $menu['label'] }}">
                     <span class="sidebar-icon">
@@ -1251,7 +1242,7 @@
 
                 $availableReports = [];
                 foreach ($reportCandidates as $key => $rep) {
-                    if (\App\Support\AccessControl::allowed($authLevel, $rep['feature'])) {
+                    if (\App\Support\AccessControl::menuEnabled($authLevel, $rep['feature'])) {
                         $availableReports[$key] = $rep;
                     }
                 }

@@ -1,3 +1,5 @@
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    
     <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
     <script>
 
@@ -1477,10 +1479,9 @@ if (endsTimeInput) {
                 openModal(@json(old('modal_id', 'create-ingredient')));
             @endif
 
-            @if (($section ?? null) === 'tables' && $errors->any()))
-                openModal(@json(old('modal_id', 'create-table')));
-            @endif
-
+@if (($section ?? null) === 'tables' && $errors->any())
+    openModal(@json(old('modal_id', 'create-table')));
+@endif
             // Barcode / QR Scanner
             let _qrScanner       = null;   // Html5Qrcode instance
             let _qrScannerTarget = null;   // <input> to fill
@@ -1504,7 +1505,7 @@ if (endsTimeInput) {
                 style.textContent = [
                     '#qrScannerModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;',
                     'background:rgba(0,0,0,.72);z-index:11000;backdrop-filter:blur(4px);}',
-                    '#qrScannerBox{width:360px;max-width:94vw;background:#1a1a1a;border-radius:16px;',
+                    '#qrScannerBox{width:320px;max-width:92vw;background:#1a1a1a;border-radius:16px;',
                     'overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.6);}',
                     '#qrScannerHeader{display:flex;align-items:center;justify-content:space-between;',
                     'padding:14px 16px;background:#111;}',
@@ -1529,7 +1530,7 @@ if (endsTimeInput) {
                     'padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px;white-space:nowrap;',
                     'transition:background .15s;display:none;}',
                     '#qrSwitchCamBtn:hover{background:rgba(255,255,255,.18);}',
-                    '#qrPreview{width:100%;height:100%;object-fit:cover;}',
+                    '#qrPreview{width:100%;height:100%;object-fit:cover;}'
                 ].join('');
                 document.head.appendChild(style);
 
@@ -1752,10 +1753,11 @@ if (endsTimeInput) {
 
             function scanEanFromVideo(video) {
                 if (!video || video.readyState < 2) return null;
+                let best = null;
 
                 const sourceWidth = video.videoWidth || 640;
                 const sourceHeight = video.videoHeight || 480;
-                const canvasWidth = 760;
+                const canvasWidth = 1280;
                 const canvasHeight = Math.max(260, Math.round(sourceHeight * (canvasWidth / sourceWidth)));
 
                 if (!_qrDecodeCanvas) {
@@ -1769,11 +1771,10 @@ if (endsTimeInput) {
 
                 ctx.drawImage(video, 0, 0, canvasWidth, canvasHeight);
 
-                const yStart = Math.round(canvasHeight * 0.28);
-                const yEnd = Math.round(canvasHeight * 0.78);
+               const yStart = Math.round(canvasHeight * 0.40);
+const yEnd = Math.round(canvasHeight * 0.60);
                 const rowStep = Math.max(4, Math.round(canvasHeight / 42));
-                const moduleWidths = [1.8, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.8, 4.1, 4.45, 4.8, 5.2, 5.65, 6.1, 6.6, 7.1, 7.7];
-                let best = null;
+                const moduleWidths = [2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.8, 4.1, 4.45, 4.8, 5.2, 5.65, 6.1, 6.6, 7.1, 7.7, 8.3, 8.9, 9.5, 10.2, 11, 12];
 
                 for (let y = yStart; y <= yEnd; y += rowStep) {
                     const bandHeight = Math.min(5, canvasHeight - y);
@@ -1904,10 +1905,42 @@ if (endsTimeInput) {
                     throw new Error('Kamera tidak didukung browser ini.');
                 }
 
-                _qrRawStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: { ideal: 'environment' } },
-                    audio: false,
-                });
+               try {
+    _qrRawStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+            facingMode: { exact: 'environment' },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+        },
+        audio: false,
+    });
+} catch (e) {
+    _qrRawStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        },
+        audio: false,
+    });
+}
+
+const track = _qrRawStream.getVideoTracks()[0];
+
+if (track) {
+    const capabilities = track.getCapabilities?.();
+
+    if (capabilities?.torch) {
+        try {
+            await track.applyConstraints({
+                advanced: [{ torch: true }]
+            });
+        } catch (e) {
+            console.log('Torch tidak didukung', e);
+        }
+    }
+}
+console.log(track.getCapabilities());
 
                 readerEl.innerHTML = '';
                 const video = document.createElement('video');
@@ -1920,7 +1953,9 @@ if (endsTimeInput) {
                 _qrPreviewVideo = video;
 
                 try { await video.play(); } catch (e) { /* browser may autoplay after metadata */ }
-
+                setTimeout(() => {
+    setQrStatus('Dekatkan barcode sampai memenuhi kotak scanner.');
+}, 800);
                 if (scanWithDetector) {
                     const loop = async () => {
                         if (!_qrPreviewVideo || _qrHasResult) return;
@@ -1941,9 +1976,11 @@ if (endsTimeInput) {
                             }
 
                             const localCode =
-                                scanEanFromVideo(_qrPreviewVideo) ||
-                                scanEanFromVideo(_qrPreviewVideo) ||
-                                scanEanFromVideo(_qrPreviewVideo);
+    scanEanFromVideo(_qrPreviewVideo) ||
+    scanEanFromVideo(_qrPreviewVideo) ||
+    scanEanFromVideo(_qrPreviewVideo);
+
+console.log('SCAN RESULT:', localCode);
 
                             if (localCode) {
                                 fillQrTarget(localCode);
@@ -1981,12 +2018,13 @@ if (endsTimeInput) {
                     if (switchBtn) switchBtn.style.display = 'none';
 
                     setQrStatus('Tahan barcode 1 detik sampai terbaca...');
-                    if (_barcodeDetector) {
-                        return true;
-                    }
+                    await new Promise((resolve) => setTimeout(resolve, 2500));
 
-                    await new Promise((resolve) => setTimeout(resolve, 1200));
-                    return _qrHasResult;
+if (_qrHasResult) {
+    return true;
+}
+
+return false;
                 } catch (e) {
                     console.error('Raw camera start failed:', e);
                     stopRawPreview();

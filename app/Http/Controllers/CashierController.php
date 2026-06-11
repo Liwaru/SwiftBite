@@ -20,8 +20,16 @@ class CashierController extends Controller
     {
         $stats = $this->todayStats();
         $mode = 'dashboard';
+        $cashierUser = \App\Models\User::find($request->session()->get('auth_user_id'));
+        $todayAbsensi = null;
 
-        return view('cashier.dashboard', compact('stats', 'mode'));
+        if ($cashierUser) {
+            $todayAbsensi = \App\Models\Absensi::where('id_user', $cashierUser->id_user)
+                ->where('tanggal', today()->toDateString())
+                ->first();
+        }
+
+        return view('cashier.dashboard', compact('stats', 'mode', 'todayAbsensi', 'cashierUser'));
     }
 
     public function orders(Request $request): View
@@ -275,54 +283,65 @@ public function liveOrders(Request $request)
         return view('cashier.history', compact('orders', 'filters', 'hasActiveFilters'));
     }
 
-    public function updateOrderStatus(Request $request, Order $order): RedirectResponse
-    {
-        $validated = $request->validate([
-            'status' => ['required', 'in:diproses,selesai,dibatalkan'],
-        ]);
+public function updateOrderStatus(Request $request, Order $order): RedirectResponse
+{
+    $validated = $request->validate([
+        'status' => ['required', 'in:diproses,selesai,dibatalkan'],
+    ]);
 
-        if ($validated['status'] === 'diproses') {
-            abort_unless($order->status === 'menunggu', 403);
-
-            $order->update(['status' => 'diproses']);
-
-            ActivityRecorder::activity('Cashier', 'Menerima pesanan #' . $order->kode_pesanan);
-
-            return back()->with('success', 'Pesanan diterima dan dikirim ke Baker.');
-        }
-
-        if ($validated['status'] === 'selesai') {
-            abort_unless($order->status === 'menunggu_pembayaran', 403);
-
-            $order->update([
-                'status' => 'selesai',
-                'payment_status' => 'berhasil',
+    if ($validated['status'] === 'diproses') {
+        if ($order->status !== 'menunggu') {
+            return back()->withErrors([
+                'order_status' => 'Pesanan ini tidak bisa dikirim ke Baker karena statusnya sudah berubah.',
             ]);
-
-            ActivityRecorder::activity('Cashier', 'Menyelesaikan pembayaran pesanan #' . $order->kode_pesanan);
-
-            return back()->with('success', 'Pembayaran dikonfirmasi dan pesanan selesai.');
         }
 
-        abort_unless(in_array($order->status, ['menunggu', 'diproses'], true), 403);
+        $order->update(['status' => 'diproses']);
 
-        DB::transaction(function () use ($order) {
-            $order->loadMissing('items');
+        ActivityRecorder::activity('Cashier', 'Menerima pesanan #' . $order->kode_pesanan);
 
-            foreach ($order->items as $item) {
-                if ($item->id_menu) {
-                    MenuItem::whereKey($item->id_menu)->increment('stok', (int) $item->qty);
-                }
-            }
-
-            $order->update(['status' => 'dibatalkan']);
-        });
-
-        ActivityRecorder::activity('Cashier', 'Membatalkan pesanan #' . $order->kode_pesanan);
-
-        return back()->with('success', 'Pesanan dibatalkan.');
+        return back()->with('success', 'Pesanan diterima dan dikirim ke Baker.');
     }
 
+    if ($validated['status'] === 'selesai') {
+        if (! in_array($order->status, ['menunggu_pembayaran', 'siap_diantar'], true)) {
+            return back()->withErrors([
+                'order_status' => 'Pesanan ini belum bisa dikonfirmasi pembayarannya.',
+            ]);
+        }
+
+        $order->update([
+            'status' => 'selesai',
+            'payment_status' => 'berhasil',
+        ]);
+
+        ActivityRecorder::activity('Cashier', 'Menyelesaikan pembayaran pesanan #' . $order->kode_pesanan);
+
+        return back()->with('success', 'Pembayaran dikonfirmasi dan pesanan selesai.');
+    }
+
+    if (! in_array($order->status, ['menunggu', 'diproses'], true)) {
+        return back()->withErrors([
+            'order_status' => 'Pesanan ini tidak bisa dibatalkan.',
+        ]);
+    }
+
+    DB::transaction(function () use ($order) {
+        $order->loadMissing('items');
+
+        foreach ($order->items as $item) {
+            if ($item->id_menu) {
+                MenuItem::whereKey($item->id_menu)->increment('stok', (int) $item->qty);
+            }
+        }
+
+        $order->update(['status' => 'dibatalkan']);
+    });
+
+    ActivityRecorder::activity('Cashier', 'Membatalkan pesanan #' . $order->kode_pesanan);
+
+    return back()->with('success', 'Pesanan dibatalkan.');
+}
     private function normalizeStatus(?string $status): string
     {
         $allowedStatuses = ['aktif', 'menunggu', 'diproses', 'siap_diantar', 'menunggu_pembayaran', 'selesai'];

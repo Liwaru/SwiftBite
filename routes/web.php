@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AbsensiController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\CashierController;
 use App\Http\Controllers\ChefController;
 use App\Http\Controllers\CustomerMenuController;
@@ -30,12 +32,13 @@ Route::middleware(['simple.auth', 'user.level:1,4'])->group(function () {
 
 Route::middleware(['simple.auth', 'user.level:2,4'])->group(function () {
     Route::get('/baker/live-orders', [ChefController::class, 'liveOrders'])
-    ->name('baker.orders.live')
-    ->middleware('feature.access:chef.orders');
+        ->name('baker.orders.live')
+        ->middleware('feature.access:chef.orders');
 
-Route::patch('/baker/orders/{order}/finish-cooking', [ChefController::class, 'finishCooking'])
-    ->name('baker.orders.finish-cooking')
-    ->middleware('feature.access:chef.orders');
+    Route::patch('/baker/orders/{order}/finish-cooking', [ChefController::class, 'finishCooking'])
+        ->name('baker.orders.finish-cooking')
+        ->middleware('feature.access:chef.orders');
+
     Route::get('/baker', [ChefController::class, 'dashboard'])->name('baker.dashboard')->middleware('feature.access:chef.orders');
     Route::get('/baker/orders', [ChefController::class, 'orders'])->name('baker.orders')->middleware('feature.access:chef.orders');
     Route::patch('/baker/orders/{order}/ready', [ChefController::class, 'markReady'])->name('baker.orders.ready')->middleware('feature.access:chef.orders');
@@ -71,30 +74,57 @@ Route::middleware(['simple.auth', 'user.level:4'])->group(function () {
     Route::post('/manager/database/backup', [ManagerController::class, 'backupDatabase'])->name('manager.database.backup');
     Route::post('/manager/database/import', [ManagerController::class, 'importDatabase'])->name('manager.database.import');
     Route::delete('/manager/database/reset', [ManagerController::class, 'resetDatabase'])->name('manager.database.reset');
-Route::post('/manager/activity/data/{change}/restore', [ManagerController::class, 'restoreDataChange'])
-    ->name('manager.activity.restore');
+    Route::post('/manager/activity/data/{change}/restore', [ManagerController::class, 'restoreDataChange'])
+        ->name('manager.activity.restore');
 
-Route::get('/manager/barang-masuk', [ManagerController::class, 'ingredientIn'])
-    ->name('manager.ingredient-in');
+    Route::get('/manager/barang-masuk', [ManagerController::class, 'ingredientIn'])
+        ->name('manager.ingredient-in');
 
-Route::post('/manager/barang-masuk', [ManagerController::class, 'storeIngredientIn'])
-    ->name('manager.ingredient-in.store');
-
-Route::get('/manager/barang-keluar', [ManagerController::class, 'ingredientOut'])
-    ->name('manager.ingredient-out');
+    Route::post('/manager/barang-masuk', [ManagerController::class, 'storeIngredientIn'])
+        ->name('manager.ingredient-in.store');
 
     Route::get('/manager/barang-keluar', [ManagerController::class, 'ingredientOut'])
-    ->name('manager.ingredient-out');
+        ->name('manager.ingredient-out');
 
-Route::post('/manager/barang-keluar', [ManagerController::class, 'storeIngredientOut'])
-    ->name('manager.ingredient-out.store');
+    Route::post('/manager/barang-keluar', [ManagerController::class, 'storeIngredientOut'])
+        ->name('manager.ingredient-out.store');
 
-Route::get('/manager/{section}', [ManagerController::class, 'page'])
-    ->name('manager.page');    // Manager-accessible report routes (appear when manager has report permissions)
+    Route::get('/manager/absensi', [AbsensiController::class, 'index'])
+        ->name('absensi.index')
+        ->middleware('feature.access:manager.absensi');
+
+    Route::get('/manager/absensi/create', [AbsensiController::class, 'create'])
+        ->name('absensi.create')
+        ->middleware('feature.access:manager.absensi');
+
+    Route::post('/manager/absensi/store', [AbsensiController::class, 'store'])
+        ->name('absensi.store')
+        ->middleware('feature.access:manager.absensi');
+
+    Route::get('/manager/absensi/edit/{id}', [AbsensiController::class, 'edit'])
+        ->name('absensi.edit')
+        ->middleware('feature.access:manager.absensi');
+
+    Route::put('/manager/absensi/update/{id}', [AbsensiController::class, 'update'])
+        ->name('absensi.update')
+        ->middleware('feature.access:manager.absensi');
+
+    Route::delete('/manager/absensi/delete/{id}', [AbsensiController::class, 'destroy'])
+        ->name('absensi.destroy')
+        ->middleware('feature.access:manager.absensi');
+
+    Route::get('/manager/absensi/{id}', [ManagerController::class, 'showAbsensi'])
+        ->whereNumber('id')
+        ->middleware('feature.access:manager.absensi');
+
+    // Manager-accessible report routes (appear when manager has report permissions)
     Route::get('/manager/laporan/penjualan', [OwnerController::class, 'sales'])->name('manager.reports.sales')->middleware('feature.access:owner.sales');
     Route::get('/manager/laporan/keuangan', [OwnerController::class, 'finance'])->name('manager.reports.finance')->middleware('feature.access:owner.finance');
     Route::get('/manager/laporan/produk', [OwnerController::class, 'products'])->name('manager.reports.products')->middleware('feature.access:owner.products');
     Route::get('/manager/laporan/bahan', [OwnerController::class, 'ingredients'])->name('manager.reports.ingredients')->middleware('feature.access:owner.ingredients');
+
+    Route::get('/manager/{section}', [ManagerController::class, 'page'])
+        ->name('manager.page');
 });
 
 Route::middleware(['simple.auth', 'user.level:5'])->group(function () {
@@ -122,7 +152,9 @@ Route::middleware(['simple.auth', 'user.level:3,4'])->group(function () {
     Route::post('/kasir/pesanan/langsung', [CashierController::class, 'storeDirectOrder'])->name('cashier.orders.direct-store')->middleware('feature.access:cashier.orders');
     Route::get('/kasir/live-orders', [CashierController::class, 'liveOrders'])->name('cashier.orders.live')->middleware('feature.access:cashier.orders');
     Route::get('/kasir/riwayat', [CashierController::class, 'history'])->name('cashier.history')->middleware('feature.access:cashier.history');
-    Route::patch('/kasir/orders/{order}/status', [CashierController::class, 'updateOrderStatus'])->name('cashier.orders.status')->middleware('feature.access:cashier.order_status');
+    Route::patch('/kasir/orders/{order}/status', [CashierController::class, 'updateOrderStatus'])
+        ->name('cashier.orders.status')
+        ->middleware('feature.access:cashier.order_status');
 });
 
 Route::middleware(['simple.auth', 'user.level:0'])->group(function () {
@@ -139,16 +171,7 @@ Route::get('/menu/{token}/orders/{order}/qris', [CustomerMenuController::class, 
 Route::get('/menu/{token}/orders/{order}/qris/status', [CustomerMenuController::class, 'qrisStatus'])->name('customer.orders.qris.status');
 Route::get('/menu/{token}/orders/{order}', [CustomerMenuController::class, 'receipt'])->name('customer.orders.show');
 
-Route::get('/baker/live-orders', [ChefController::class, 'liveOrders'])
-    ->name('baker.orders.live');
-
-    Route::get('/baker/live-orders', [ChefController::class, 'liveOrders'])
-    ->name('baker.orders.live');
-    
-    Route::patch('/baker/orders/{order}/finish-cooking', [ChefController::class, 'finishCooking'])
-    ->name('baker.orders.finish-cooking');
-
-    Route::get('/language/{locale}', function ($locale) {
+Route::get('/language/{locale}', function ($locale) {
     if (! in_array($locale, ['id', 'en'])) {
         abort(404);
     }
@@ -158,40 +181,10 @@ Route::get('/baker/live-orders', [ChefController::class, 'liveOrders'])
     return back();
 })->name('language.switch');
 
-Route::get('/manager/{section}', [ManagerController::class, 'page'])
-    ->name('manager.page');
-
-    Route::prefix('manager')
-    ->middleware('auth')
-    ->group(function () {
-
-        Route::get('/absensi', [AbsensiController::class, 'index'])
-            ->name('absensi.index');
-
-        Route::get('/absensi/create', [AbsensiController::class, 'create'])
-            ->name('absensi.create');
-
-        Route::post('/absensi/store', [AbsensiController::class, 'store'])
-            ->name('absensi.store');
-
-        Route::get('/absensi/edit/{id}', [AbsensiController::class, 'edit'])
-            ->name('absensi.edit');
-
-        Route::put('/absensi/update/{id}', [AbsensiController::class, 'update'])
-            ->name('absensi.update');
-
-        Route::delete('/absensi/delete/{id}', [AbsensiController::class, 'destroy'])
-            ->name('absensi.destroy');
-    });
-
-    Route::get('/manager/absensi/{id}', [ManagerController::class, 'showAbsensi']);
-
-    use App\Http\Controllers\AttendanceController;
-
-
-
 Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])
-    ->name('attendance.checkIn');
+    ->name('attendance.checkIn')
+    ->middleware('simple.auth');
 
 Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])
-    ->name('attendance.checkOut');
+    ->name('attendance.checkOut')
+    ->middleware('simple.auth');

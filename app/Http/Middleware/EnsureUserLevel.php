@@ -8,9 +8,14 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserLevel
 {
-    public function handle(Request $request, Closure $next, string $level): Response
+    public function handle(Request $request, Closure $next, string ...$levels): Response
     {
-        $allowedLevels = array_map('intval', explode(',', $level));
+        $allowedLevels = collect($levels)
+            ->flatMap(fn (string $level) => explode(',', $level))
+            ->map(fn (string $level) => (int) trim($level))
+            ->filter(fn (int $level) => $level >= 0)
+            ->values()
+            ->all();
 
         if (! in_array((int) $request->session()->get('auth_level'), $allowedLevels, true)) {
             abort(403);

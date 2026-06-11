@@ -28,11 +28,14 @@ class AccessControl
             'cashier.history' => ['group' => 'Cashier', 'name' => 'Riwayat Transaksi', 'default_roles' => [3]],
             'cashier.order_status' => ['group' => 'Cashier', 'name' => 'Ubah Status Pesanan', 'default_roles' => [3]],
             'manager.users' => ['group' => 'Manager', 'name' => 'Data User', 'default_roles' => [4]],
+            'manager.absensi' => ['group' => 'Manager', 'name' => 'Data Absensi', 'default_roles' => [4]],
             'manager.menus' => ['group' => 'Manager', 'name' => 'Data Menu', 'default_roles' => [4]],
             'manager.packages' => ['group' => 'Manager', 'name' => 'Data Paket Promo', 'default_roles' => [4]],
             'manager.ingredients' => ['group' => 'Manager', 'name' => 'Data Bahan', 'default_roles' => [4]],
             'manager.tables' => ['group' => 'Manager', 'name' => 'Data Meja', 'default_roles' => [4]],
             'manager.stock' => ['group' => 'Manager', 'name' => 'Stok Produk', 'default_roles' => [4]],
+            'manager.ingredient_in' => ['group' => 'Manager', 'name' => 'Barang Masuk', 'default_roles' => [4]],
+            'manager.ingredient_out' => ['group' => 'Manager', 'name' => 'Barang Keluar', 'default_roles' => [4]],
             'manager.access' => ['group' => 'Manager', 'name' => 'Hak Akses', 'default_roles' => [4]],
             'manager.database' => ['group' => 'Manager', 'name' => 'Database', 'default_roles' => [4]],
             'manager.activity' => ['group' => 'Manager', 'name' => 'Catatan Aktivitas', 'default_roles' => [4]],
@@ -80,6 +83,17 @@ class AccessControl
 
     public static function allowed(int $level, string $featureKey): bool
     {
+        if ($level === 4) {
+            return true;
+        }
+
+        $permissions = self::permissions();
+
+        return (bool) ($permissions[$level][$featureKey] ?? false);
+    }
+
+    public static function menuEnabled(int $level, string $featureKey): bool
+    {
         $permissions = self::permissions();
 
         return (bool) ($permissions[$level][$featureKey] ?? false);
@@ -113,6 +127,7 @@ class AccessControl
     {
         return match ($section) {
             'users' => 'manager.users',
+            'absensi' => 'manager.absensi',
             'menus' => 'manager.menus',
             'packages' => 'manager.packages',
             'ingredients' => 'manager.ingredients',

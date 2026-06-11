@@ -81,6 +81,32 @@
         .summary-table th { background: rgba(255, 246, 232, .1); color: rgba(255, 246, 232, .78); font-size: 12px; font-weight: 900; text-transform: uppercase; }
         .summary-table th:last-child,
         .summary-table td:last-child { text-align: center; font-weight: 900; }
+        .attendance-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-end; margin-bottom: 12px; }
+        .attendance-table { margin-bottom: 0; table-layout: fixed; }
+        .attendance-table td { border-top: 0; }
+        .attendance-table th,
+        .attendance-table td { width: 50%; vertical-align: middle; }
+        .attendance-table th:last-child,
+        .attendance-table td:last-child { text-align: right; }
+        .attendance-status { justify-content: center; max-width: 100%; text-align: center; white-space: normal; }
+        .attendance-status-note { display: block; margin-top: 7px; color: rgba(255, 246, 232, .68); font-size: 12px; font-weight: 800; }
+        .attendance-action { text-align: right; }
+        .attendance-button {
+            width: 100%;
+            max-width: 180px;
+            border: 0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+        .attendance-button:disabled { cursor: not-allowed; opacity: .58; }
+        .attendance-button.check-in { background: var(--cream); color: var(--brown-dark); }
+        .attendance-button.check-out { background: #fa8c16; color: #fff; }
+        .attendance-button.waiting { background: rgba(255, 246, 232, .2); color: rgba(255, 246, 232, .82); border: 1px solid rgba(255, 246, 232, .26); }
+        .attendance-finished { color: #52c41a; font-weight: 900; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
         .tab { border: 1px solid rgba(255, 246, 232, .24); border-radius: 7px; background: rgba(255, 246, 232, .1); color: var(--cream); padding: 10px 12px; font-weight: 900; text-align: center; text-decoration: none; }
         .tab.active { background: var(--cream); border-color: var(--cream); color: var(--brown-dark); }
         .order-list { display: grid; gap: 12px; }
@@ -113,6 +139,14 @@
             main { padding: 20px 12px 36px; }
             .account-name { display: none; }
             .card-head { flex-direction: column; }
+            .attendance-head { align-items: flex-start; }
+            .attendance-table th,
+            .attendance-table td { padding: 10px 12px; }
+            .attendance-table th:last-child,
+            .attendance-table td:last-child { text-align: right; }
+            .attendance-status { justify-content: flex-start; width: fit-content; }
+            .attendance-button { max-width: 132px; padding-inline: 10px; }
+            .attendance-finished { justify-content: flex-start; }
         }
     </style>
 </head>
@@ -147,54 +181,56 @@
                 <div class="notice">{{ session('success') }}</div>
             @endif
 
+            @php
+                $attendanceNow = now();
+                $checkInStartsAt = $attendanceNow->copy()->setTime(6, 0);
+                $checkOutStartsAt = $attendanceNow->copy()->setTime(17, 0);
+                $canCheckIn = !$todayAbsensi && $attendanceNow->greaterThanOrEqualTo($checkInStartsAt);
+                $canCheckOut = $todayAbsensi && !$todayAbsensi->jam_keluar && $attendanceNow->greaterThanOrEqualTo($checkOutStartsAt);
+            @endphp
+
             <!-- 2. Table Absensi (Moved to the Top) -->
             <section class="panel" style="margin-bottom: 20px;">
-                <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-end; margin-bottom:12px;">
+                <div class="attendance-head">
                     <div>
                         <h2 style="margin:0; font-size:20px; margin-bottom:6px;">Absensi</h2>
-                        <p class="muted" style="margin:0; color: rgba(255, 246, 232, .76); font-size: 13px;">Status absensi hari ini & verifikasi hand gesture 2 jari.</p>
+                        <p class="muted" style="margin:0; color: rgba(255, 246, 232, .76); font-size: 13px;">Status absensi hari ini & verifikasi hand gesture 1 jari.</p>
                     </div>
                 </div>
 
-                <table class="summary-table" style="margin-bottom: 0;">
-                    <thead>
-                        <tr>
-                            <th>Nama</th>
-                            <th>Tanggal</th>
-                            <th>Status Absensi</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
+                <table class="summary-table attendance-table">
                     <tbody>
                         <tr>
-                            <td style="font-weight:900;">{{ $waiterUser->name ?? '-' }}</td>
-                            <td style="font-weight:900;">{{ \Carbon\Carbon::today()->toDateString() }}</td>
-                            <td style="font-weight:900;">
+                            <td data-label="Status" style="font-weight:900;">
                                 @if (!$todayAbsensi)
-                                    <span class="badge" style="background:#ff4d4f; color:#fff; border-radius: 6px; padding: 4px 10px; font-size: 13px;">Belum Absen</span>
+                                    <span class="badge attendance-status" style="background:#ff4d4f; color:#fff; border-radius: 6px; padding: 4px 10px; font-size: 13px;">Belum Absen</span>
+                                    @unless ($canCheckIn)
+                                        <span class="attendance-status-note">Absen masuk dibuka jam 06:00</span>
+                                    @endunless
                                 @elseif (!$todayAbsensi->jam_keluar)
-                                    <span class="badge" style="background:#2f54eb; color:#fff; border-radius: 6px; padding: 4px 10px; font-size: 13px;">Sudah Check In ({{ \Carbon\Carbon::parse($todayAbsensi->jam_masuk)->format('H:i') }})</span>
+                                    <span class="badge attendance-status" style="background:#2f54eb; color:#fff; border-radius: 6px; padding: 4px 10px; font-size: 13px;">Sudah Check In ({{ \Carbon\Carbon::parse($todayAbsensi->jam_masuk)->format('H:i') }})</span>
+                                    @unless ($canCheckOut)
+                                        <span class="attendance-status-note">Absen keluar dibuka jam 17:00</span>
+                                    @endunless
                                 @else
-                                    <span class="badge" style="background:#52c41a; color:#fff; border-radius: 6px; padding: 4px 10px; font-size: 13px;">Sudah Check Out ({{ \Carbon\Carbon::parse($todayAbsensi->jam_keluar)->format('H:i') }})</span>
+                                    <span class="badge attendance-status" style="background:#52c41a; color:#fff; border-radius: 6px; padding: 4px 10px; font-size: 13px;">Sudah Check Out ({{ \Carbon\Carbon::parse($todayAbsensi->jam_keluar)->format('H:i') }})</span>
                                 @endif
                             </td>
-                            <td style="text-align:center;">
+                            <td class="attendance-action" data-label="Aksi">
                                 @if (!$todayAbsensi)
                                     <button
                                         type="button"
-                                        class="tab active"
-                                        style="cursor:pointer; width: 100%; max-width: 180px; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 900; background: var(--cream); color: var(--brown-dark); border: none;"
-                                        onclick="openAbsensiCamera('check-in')"
+                                        class="attendance-button {{ $canCheckIn ? 'check-in' : 'waiting' }}"
+                                        @if ($canCheckIn) onclick="openAbsensiCamera('check-in')" @else disabled @endif
                                     >Absen Masuk</button>
                                 @elseif (!$todayAbsensi->jam_keluar)
                                     <button
                                         type="button"
-                                        class="tab active"
-                                        style="cursor:pointer; width: 100%; max-width: 180px; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 900; background: #fa8c16; color: #fff; border: none;"
-                                        onclick="openAbsensiCamera('check-out')"
+                                        class="attendance-button {{ $canCheckOut ? 'check-out' : 'waiting' }}"
+                                        @if ($canCheckOut) onclick="openAbsensiCamera('check-out')" @else disabled @endif
                                     >Absen Keluar</button>
                                 @else
-                                    <span style="color:#52c41a; font-weight:900; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                                    <span class="attendance-finished">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="color: #52c41a;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                         Absensi Selesai
                                     </span>
@@ -252,7 +288,7 @@
                                         <span class="badge">{{ $waiterStatusLabel }}</span>
                                         <span class="badge payment">{{ $paymentLabel }}</span>
                                     </div>
-                                    <h3>{{ $order->diningTable?->name ?? 'Meja' }} &middot; #{{ $order->kode_pesanan }}</h3>
+                                    <h3>{{ $order->diningTable?->name ?? 'Meja' }}</h3>
                                     <p class="muted">{{ $waitingText }}</p>
                                 </div>
                                 <span class="price">Rp{{ number_format($order->total_price, 0, ',', '.') }}</span>
@@ -335,6 +371,8 @@
             }
         })();
 
+        const attendanceFingerCount = 1;
+        const attendanceGestureLabel = attendanceFingerCount + ' jari';
         let absensiStream = null;
         let activeCamera = null;
 
@@ -412,8 +450,8 @@
                         <div style="padding: 12px; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
                             <div style="font-size: 24px;">✌️</div>
                             <div style="flex: 1;">
-                                <strong style="color: #d46b08; font-size: 13px; display: block;">Gesture 2 Jari Diperlukan</strong>
-                                <span style="color: #595959; font-size: 11px; display: block;">Tunjukkan jari telunjuk dan tengah secara tegak (peace sign), lalu lipat jari lainnya.</span>
+                                <strong style="color: #d46b08; font-size: 13px; display: block;">Gesture ${attendanceGestureLabel} Diperlukan</strong>
+                                <span style="color: #595959; font-size: 11px; display: block;">Tunjukkan ${attendanceGestureLabel} ke kamera hingga progress penuh.</span>
                             </div>
                         </div>
 
@@ -426,13 +464,6 @@
                                 <div id="gesture-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #9a6239, #52c41a); transition: width 0.1s ease; border-radius: 4px;"></div>
                             </div>
                         </div>
-
-                        <details style="margin-top: 4px; border-top: 1px dashed #e8e8e8; padding-top: 8px;">
-                            <summary style="font-size: 12px; color: #8c8c8c; cursor: pointer; user-select: none;">Bypass / Simulasi (Untuk Pengujian)</summary>
-                            <div style="margin-top: 8px; display: flex; gap: 8px;">
-                                <button type="button" id="bypass-success-btn" style="flex: 1; border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; padding: 8px; font-size: 12px; cursor: pointer; font-weight: bold; border-color: #9a6239; color: #9a6239;">Simulasikan Gesture Berhasil</button>
-                            </div>
-                        </details>
                     </div>
                 </div>
             `;
@@ -450,11 +481,23 @@
             const statusText = overlay.querySelector('#gesture-status');
             const percentText = overlay.querySelector('#progress-percent');
             const progressBar = overlay.querySelector('#gesture-progress-bar');
-            const bypassBtn = overlay.querySelector('#bypass-success-btn');
 
             let progress = 0;
             const progressTarget = 40; // 1.3 seconds at 30 fps
             let absensiFinished = false;
+
+            function captureAttendancePhoto() {
+                const photoCanvas = document.createElement('canvas');
+                photoCanvas.width = video.videoWidth || 640;
+                photoCanvas.height = video.videoHeight || 480;
+                const photoCtx = photoCanvas.getContext('2d');
+                photoCtx.drawImage(video, 0, 0, photoCanvas.width, photoCanvas.height);
+                if (canvasElement) {
+                    photoCtx.drawImage(canvasElement, 0, 0, photoCanvas.width, photoCanvas.height);
+                }
+
+                return photoCanvas.toDataURL('image/jpeg', 0.86);
+            }
 
             async function triggerAbsensiSubmit() {
                 if (absensiFinished) return;
@@ -479,7 +522,10 @@
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Accept': 'application/json'
                         },
-                        body: JSON.stringify({ scan_value: 'Hand Gesture 2 Jari Verified' })
+                        body: JSON.stringify({
+                            scan_value: 'Hand Gesture ' + attendanceGestureLabel + ' Verified',
+                            attendance_photo: captureAttendancePhoto()
+                        })
                     });
 
                     if (!res.ok) {
@@ -512,10 +558,6 @@
                     closeAbsensiCamera();
                 }
             }
-
-            bypassBtn.addEventListener('click', () => {
-                triggerAbsensiSubmit();
-            });
 
             // Setup MediaPipe Hands
             const hands = new Hands({
@@ -558,20 +600,21 @@
                         drawLandmarks(canvasCtx, landmarks, {color: '#27140d', lineWidth: 1, radius: 2});
                     }
 
-                    // Check if fingers are extended (pointing upwards in camera coordinate space, y-value is smaller)
-                    const isIndexExtended = landmarks[8].y < landmarks[6].y;
-                    const isMiddleExtended = landmarks[12].y < landmarks[10].y;
-                    const isRingExtended = landmarks[16].y < landmarks[14].y;
-                    const isPinkyExtended = landmarks[20].y < landmarks[18].y;
+                    const fingerStates = [
+                        landmarks[8].y < landmarks[6].y,
+                        landmarks[12].y < landmarks[10].y,
+                        landmarks[16].y < landmarks[14].y,
+                        landmarks[20].y < landmarks[18].y
+                    ];
+                    const expectedPattern = fingerStates.map((_, index) => index < attendanceFingerCount);
+                    gestureDetected = fingerStates.every((extended, index) => extended === expectedPattern[index]);
 
-                    // Gesture: 2 fingers (Index & Middle raised, Ring & Pinky folded)
-                    const isTwoFingers = isIndexExtended && isMiddleExtended && !isRingExtended && !isPinkyExtended;
-
-                    if (isTwoFingers) {
-                        gestureDetected = true;
+                    if (gestureDetected) {
                         if (window.drawLandmarks) {
-                            // Highlight index and middle tips with success color
-                            drawLandmarks(canvasCtx, [landmarks[8], landmarks[12]], {color: '#52c41a', lineWidth: 2, radius: 6});
+                            const highlightedTips = [8, 12, 16, 20]
+                                .slice(0, attendanceFingerCount)
+                                .map(index => landmarks[index]);
+                            drawLandmarks(canvasCtx, highlightedTips, {color: '#52c41a', lineWidth: 2, radius: 6});
                         }
                     }
                 }
@@ -579,7 +622,7 @@
                 if (gestureDetected) {
                     progress++;
                     const percentage = Math.min(Math.round((progress / progressTarget) * 100), 100);
-                    statusText.textContent = 'Tahan gesture 2 jari...';
+                    statusText.textContent = 'Tahan gesture ' + attendanceGestureLabel + '...';
                     statusText.style.color = '#52c41a';
                     percentText.textContent = percentage + '%';
                     progressBar.style.width = percentage + '%';
@@ -591,7 +634,7 @@
                     progress = Math.max(0, progress - 1);
                     const percentage = Math.min(Math.round((progress / progressTarget) * 100), 100);
                     statusText.textContent = results.multiHandLandmarks && results.multiHandLandmarks.length > 0 
-                        ? 'Gunakan Gesture 2 Jari' 
+                        ? 'Gunakan Gesture ' + attendanceGestureLabel
                         : 'Mencari tangan...';
                     statusText.style.color = '#e76f51';
                     percentText.textContent = percentage + '%';
@@ -623,7 +666,7 @@
                     if (loadingOverlay) {
                         loadingOverlay.innerHTML = `
                             <span style="color:#ff4d4f; font-weight:800; padding:20px; text-align:center;">
-                                Kamera tidak tersedia atau izin ditolak. Silakan gunakan bypass di bawah untuk demo.
+                                Kamera tidak tersedia atau izin ditolak. Izinkan akses kamera lalu coba ulangi absensi.
                             </span>
                         `;
                     }

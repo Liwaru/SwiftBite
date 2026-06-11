@@ -10,11 +10,41 @@ class AbsensiController extends Controller
 {
     public function index()
     {
-        $absensis = Absensi::with('user')
-            ->latest()
-            ->get();
+        $attendanceFilters = [
+            'name' => trim((string) request('name', '')),
+            'role' => (string) request('role', 'semua'),
+            'date' => (string) request('date', ''),
+            'status' => (string) request('status', 'semua'),
+        ];
 
-        return view('manager.pages.absensi', compact('absensis'));
+        $absensis = Absensi::with('user')
+            ->when($attendanceFilters['name'] !== '', function ($query) use ($attendanceFilters) {
+                $query->whereHas('user', fn ($userQuery) => $userQuery->where('name', 'like', '%' . $attendanceFilters['name'] . '%'));
+            })
+            ->when($attendanceFilters['role'] !== 'semua', function ($query) use ($attendanceFilters) {
+                $query->whereHas('user', fn ($userQuery) => $userQuery->where('level', (int) $attendanceFilters['role']));
+            })
+            ->when($attendanceFilters['date'] !== '', fn ($query) => $query->whereDate('tanggal', $attendanceFilters['date']))
+            ->when($attendanceFilters['status'] !== 'semua', function ($query) use ($attendanceFilters) {
+                if ($attendanceFilters['status'] === 'hadir') {
+                    $query->whereIn('status', ['hadir', 'masuk', 'keluar']);
+
+                    return;
+                }
+
+                $query->where('status', $attendanceFilters['status']);
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        $page = [
+            'title' => 'Data Absensi',
+            'description' => 'Kelola data absensi karyawan dan catatan kehadiran.',
+        ];
+        $section = 'absensi';
+
+        return view('manager.absensi', compact('absensis', 'page', 'section', 'attendanceFilters'));
     }
 
     public function create()

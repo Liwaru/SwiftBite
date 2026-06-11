@@ -100,7 +100,17 @@ class ChefController extends Controller
             'bahan_habis' => $ingredients->filter(fn (Ingredient $ingredient) => $ingredient->status_label === 'Habis')->count(),
         ];
 
-        return view('chef.dashboard', compact('stats', 'processingOrders', 'ingredients'));
+        $userId = request()->session()->get('auth_user_id');
+        $bakerUser = \App\Models\User::find($userId);
+        $todayAbsensi = null;
+
+        if ($bakerUser) {
+            $todayAbsensi = \App\Models\Absensi::where('id_user', $bakerUser->id_user)
+                ->where('tanggal', today()->toDateString())
+                ->first();
+        }
+
+        return view('chef.dashboard', compact('stats', 'processingOrders', 'ingredients', 'todayAbsensi', 'bakerUser'));
     }
 
     public function orders(): View

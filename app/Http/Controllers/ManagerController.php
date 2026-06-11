@@ -168,8 +168,35 @@ public function storeIngredientIn(Request $request)
 
         $data = ['page' => $pages[$section], 'section' => $section];
         if ($section === 'absensi') {
-    $data['absensis'] = Absensi::latest()->paginate(10);
-}
+            $attendanceFilters = [
+                'name' => trim((string) request('name', '')),
+                'role' => (string) request('role', 'semua'),
+                'date' => (string) request('date', ''),
+                'status' => (string) request('status', 'semua'),
+            ];
+
+            $data['absensis'] = Absensi::with('user')
+                ->when($attendanceFilters['name'] !== '', function ($query) use ($attendanceFilters) {
+                    $query->whereHas('user', fn ($userQuery) => $userQuery->where('name', 'like', '%' . $attendanceFilters['name'] . '%'));
+                })
+                ->when($attendanceFilters['role'] !== 'semua', function ($query) use ($attendanceFilters) {
+                    $query->whereHas('user', fn ($userQuery) => $userQuery->where('level', (int) $attendanceFilters['role']));
+                })
+                ->when($attendanceFilters['date'] !== '', fn ($query) => $query->whereDate('tanggal', $attendanceFilters['date']))
+                ->when($attendanceFilters['status'] !== 'semua', function ($query) use ($attendanceFilters) {
+                    if ($attendanceFilters['status'] === 'hadir') {
+                        $query->whereIn('status', ['hadir', 'masuk', 'keluar']);
+
+                        return;
+                    }
+
+                    $query->where('status', $attendanceFilters['status']);
+                })
+                ->latest()
+                ->paginate(10)
+                ->withQueryString();
+            $data['attendanceFilters'] = $attendanceFilters;
+        }
 
         if ($section === 'users') {
             $roleOptions = [
@@ -227,7 +254,7 @@ public function storeIngredientIn(Request $request)
             ];
         }
 
-        if ($section === 'menus') {
+        if (in_array($section, ['menus', 'packages'], true)) {
             $menuItems = MenuItem::with([
         'categoryModel',
         'recipes.ingredient'

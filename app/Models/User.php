@@ -7,7 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Absensi;
+
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -51,40 +51,13 @@ class User extends Authenticatable
             'level' => 'integer',
         ];
     }
-}
 
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Model;
-
-class Absensi extends Model
-{
-    protected $table = 'absensis';
-
-    protected $primaryKey = 'id_absensi';
-
-    protected $fillable = [
-        'id_user',
-        'tanggal',
-        'jam_masuk',
-        'jam_keluar',
-        'status',
-    ];
-
-    public function user()
+    public function absensis()
     {
-        return $this->belongsTo(
-            User::class,
+        return $this->hasMany(
+            Absensi::class,
             'id_user',
             'id_user'
         );
     }
-    public function absensis()
-{
-    return $this->hasMany(
-        Absensi::class,
-        'id_user',
-        'id_user'
-    );
-}
 }

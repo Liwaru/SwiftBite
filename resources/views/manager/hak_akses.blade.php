@@ -169,7 +169,7 @@
                         'waiter.orders',
                         'chef.orders', 'chef.ingredients',
                         'cashier.orders', 'cashier.history',
-                        'manager.users', 'manager.menus', 'manager.ingredients', 'manager.tables', 'manager.stock', 'manager.access', 'manager.database', 'manager.activity',
+                        'manager.users', 'manager.absensi', 'manager.menus', 'manager.ingredients', 'manager.tables', 'manager.stock', 'manager.ingredient_in', 'manager.ingredient_out', 'manager.access', 'manager.database', 'manager.activity',
                         'owner.sales', 'owner.finance', 'owner.products', 'owner.ingredients',
                     ];
 
@@ -243,7 +243,7 @@
                     </form>
 
                     <p class="access-note">
-                        Hak akses mengikuti level role terbaru: Customer 0, Waiter 1, Baker 2, Cashier 3, Manager 4, dan Owner 5. Hak Akses untuk Manager wajib aktif agar manager tidak mengunci aksesnya sendiri.
+                        Hak akses mengikuti level role terbaru: Customer 0, Waiter 1, Baker 2, Cashier 3, Manager 4, dan Owner 5. Kolom Manager mengatur tampil atau sembunyi menu di sidebar; akses langsung tetap diizinkan untuk Manager. Fitur Hak Akses wajib aktif.
                     </p>
                 </section>
             </main>
