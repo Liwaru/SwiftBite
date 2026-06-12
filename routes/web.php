@@ -178,7 +178,7 @@ Route::get('/language/{locale}', function ($locale) {
 
     session(['locale' => $locale]);
 
-    return back();
+    return back()->withCookie(cookie()->forever('swiftbite_locale', $locale));
 })->name('language.switch');
 
 Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])

@@ -22,8 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->web(append: [
-    \App\Http\Middleware\SetLocale::class,
-]);
+            \App\Http\Middleware\SetLocale::class,
+            \App\Http\Middleware\ProtectViewSource::class,
+            \App\Http\Middleware\TranslateHtml::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

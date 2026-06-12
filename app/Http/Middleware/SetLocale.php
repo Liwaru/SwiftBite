@@ -10,12 +10,13 @@ class SetLocale
 {
     public function handle(Request $request, Closure $next)
     {
-        $locale = session('locale', 'id');
+        $locale = session('locale', $request->cookie('swiftbite_locale', 'id'));
 
         if (! in_array($locale, ['id', 'en'])) {
             $locale = 'id';
         }
 
+        session(['locale' => $locale]);
         App::setLocale($locale);
 
         return $next($request);
