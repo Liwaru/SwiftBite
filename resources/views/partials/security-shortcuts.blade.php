@@ -1,21 +1,31 @@
 <script id="swiftbite-security-shortcuts">
     (function () {
+        const allowViewSource = @json($allowViewSource ?? false);
+        const allowInspect = @json($allowInspect ?? false);
         const blockedKeys = new Set([
-            'F12',
         ]);
 
+        @unless($allowInspect ?? false)
+            blockedKeys.add('F12');
+        @endunless
+
         const blockedCtrlKeys = new Set([
-            'u', // View source
             's', // Save page
             'p', // Print page
         ]);
 
-        const blockedCtrlShiftKeys = new Set([
-            'i', // DevTools
-            'j', // Console
-            'c', // Inspect element
-            'k', // Firefox console
-        ]);
+        @unless($allowViewSource ?? false)
+            blockedCtrlKeys.add('u'); // View source
+        @endunless
+
+        const blockedCtrlShiftKeys = new Set([]);
+
+        @unless($allowInspect ?? false)
+            blockedCtrlShiftKeys.add('i'); // DevTools
+            blockedCtrlShiftKeys.add('j'); // Console
+            blockedCtrlShiftKeys.add('c'); // Inspect element
+            blockedCtrlShiftKeys.add('k'); // Firefox console
+        @endunless
 
         function block(event) {
             event.preventDefault();
@@ -36,7 +46,7 @@
                 return block(event);
             }
 
-            if (hasCtrl && event.altKey && key === 'u') {
+            if (!allowViewSource && hasCtrl && event.altKey && key === 'u') {
                 return block(event);
             }
 
@@ -45,6 +55,8 @@
             }
         }, true);
 
-        document.addEventListener('contextmenu', block, true);
+        @unless($allowInspect ?? false)
+            document.addEventListener('contextmenu', block, true);
+        @endunless
     })();
 </script>

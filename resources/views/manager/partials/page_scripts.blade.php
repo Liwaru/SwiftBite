@@ -758,44 +758,43 @@ if (endsTimeInput) {
                 const url = tableQrState.url || '';
                 const svgText = new XMLSerializer().serializeToString(svg);
                 const printWindow = window.open('', '_blank', 'width=520,height=720');
-                const safeName = escapeHtml(name);
-                const safeUrl = escapeHtml(url);
 
                 if (!printWindow) {
                     return;
                 }
 
-                printWindow.document.write(`
-                    <!doctype html>
-                    <html lang="id">
-                    <head>
-    @include('partials.favicon')
-                        <meta charset="utf-8">
-                        <title>QR ${safeName}</title>
-                        <style>
-                            body { margin: 0; font-family: Arial, sans-serif; color: #2a1309; }
-                            .sheet { min-height: 100vh; display: grid; place-items: center; padding: 32px; box-sizing: border-box; }
-                            .card { width: 100%; max-width: 360px; text-align: center; border: 2px solid #5a2b17; border-radius: 16px; padding: 28px; }
-                            .brand { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
-                            h1 { font-size: 34px; margin: 0 0 18px; }
-                            svg { width: 260px; height: 260px; }
-                            .url { margin-top: 18px; font-size: 12px; overflow-wrap: anywhere; }
-                            @media print { .sheet { padding: 0; } .card { border-color: #000; } }
-                        </style>
-                    </head>
-                    <body>
-                        <main class="sheet">
-                            <section class="card">
-                                <div class="brand">SwiftBite Morning Bakery</div>
-                                <h1>${safeName}</h1>
-                                ${svgText}
-                                <div class="url">${safeUrl}</div>
-                            </section>
-                        </main>
-                    </body>
-                    </html>
-                `);
-                printWindow.document.close();
+                const printDocument = printWindow.document;
+                printDocument.open();
+                printDocument.close();
+                printDocument.title = 'QR ' + name;
+
+                const style = printDocument.createElement('style');
+                style.textContent = 'body{margin:0;font-family:Arial,sans-serif;color:#2a1309}.sheet{min-height:100vh;display:grid;place-items:center;padding:32px;box-sizing:border-box}.card{width:100%;max-width:360px;text-align:center;border:2px solid #5a2b17;border-radius:16px;padding:28px}.brand{font-size:18px;font-weight:800;margin-bottom:8px}h1{font-size:34px;margin:0 0 18px}svg{width:260px;height:260px}.url{margin-top:18px;font-size:12px;overflow-wrap:anywhere}@media print{.sheet{padding:0}.card{border-color:#000}}';
+                printDocument.head.appendChild(style);
+
+                const main = printDocument.createElement('main');
+                main.className = 'sheet';
+
+                const card = printDocument.createElement('section');
+                card.className = 'card';
+
+                const brand = printDocument.createElement('div');
+                brand.className = 'brand';
+                brand.textContent = 'SwiftBite Morning Bakery';
+
+                const title = printDocument.createElement('h1');
+                title.textContent = name;
+
+                const urlText = printDocument.createElement('div');
+                urlText.className = 'url';
+                urlText.textContent = url;
+
+                card.appendChild(brand);
+                card.appendChild(title);
+                card.insertAdjacentHTML('beforeend', svgText);
+                card.appendChild(urlText);
+                main.appendChild(card);
+                printDocument.body.appendChild(main);
                 printWindow.focus();
                 setTimeout(() => printWindow.print(), 250);
             }
@@ -1265,6 +1264,7 @@ if (endsTimeInput) {
 
             document.querySelectorAll('.menu-rail').forEach((rail) => {
                 let isDragging = false;
+                let hasMoved = false;
                 let startX = 0;
                 let startScrollLeft = 0;
 
@@ -1283,10 +1283,12 @@ if (endsTimeInput) {
                     }
 
                     isDragging = true;
+                    hasMoved = false;
                     startX = event.clientX;
                     startScrollLeft = rail.scrollLeft;
                     rail.classList.add('is-dragging');
                     rail.setPointerCapture(event.pointerId);
+                    event.preventDefault();
                 });
 
                 rail.addEventListener('pointermove', (event) => {
@@ -1296,12 +1298,38 @@ if (endsTimeInput) {
 
                     event.preventDefault();
                     const walk = event.clientX - startX;
+                    hasMoved = hasMoved || Math.abs(walk) > 4;
                     rail.scrollLeft = startScrollLeft - walk;
                 });
 
                 rail.addEventListener('pointerup', stopDrag);
                 rail.addEventListener('pointercancel', stopDrag);
                 rail.addEventListener('pointerleave', stopDrag);
+                rail.addEventListener('click', (event) => {
+                    if (!hasMoved) {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    event.stopPropagation();
+                    hasMoved = false;
+                }, true);
+                rail.addEventListener('wheel', (event) => {
+                    if (!event.shiftKey) {
+                        if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+                            event.preventDefault();
+                        }
+
+                        return;
+                    }
+
+                    event.preventDefault();
+                    const wheelDirection = Number(rail.dataset.wheelDirection || 1);
+                    rail.scrollBy({
+                        left: event.deltaY * wheelDirection,
+                        behavior: 'auto',
+                    });
+                }, { passive: false });
             });
 
             function updateBulkToolbar(section) {

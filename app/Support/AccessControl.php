@@ -106,6 +106,7 @@ class AccessControl
         }
 
         $selected[4] = array_values(array_unique(array_merge($selected[4] ?? [], ['manager.access'])));
+        $selected = self::withRequiredActionPermissions($selected);
 
         $now = now();
 
@@ -121,6 +122,29 @@ class AccessControl
                 );
             }
         }
+    }
+
+    private static function withRequiredActionPermissions(array $selected): array
+    {
+        $dependencies = [
+            'cashier.orders' => ['cashier.order_status'],
+        ];
+
+        foreach ($selected as $level => $featureKeys) {
+            $featureKeys = is_array($featureKeys) ? $featureKeys : [];
+
+            foreach ($dependencies as $menuFeature => $actionFeatures) {
+                if (! in_array($menuFeature, $featureKeys, true)) {
+                    continue;
+                }
+
+                $featureKeys = array_merge($featureKeys, $actionFeatures);
+            }
+
+            $selected[$level] = array_values(array_unique($featureKeys));
+        }
+
+        return $selected;
     }
 
     public static function managerFeatureForSection(string $section): string

@@ -10,6 +10,29 @@
 <body>
     <div class="app-shell">
         @include('header')
+        <style>
+            html,
+            body {
+                overflow-y: auto;
+                scrollbar-width: auto;
+                -ms-overflow-style: auto;
+            }
+
+            body::-webkit-scrollbar {
+                display: block;
+                width: 12px;
+            }
+
+            body::-webkit-scrollbar-thumb {
+                border: 3px solid #ffffff;
+                border-radius: 999px;
+                background: rgba(90, 50, 31, .46);
+            }
+
+            body::-webkit-scrollbar-track {
+                background: #ffffff;
+            }
+        </style>
 
         <div class="content-with-sidebar">
             <main>

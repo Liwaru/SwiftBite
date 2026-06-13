@@ -8,6 +8,27 @@
     @include('manager.partials.page_styles')
 </head>
 <style>
+    html,
+    body {
+        overflow-y: auto;
+        scrollbar-width: auto;
+        -ms-overflow-style: auto;
+    }
+
+    body::-webkit-scrollbar {
+        display: block;
+        width: 12px;
+    }
+
+    body::-webkit-scrollbar-thumb {
+        border: 3px solid #ffffff;
+        border-radius: 999px;
+        background: rgba(90, 50, 31, .46);
+    }
+
+    body::-webkit-scrollbar-track {
+        background: #ffffff;
+    }
 
     .barcode-generate-btn {
     width: 100%;
@@ -131,7 +152,7 @@
 }
 
 </style>
-<body>
+<body class="manager-menu-page">
     <div class="app-shell">
         @include('header')
 
@@ -237,7 +258,7 @@
                                         <div class="menu-carousel">
                                             <button type="button" class="menu-carousel-btn js-menu-scroll" data-direction="-1" aria-label="Geser {{ strtolower($packageSection['title']) }} ke kiri">&lsaquo;</button>
 
-                                            <div class="menu-rail">
+                                            <div class="menu-rail menu-rail-menu-page" data-wheel-direction="-1">
                                                 @foreach ($packageSection['items'] as $package)
                                                     @php
                                                         $todayDate = today();
@@ -353,7 +374,7 @@
                                         <div class="menu-carousel">
                                             <button type="button" class="menu-carousel-btn js-menu-scroll" data-direction="-1" aria-label="Geser {{ $menuSection['title'] }} ke kiri">&lsaquo;</button>
 
-                                            <div class="menu-rail">
+                                            <div class="menu-rail menu-rail-menu-page" data-wheel-direction="-1">
                                                 @foreach ($menuSection['items'] as $menu)
                                                     @php
                                                         $statusLabel = $menu->status === 'tersedia' ? 'Aktif' : 'Nonaktif';

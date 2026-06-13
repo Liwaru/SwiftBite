@@ -765,9 +765,31 @@
     .app-shell.sidebar-collapsed .sidebar-brand-link,
     .app-shell.sidebar-collapsed .sidebar-logo,
     .app-shell.sidebar-collapsed .sidebar-brand-text,
-    .app-shell.sidebar-collapsed .sidebar-footer,
     .app-shell.sidebar-collapsed .sidebar-label {
         display: none;
+    }
+
+    .app-shell.sidebar-collapsed .sidebar-footer {
+        display: grid;
+        padding-top: 18px;
+    }
+
+    .app-shell.sidebar-collapsed .sidebar-user-info {
+        display: grid;
+        grid-template-columns: 38px;
+        justify-content: center;
+        padding: 10px 0;
+    }
+
+    .app-shell.sidebar-collapsed .sidebar-user-details {
+        display: none;
+    }
+
+    .app-shell.sidebar-collapsed .account-menu {
+        left: calc(100% + 10px);
+        right: auto;
+        bottom: 0;
+        width: 220px;
     }
 
     .app-shell.sidebar-collapsed .sidebar-toggle {
@@ -1493,7 +1515,8 @@
             }
 
             if (account && accountToggle) {
-                accountToggle.addEventListener('click', function () {
+                accountToggle.addEventListener('click', function (event) {
+                    event.stopPropagation();
                     const isOpen = account.classList.toggle('open');
                     accountToggle.setAttribute('aria-expanded', String(isOpen));
                 });

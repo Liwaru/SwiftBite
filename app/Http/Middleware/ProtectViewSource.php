@@ -22,7 +22,12 @@ class ProtectViewSource
             return $response;
         }
 
-        $script = view('partials.security-shortcuts')->render();
+        $allowInspect = $request->routeIs('baker.*', 'customer.menu', 'waiter.dashboard');
+
+        $script = view('partials.security-shortcuts', [
+            'allowInspect' => $allowInspect,
+            'allowViewSource' => false,
+        ])->render();
 
         if (str_contains($content, '</head>')) {
             $content = str_replace('</head>', $script.'</head>', $content);
